@@ -1,0 +1,5 @@
+MODULE double
+
+    INTEGER, public, PARAMETER :: dp = SELECTED_REAL_KIND(15)
+
+END MODULE double
