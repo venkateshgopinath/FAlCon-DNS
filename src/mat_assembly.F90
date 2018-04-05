@@ -1,4 +1,5 @@
 module mat_assembly
+   !$ use omp_lib
 
    use double
    use constants, only: ii
@@ -10,15 +11,15 @@ module mat_assembly
 
    private
 
-   real(kind=dp), allocatable :: AT(:,:)
-   real(kind=dp), allocatable, public :: A_uphi(:,:)
-   real(kind=dp), allocatable :: AF(:,:)
+   
+   real(kind=dp), allocatable, public :: A_uphi_all(:,:,:)
+  
    integer, allocatable, public :: IPIV1(:,:), IPIV2(:,:)
    integer, allocatable, public :: IPIV1_lap(:,:)
-   real(kind=dp), allocatable :: bctemp(:,:), bcpsi1(:,:), bcpsi2(:,:) 
+    
    real(kind=dp), allocatable, public :: AT_all(:,:,:), AF_all(:,:,:)
-   integer, allocatable :: PIV1(:), PIV2(:)
-   integer, allocatable, public :: PIV_uphi(:)
+   
+   integer, allocatable, public :: IPIV_uphi(:,:)
    real(kind=dp), allocatable, public :: LAPpsi(:,:) 
    real(kind=dp), allocatable, public :: LAPpsi_all(:,:,:) 
 
@@ -33,9 +34,8 @@ contains
 
       allocate( IPIV1(Nr_max,Nm_max+1), IPIV2(2*Nr_max,Nm_max+1) )
       allocate( IPIV1_lap(Nr_max,Nm_max+1) )
-      allocate( PIV1(Nr_max), PIV2(2*Nr_max), PIV_uphi(Nr_max) )   
-      allocate( bctemp(2,Nr_max), bcpsi1(2,Nr_max), bcpsi2(2,Nr_max) )
-      allocate( AT(Nr_max,Nr_max), A_uphi(Nr_max,Nr_max), AF(2*Nr_max,2*Nr_max) )
+      allocate( IPIV_uphi(Nr_max,Nm_max+1) )   
+      allocate( A_uphi_all(Nr_max,Nr_max,Nm_max+1) )
       allocate( AT_all(Nr_max,Nr_max,Nm_max+1), AF_all(2*Nr_max,2*Nr_max,Nm_max+1) )
       allocate( LAPpsi(Nr_max,Nr_max) )
       allocate( LAPpsi_all(Nr_max,Nr_max,Nm_max+1) )
@@ -45,9 +45,8 @@ contains
    subroutine deallocate_mat() !----------------DEALLOCATE MATRICES----------------------
 
       deallocate( AT_all, AF_all )
-      deallocate( AT, A_uphi, AF )
-      deallocate( bcpsi2 )
-      deallocate( PIV1, PIV2, PIV_uphi )   
+      deallocate( A_uphi_all )
+      deallocate( IPIV_uphi )   
       deallocate( IPIV1, IPIV2 )
       deallocate( IPIV1_lap )
       deallocate( LAPpsi )
@@ -67,7 +66,13 @@ contains
       integer :: i,j 
       integer :: INFO1, INFO2, INFO3
       real(kind=dp), intent(in) :: wt_lhs_tscheme_imp
-
+       
+      real(kind=dp) :: AT(Nr_max,Nr_max)
+      real(kind=dp) :: A_uphi(Nr_max,Nr_max)
+      real(kind=dp) :: AF(2*Nr_max,2*Nr_max)
+      real(kind=dp) :: bctemp(2,Nr_max), bcpsi1(2,Nr_max), bcpsi2(2,Nr_max)
+      integer :: PIV1(Nr_max), PIV2(2*Nr_max), PIV_uphi(Nr_max)
+      
       AT(:,:)=0.0_dp
       AF(:,:)=0.0_dp
       A_uphi(:,:)=0.0_dp
@@ -180,6 +185,8 @@ contains
       !if (n==0) then 
          !***** CALL DGETRF factorization for A_uphi matrix
          call factorize(Nr_max,A_uphi,PIV_uphi,INFO3)
+         A_uphi_all(:,:,n+1)=A_uphi
+         IPIV_uphi(:,n+1)=PIV_uphi
       !end if
                                     
       !end do ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
@@ -194,6 +201,7 @@ contains
       real(kind=dp) :: C
       integer :: i,j 
       integer :: INFO1
+      integer :: PIV1(Nr_max)
 
                            ! OPERATOR MATRIX ASSEMBLY and LU Factorization 
       !**************** AT is the operator matrix for temperature equation *************************************

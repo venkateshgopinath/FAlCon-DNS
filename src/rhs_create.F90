@@ -65,7 +65,6 @@ contains
       integer, intent(in) :: n_order_tscheme_exp
       real(kind=dp), intent(in) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(in) :: wt_rhs_tscheme_exp(n_order_tscheme_exp)
-      !complex(kind=dp), intent(in) :: tmp_exp_temp(n_order_tscheme_exp,Nr_max)
       character(len=100), intent(in) :: time_scheme_imp
       real(kind=dp), intent(in) :: dt
       complex(kind=dp), intent(in) :: temp_specp(Nr_max)

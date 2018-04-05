@@ -5,7 +5,7 @@ module fourierloop
    use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD1D2
    use init, only: TFC, tFR, t2FR, omgFR, temp_spec, omg_spec, upFC, psii, upFR, urFR, startmatbuild, &
                    & finishmatbuild, finishmatbuild, time_matbuild, r_radius,dt_new, tmp_rhs_exp_temp
-   use mat_assembly, only: AT_all, AF_all, IPIV1, IPIV2, mat_build, A_uphi, PIV_uphi
+   use mat_assembly, only: AT_all, AF_all, IPIV1, IPIV2, mat_build, A_uphi_all, IPIV_uphi
    use algebra, only: matsolve, matsolve_real
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, wt_rhs_tscheme_exp, n_order_tscheme_imp, &
                           & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, dt_array, rhs_exp_temp
@@ -85,23 +85,21 @@ contains
       rhs_r(:)=0.0_dp
       rhs_i(:)=0.0_dp
 !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
+      !!$omp do 
+      !$omp parallel & 
+      !$omp private(Nm,i,rhs,rhs_r,rhs_i,rhsf_r,rhsf_i,TFC,real_rhs_temp,rhs_uphi,D1upFR,real_rhs_omg,real_rhs_psi, & 
+      !$omp & real_d_rhs_psi,rhsf,rhs_omg,rhs_psi) default(shared)  
+         t_ref= OMP_GET_WTIME ()
+      !$omp do   
       do Nm=0,Nm_max   
-         
+           
          if (n_step-n_restart==1 .or. dt_array(1)/=dt_array(2)) then ! Call 'mat_build' only if dt_current and dt_previous are different 
             call cpu_time(startmatbuild)
             call mat_build(Nr_max,dt_array(1),Nm,mBC,wt_lhs_tscheme_imp,Pr) ! Build the operator matrices and factorize them 
             call cpu_time(finishmatbuild) 
             time_matbuild=time_matbuild + finishmatbuild - startmatbuild
          end if
-      end do  
-      !$omp parallel & 
-      !$omp private(Nm,i,rhs,rhs_r,rhs_i,rhsf_r,rhsf_i,TFC,real_rhs_temp,rhs_uphi,D1upFR,real_rhs_omg,real_rhs_psi, & 
-      !$omp & real_d_rhs_psi,rhsf,rhs_omg,rhs_psi) default(shared)  
-      !!$omp private(Nm,i,rhs,rhs_r,rhs_i,tspec,TFC,real_rhs_temp) default(shared) 
-         t_ref= OMP_GET_WTIME ()
-      !$omp do 
-      do Nm=0,Nm_max 
-          
+      
 ! -------------------------------------------------------------------------------------------------
 
          !----------- Call RHS construct for temperature ----------
@@ -120,7 +118,6 @@ contains
            rhs(i)=cmplx(rhs_r(i),rhs_i(i),kind=dp)
          end do
          
-         !print *, rhs(3), tspec(3),Nm, OMP_GET_THREAD_NUM()  
          if (Nm==0) then
             TFC=rhs
          end if
@@ -128,11 +125,7 @@ contains
          call chebinvtran(Nr_max,rhs,real_rhs_temp)
          temp_spec(Nm+1,:)=rhs(:)
          tFR(Nm+1,:)=real_rhs_temp(:)
-         !print *, tFR(Nm+1,3), "tFR(Nm+1,3)", Nm , OMP_GET_THREAD_NUM(), real(rhs(3)), real(tspec(3))
-      !end do  
-      !print *, tFR(100,1), maxval(real(rhs_r)), Nm_max, shape(tFR)
 
-      !do Nm=0,Nm_max  
          ! SOLVE FOR UPHI_BAR HERE -----------------------------------------------------------------------------
          if (Nm==0) then
             !----------- Call RHS construct for uphi_bar -------------
@@ -145,9 +138,9 @@ contains
             ! --------------------------------------------------
                
             !************************** CALL DGETRS A_uphi*u_phi=rhs ****************************
-            call matsolve_real(TRANS, Nr_max, A_uphi(:,:), PIV_uphi(:), rhs_r, INFO1)
+            call matsolve_real(TRANS, Nr_max, A_uphi_all(:,:,Nm+1), IPIV_uphi(:,Nm+1), rhs_r, INFO1)
             !**************************************************************************** 
-           ! print *, "solved", Nm, OMP_GET_THREAD_NUM()
+
             do i=1,Nr_max
                upFC(Nm+1,i)=cmplx(rhs_r(i),rhs_i(i),kind=dp)
             end do

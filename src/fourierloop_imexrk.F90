@@ -6,7 +6,7 @@ module fourierloop_imexrk
    use init, only: TFC, temp_spec,omg_spec,startmatbuild, &
                    & finishmatbuild, finishmatbuild, time_matbuild, r_radius, r_radius2, &
                    & dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC
-   use mat_assembly, only: LAPpsi_all, IPIV1, AT_all, AF_all, IPIV1, IPIV2, mat_build, IPIV1_lap, A_uphi, PIV_uphi
+   use mat_assembly, only: LAPpsi_all, IPIV1, AT_all, AF_all, IPIV1, IPIV2, mat_build, IPIV1_lap, A_uphi_all, IPIV_uphi
    use algebra, only: matsolve
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, wt_rhs_tscheme_exp, & 
                           & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, &
@@ -209,7 +209,7 @@ contains
             rhs_i=aimag(rhs_stage_uphibar)
 
             !******Solve for stage temperature CALL DGETRS A*vt=rhs ****************************
-            call matsolve(TRANS, Nr_max, A_uphi, PIV_uphi, rhs_r, rhs_i,INFO1)
+            call matsolve(TRANS, Nr_max, A_uphi_all(:,:,Nm+1), IPIV_uphi(:,Nm+1), rhs_r, rhs_i,INFO1)
             !*********************************************************************************** 
 
             do i=1,Nr_max

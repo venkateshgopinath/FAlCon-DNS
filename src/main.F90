@@ -12,11 +12,13 @@
 
  call solver_init   ! Initialize solver
 
- call cpu_time(startmain)
- 
+ !call cpu_time(startmain)
+ startmain = OMP_GET_WTIME () 
+
  call solver_run    ! Run the solver
 
- call cpu_time(finishmain) 
+ !call cpu_time(finishmain) 
+ finishmain = OMP_GET_WTIME () 
          
  call solver_exit   ! Exit the solver and deallocate
 
