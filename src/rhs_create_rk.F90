@@ -12,85 +12,54 @@ module rhs_create_rk
 
    private
 
-   complex(kind=dp), allocatable :: uphi_temp_rad(:), ur_temp_rad_spec(:), ur_temp_rad(:)
-   complex(kind=dp), allocatable :: uphi_omg_rad(:), ur_omg_rad_spec(:), ur_omg_rad(:) 
-   complex(kind=dp), allocatable :: real_omg_spec(:), temp_real_rad(:), temp_spec_rad(:) 
-   complex(kind=dp), allocatable :: real_d_omg_rad(:), real_d2_omg_rad(:)
-   complex(kind=dp), allocatable :: omg_real_rad(:), omg_spec_rad(:)  
-   complex(kind=dp), allocatable :: real_temp_rad(:), real_d_temp_rad(:), real_d2_temp_rad(:)
-   complex(kind=dp), allocatable :: real_d_ur_temp_rad(:,:), real_d_ur_omg_rad(:,:)
-   complex(kind=dp), allocatable, public :: rhs_vort_buo_term(:,:)
-   complex(kind=dp), allocatable, public :: rhs2(:)
-
-   public :: allocate_rhs_rk, deallocate_rhs_rk, rhs_construct_temp, rhs_construct_vort, rhs_construct_uphi_bar
+   public :: rhs_construct_temp, rhs_construct_vort, rhs_construct_uphi_bar
 
 contains
 
-   subroutine allocate_rhs_rk(Nm_max,Nr_max)
-
-      integer, intent(in) :: Nm_max
-      integer, intent(in) :: Nr_max 
-           
-      allocate( uphi_temp_rad(Nr_max), ur_temp_rad_spec(Nr_max), ur_temp_rad(Nr_max), &
-                & uphi_omg_rad(Nr_max), ur_omg_rad_spec(Nr_max) )
-      allocate( real_omg_spec(Nr_max), temp_real_rad(Nr_max), temp_spec_rad(Nr_max), &
-                & omg_real_rad(Nr_max), omg_spec_rad(Nr_max), &
-                & ur_omg_rad(Nr_max), real_d_omg_rad(Nr_max), real_d2_omg_rad(Nr_max) )
-      allocate( real_temp_rad(Nr_max), real_d_temp_rad(Nr_max), real_d2_temp_rad(Nr_max) )
-      allocate( real_d_ur_temp_rad(Nm_max+1,Nr_max), real_d_ur_omg_rad(Nm_max+1,Nr_max) )
-      allocate( rhs_vort_buo_term(Nm_max+1,Nr_max) )
-      allocate( rhs2(Nr_max) )
-     
-
-   end subroutine allocate_rhs_rk
-
-   subroutine deallocate_rhs_rk
-
-      deallocate( rhs2 )
-      deallocate( rhs_vort_buo_term )
-      deallocate( real_d_ur_temp_rad, real_d_ur_omg_rad )
-      deallocate( real_temp_rad, real_d_temp_rad, real_d2_temp_rad )
-      deallocate( real_omg_spec, temp_real_rad, temp_spec_rad,omg_real_rad, omg_spec_rad, &
-                  & ur_omg_rad, real_d_omg_rad, real_d2_omg_rad )
-      deallocate( uphi_temp_rad, ur_temp_rad_spec, ur_temp_rad, uphi_omg_rad, ur_omg_rad_spec )
-
-   end subroutine deallocate_rhs_rk
-
-   subroutine rhs_construct_temp(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,temp_spec,Nm,rhs, &
+   subroutine rhs_construct_temp(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,temp_specp,Nm,rhs, &
                                  & time_scheme_exp,Pr)
              
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       real(kind=dp), intent(in) :: Pr
       character(len=100), intent(in) :: time_scheme_exp
-      complex(kind=dp), intent(in) :: temp_spec(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: temp_specp(Nr_max)
       integer, intent(in) :: Nm
       complex(kind=dp), intent(in) :: uphi_temp_FR(Nm_max+1,Nr_max),ur_temp_FR(Nm_max+1,Nr_max)
       integer :: i
       complex(kind=dp), intent(out) :: rhs(Nr_max)
+      ! Local variables --------------------------
+      integer :: i_order
+      complex(kind=dp) :: ur_temp_rad(Nr_max)
+      complex(kind=dp) :: temp_spec_rad(Nr_max)
+      complex(kind=dp) :: real_d_ur_temp_rad(Nr_max)
+      complex(kind=dp) :: ur_temp_rad_spec(Nr_max)
+      complex(kind=dp) :: uphi_temp_rad(Nr_max)
+      complex(kind=dp) :: real_temp_rad(Nr_max)
+      complex(kind=dp) :: real_d_temp_rad(Nr_max)
+      complex(kind=dp) :: real_d2_temp_rad(Nr_max)
       
       if (time_scheme_exp=='RK4' .or. time_scheme_exp=='RK2') then
          do i=1,Nr_max
             uphi_temp_rad(i)=uphi_temp_FR(Nm+1,i)
             ur_temp_rad(i)=ur_temp_FR(Nm+1,i)
-            temp_real_rad(i)=temp_spec(Nm+1,i)
             rhs(i)=0.0_dp
          end do
 
          call chebtransform(Nr_max,ur_temp_rad,ur_temp_rad_spec)
          
-         call chebtransform(Nr_max,temp_real_rad,temp_spec_rad)
+         call chebtransform(Nr_max,temp_specp,temp_spec_rad)
                         
          call chebinvtranD1D2(Nr_max,temp_spec_rad,real_d_temp_rad,real_d2_temp_rad)
          
-         call chebinvtranD1(Nr_max,ur_temp_rad_spec,real_d_ur_temp_rad(Nm+1,:))
+         call chebinvtranD1(Nr_max,ur_temp_rad_spec,real_d_ur_temp_rad(:))
 
          do i=1,Nr_max
 
             rhs(i)= (1.0_dp/Pr)*(r_radius(i)*real_d_temp_rad(i) + real_d2_temp_rad(i) & 
-                    & -real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*temp_real_rad(i)) &
+                    & -real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*temp_specp(i)) &
                     & - (ii*real(Nm,kind=dp)*r_radius(i)*uphi_temp_rad(i)+ &
-                    & real_d_ur_temp_rad(Nm+1,i)+r_radius(i)*ur_temp_rad(i))
+                    & real_d_ur_temp_rad(i)+r_radius(i)*ur_temp_rad(i))
                     ! Sum of linear + non-linear parts
 
          end do
@@ -99,7 +68,7 @@ contains
          
    end subroutine rhs_construct_temp
 
-   subroutine rhs_construct_vort(Nm_max,Nr_max,Ra,Pr,uphi_omg_FR,ur_omg_FR,omg2,Nm,rhs1,rhsf, &
+   subroutine rhs_construct_vort(Nm_max,Nr_max,Ra,Pr,uphi_omg_FR,ur_omg_FR,omg_specp,Nm,rhs1,rhsf, &
                                     & time_scheme_exp,rhs2) 
 
       integer, intent(in) :: Nm_max
@@ -107,13 +76,23 @@ contains
       character(len=100), intent(in) :: time_scheme_exp
       real(kind=dp), intent(in) :: Ra
       real(kind=dp), intent(in) :: Pr  
-      complex(kind=dp), intent(in) :: omg2(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: omg_specp(Nr_max)
       integer, intent(in) :: Nm
       complex(kind=dp), intent(in) :: uphi_omg_FR(Nm_max+1,Nr_max),ur_omg_FR(Nm_max+1,Nr_max)
       integer :: i
       complex(kind=dp), intent(in) :: rhs1(Nr_max) 
       complex(kind=dp), intent(out) :: rhsf(2*Nr_max) 
-      complex(kind=dp), intent(out) :: rhs2(Nr_max) 
+      complex(kind=dp), intent(out) :: rhs2(Nr_max)
+      ! Local variables --------------------------
+      complex(kind=dp) :: ur_omg_rad(Nr_max)
+      complex(kind=dp) :: omg_spec_rad(Nr_max)
+      complex(kind=dp) :: omg_real_rad(Nr_max)
+      complex(kind=dp) :: real_d_ur_omg_rad(Nr_max)
+      complex(kind=dp) :: ur_omg_rad_spec(Nr_max)
+      complex(kind=dp) :: uphi_omg_rad(Nr_max)
+      complex(kind=dp) :: real_omg_rad(Nr_max)
+      complex(kind=dp) :: real_d_omg_rad(Nr_max)
+      complex(kind=dp) :: real_d2_omg_rad(Nr_max)
 
       if (time_scheme_exp=='RK4' .or. time_scheme_exp=='RK2') then
          do i=1,Nr_max
@@ -121,7 +100,7 @@ contains
             uphi_omg_rad(i)=uphi_omg_FR(Nm+1,i)
             rhs2(i)=0.0_dp
             omg_spec_rad(i)=0.0_dp
-            omg_real_rad(i)=omg2(Nm+1,i)
+            omg_real_rad(i)=omg_specp(i)
          end do
 
          call chebtransform(Nr_max,ur_omg_rad,ur_omg_rad_spec)
@@ -130,12 +109,12 @@ contains
          
          call chebinvtranD1D2(Nr_max,omg_spec_rad,real_d_omg_rad,real_d2_omg_rad)
          
-         call chebinvtranD1(Nr_max,ur_omg_rad_spec,real_d_ur_omg_rad(Nm+1,:))
+         call chebinvtranD1(Nr_max,ur_omg_rad_spec,real_d_ur_omg_rad(:))
      
          do i=1,Nr_max
             rhs2(i)= (r_radius(i)*real_d_omg_rad(i)+real_d2_omg_rad(i)-real(Nm,kind=dp)* &
                     & real(Nm,kind=dp)*r_radius2(i)*omg_real_rad(i)) &
-                    & - (ii*real(Nm,kind=dp)*r_radius(i)*uphi_omg_rad(i)+real_d_ur_omg_rad(Nm+1,i) &
+                    & - (ii*real(Nm,kind=dp)*r_radius(i)*uphi_omg_rad(i)+real_d_ur_omg_rad(i) &
                     & + r_radius(i)*ur_omg_rad(i)) - (Ra/Pr)*(ii*real(Nm,kind=dp)*(r_radius(i))*tFR(Nm+1,i))
                     ! Sum of linear + non-linear parts + buoyancy term
 
@@ -152,16 +131,16 @@ contains
 
    end subroutine rhs_construct_vort 
 
-   subroutine rhs_construct_uphi_bar(Nm_max,Nr_max,upFR_p,urFR_p,upFC,omgFR_p,rhs_uphi, &
+   subroutine rhs_construct_uphi_bar(Nm_max,Nr_max,upFR_p,urFR_p,upFC,omg_specp,rhs_uphi, &
                                     & time_scheme_exp)
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: time_scheme_exp
       complex(kind=dp), intent(in) :: upFC(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: urFR_p(Nm_max+1,Nr_max),upFR_p(Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: omgFR_p(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: omg_specp(Nr_max)
       real(kind=dp), intent(out) :: rhs_uphi(Nr_max)
-
+      ! Local variables --------------------------
       integer :: i, Nr, Nm, Np, Npmax
       real(kind=dp) :: ur_up_FR(Nr_max)
       real(kind=dp) :: ur_up(Nr_max)
@@ -195,13 +174,13 @@ contains
          do Nm=0,Nm_max
             if (Nm==0) then
                ur_up_FR(Nr) = ur_up_FR(Nr) + real(urFR_p(Nm+1,Nr)*(upFR_p(Nm+1,Nr)))
-               ur_omg_FR(Nr) = ur_omg_FR(Nr) + real(urFR_p(Nm+1,Nr)*(omgFR_p(Nm+1,Nr)))
+               ur_omg_FR(Nr) = ur_omg_FR(Nr) + real(urFR_p(Nm+1,Nr)*(omg_specp(Nr)))
                ur_d1up_FR(Nr) = ur_d1up_FR(Nr) + real(urFR_p(Nm+1,Nr)*(d1upFR(Nm+1,Nr)))
             else
                ur_up_FR(Nr)=ur_up_FR(Nr) + real(urFR_p(Nm+1,Nr)*conjg(upFR_p(Nm+1,Nr)) &
                            & + conjg(urFR_p(Nm+1,Nr))*upFR_p(Nm+1,Nr))
-               ur_omg_FR(Nr)=ur_omg_FR(Nr) + real(urFR_p(Nm+1,Nr)*conjg(omgFR_p(Nm+1,Nr)) &
-                           & + conjg(urFR_p(Nm+1,Nr))*omgFR_p(Nm+1,Nr))
+               ur_omg_FR(Nr)=ur_omg_FR(Nr) + real(urFR_p(Nm+1,Nr)*conjg(omg_specp(Nr)) &
+                           & + conjg(urFR_p(Nm+1,Nr))*omg_specp(Nr))
                ur_d1up_FR(Nr)=ur_d1up_FR(Nr) + real(urFR_p(Nm+1,Nr)*conjg(d1upFR(Nm+1,Nr)) &
                            & + conjg(urFR_p(Nm+1,Nr))*d1upFR(Nm+1,Nr))
             end if 

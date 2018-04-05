@@ -15,43 +15,11 @@ module rhs_create
 
    private
 
-   !complex(kind=dp), allocatable :: uphi_temp_rad(:), ur_temp_rad_spec(:), ur_temp_rad(:)
-   !complex(kind=dp), allocatable :: uphi_omg_rad(:), ur_omg_rad_spec(:), ur_omg_rad(:) 
-   !complex(kind=dp), allocatable :: real_d_omg_rad(:), real_d2_omg_rad(:) 
-   !complex(kind=dp), allocatable :: omg_real_rad(:)  
-   !complex(kind=dp), allocatable :: real_temp_rad(:), real_d_temp_rad(:), real_d2_temp_rad(:)
-   !complex(kind=dp), allocatable :: real_d_ur_temp_rad(:,:), real_d_ur_omg_rad(:,:)
-   !complex(kind=dp), allocatable, public :: rhs2(:)
-   public :: allocate_rhs_imex, deallocate_rhs_imex, rhs_construct_temp, rhs_construct_vort, &
+   public :: rhs_construct_temp, rhs_construct_vort, &
              & rhs_construct_uphi_bar, rhs_temp_from_restart, rhs_vort_from_restart, &
              & rhs_uphibar_from_restart
 
 contains
-
-   subroutine allocate_rhs_imex(Nm_max,Nr_max)
-
-      integer, intent(in) :: Nm_max
-      integer, intent(in) :: Nr_max 
-           
-      !allocate( uphi_temp_rad(Nr_max), ur_temp_rad_spec(Nr_max), ur_temp_rad(Nr_max), &
-      !          & uphi_omg_rad(Nr_max), ur_omg_rad_spec(Nr_max) )
-      !allocate( omg_real_rad(Nr_max), &
-      !          & ur_omg_rad(Nr_max), real_d_omg_rad(Nr_max), real_d2_omg_rad(Nr_max) ) 
-      !allocate( real_temp_rad(Nr_max), real_d_temp_rad(Nr_max), real_d2_temp_rad(Nr_max) )
-      !allocate( real_d_ur_temp_rad(Nm_max+1,Nr_max), real_d_ur_omg_rad(Nm_max+1,Nr_max) )
-      !allocate( rhs2(Nr_max) )
-
-   end subroutine allocate_rhs_imex
-
-   subroutine deallocate_rhs_imex
-
-      !deallocate( rhs2 )
-      !deallocate( real_d_ur_temp_rad, real_d_ur_omg_rad )
-      !deallocate( real_temp_rad, real_d_temp_rad, real_d2_temp_rad )
-      !deallocate( omg_real_rad, ur_omg_rad, real_d_omg_rad, real_d2_omg_rad )
-      !deallocate( uphi_temp_rad, ur_temp_rad_spec, ur_temp_rad, uphi_omg_rad, ur_omg_rad_spec )
-
-   end subroutine deallocate_rhs_imex
 
    subroutine rhs_construct_temp(Nm_max,Nr_max,dt,uphi_temp_FR,ur_temp_FR,n_step,temp_specp,Nm,rhs_temp,n_restart, &
                                  & wt_rhs_tscheme_imp, wt_rhs_tscheme_exp,n_order_tscheme_imp, &
@@ -320,7 +288,7 @@ contains
       complex(kind=dp), intent(in) :: urFR_p(Nm_max+1,Nr_max),upFR_p(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: omgFR_p(Nm_max+1,Nr_max)
       real(kind=dp), intent(out) :: rhs_uphi(Nr_max)
-
+      ! Local variables --------------------------
       integer :: i, i_order, Nr, Nm, Np, Npmax
       real(kind=dp) :: ur_up_FR(Nr_max)
       real(kind=dp) :: ur_up(Nr_max)

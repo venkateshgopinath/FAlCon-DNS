@@ -85,7 +85,6 @@ contains
       rhs_r(:)=0.0_dp
       rhs_i(:)=0.0_dp
 !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
-      !!$omp do 
       !$omp parallel & 
       !$omp private(Nm,i,rhs,rhs_r,rhs_i,rhsf_r,rhsf_i,TFC,real_rhs_temp,rhs_uphi,D1upFR,real_rhs_omg,real_rhs_psi, & 
       !$omp & real_d_rhs_psi,rhsf,rhs_omg,rhs_psi) default(shared)  

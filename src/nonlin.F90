@@ -1,4 +1,5 @@
 module nonlin
+   !$ use OMP_LIB
 
    use double
    use constants, only: pi
@@ -21,7 +22,6 @@ contains
       integer, intent(in) :: Np_max   
       integer, intent(in) :: Nr_max 
 
-      allocate( uphi_temp(Np_max), ur_temp(Np_max), uphi_omg(Np_max), ur_omg(Np_max) )
       allocate( dtval_r(Nr_max), dtval_p(Nr_max) )
       allocate( dtval_rkr(Nr_max), dtval_rkp(Nr_max) )
 
@@ -31,7 +31,6 @@ contains
 
       deallocate( dtval_r, dtval_p )
       deallocate( dtval_rkr, dtval_rkp )
-      deallocate( uphi_temp, ur_temp, uphi_omg, ur_omg )
 
    end subroutine deallocate_nonlin
 
@@ -47,10 +46,15 @@ contains
       complex(kind=dp), intent(in) :: upFR(Nm_max+1,Nr_max), urFR(Nm_max+1,Nr_max)
       complex(kind=dp), intent(out) :: uphi_temp_FR(Nm_max+1,Nr_max),ur_temp_FR(Nm_max+1,Nr_max)
       complex(kind=dp), intent(out) :: uphi_omg_FR(Nm_max+1,Nr_max), ur_omg_FR(Nm_max+1,Nr_max)
-
+      ! Local variables -------------------------------------- 
+      real(kind=dp) :: uphi_temp(Np_max), ur_temp(Np_max)
+      real(kind=dp) :: uphi_omg(Np_max), ur_omg(Np_max)
       !****************** PRODUCTS in real space (U.grad T) *************************** 
       
       !-------------Nr_max Loop begins -------------------------------------------------------------      
+      !$omp parallel & 
+      !$omp private(Nr,uphi_temp,ur_temp,uphi_omg,ur_omg) default(shared)  
+      !$omp do    
       do Nr=1,Nr_max  
                           
          !Inverse fourier to get back real space variables
@@ -83,6 +87,8 @@ contains
          call forfft(Nm_max,Np_max,ur_omg,ur_omg_FR(:,Nr))
 
       end do
+      !$omp end do
+      !$omp end parallel
       !-------------Nr_max Loop ends-----------------------------------------------------------------      
 
    end subroutine Nr_maxLOOP

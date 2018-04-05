@@ -1,4 +1,5 @@
 module fourierloop_rk
+   !$ use OMP_LIB
 
    use double
    use constants, only: ii
@@ -80,10 +81,16 @@ contains
       complex(kind=dp) :: D1upFR(Nr_max)
       integer :: i,Nm,INFO1 ! Nm -> azimuthal 'n' loop over Fourier modes
       complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp(Nr_max), F_domg(Nr_max), F_duphi_bar(Nr_max)
+      real(kind=dp) :: t_ref, t_final
 
          call rhs_update_wts_exp(time_scheme_imp,time_scheme_exp,wt_rhs_tscheme_exp,n_order_tscheme_exp)
-     
+        
 !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
+         !$omp parallel & 
+         !$omp private(Nm,F_dtemp,F_duphi_bar,F_domg,dpsi_rmin,d2psi_rmin,dpsi_rmax,d2psi_rmax, &
+               !$omp & rhs_r,rhs_i,D1upFR,rhs_exp_uphi_bar,real_rhs_psi,real_d_rhs_psi, &
+               !$omp & real_d2_rhs_psi,rhs_psi) default(shared)  
+         !$omp do    
          do Nm=0,Nm_max   
             F_dtemp(:)=0.0_dp 
             F_duphi_bar(:)=0.0_dp 
@@ -202,6 +209,8 @@ contains
             end if
 
          end do
+         !$omp end do
+         !$omp end parallel
 
        
 !-------------- End loop over the Fourier modes --------------------------------------------------------------
@@ -226,12 +235,15 @@ contains
       rhs(:)=0.0_dp 
       rhs_uphi(:)=0.0_dp
       rhs_vort(:)=0.0_dp
-!-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
 
+!-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
+      !$omp parallel & 
+      !$omp private(Nm,rhs,rhs_uphi,rhs_vort) default(shared)  
+      !$omp do    
       do Nm=0,Nm_max  
 
          !----------- Call RHS construct for temperature ----------
-         call rhs_construct_temp(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR,Nm,rhs, &
+         call rhs_construct_temp(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR(Nm+1,:),Nm,rhs, &
                                  & time_scheme_exp,Pr)
          
          dtempdt1(rk_stage,Nm+1,:) = rhs(:)
@@ -240,7 +252,7 @@ contains
          if (Nm==0) then
 
             !----------- Call RHS construct for uphi_bar ----------
-            call rhs_construct_uphi_bar(Nm_max,Nr_max,upFR,urFR,upFC,omgFR,rhs_uphi, &
+            call rhs_construct_uphi_bar(Nm_max,Nr_max,upFR,urFR,upFC,omgFR(Nm+1,:),rhs_uphi, &
                                     & time_scheme_exp)
             
             duphibar_dt1(rk_stage,:) = rhs_uphi(:)
@@ -249,7 +261,7 @@ contains
          else
 
             !----------- Call RHS construct for vorticity ------------
-            call rhs_construct_vort(Nm_max,Nr_max,Ra,Pr,uphi_omg_FR,ur_omg_FR,omgFR, &
+            call rhs_construct_vort(Nm_max,Nr_max,Ra,Pr,uphi_omg_FR,ur_omg_FR,omgFR(Nm+1,:), &
                                     & Nm,rhs1,rhsf,time_scheme_exp,rhs_vort) 
 
             domgdt1(rk_stage,Nm+1,:) = rhs_vort(:)
@@ -257,6 +269,8 @@ contains
          end if 
 
       end do
+      !$omp end do
+      !$omp end parallel
 
 !-------------- End loop over the Fourier modes --------------------------------------------------------------
 
@@ -278,6 +292,11 @@ contains
       
 
 !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
+      !$omp parallel & 
+      !$omp private(Nm,F_dtemp,F_duphi_bar,F_domg,dpsi_rmin,d2psi_rmin,dpsi_rmax,d2psi_rmax, &
+            !$omp & rhs_r,rhs_i,D1upFR,rhs_exp_uphi_bar,real_rhs_psi,real_d_rhs_psi, &
+            !$omp & real_d2_rhs_psi,rhs_psi) default(shared)  
+      !$omp do  
       do Nm=0,Nm_max  
          F_dtemp(:)=0.0_dp 
          F_duphi_bar(:)=0.0_dp 
@@ -382,6 +401,8 @@ contains
             end if
 
       end do
+      !$omp end do
+      !$omp end parallel
 
       tFR=temp_spec
       omgFR=omg_spec

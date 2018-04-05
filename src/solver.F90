@@ -18,11 +18,9 @@ module solver
 
    use fourierloop, only: allocate_fourierloop_imex, deallocate_fourierloop_imex
    use steptime, only: allocate_steptime_imex, deallocate_steptime_imex, timeloop_imex
-   use rhs_create, only: allocate_rhs_imex, deallocate_rhs_imex
 
    use fourierloop_rk, only: allocate_fourierloop_rk, deallocate_fourierloop_rk
    use steptime_rk, only: allocate_steptime_rk, deallocate_steptime_rk, timeloop_rk
-   use rhs_create_rk, only: allocate_rhs_rk, deallocate_rhs_rk
 
    use fourierloop_imexrk, only: allocate_fourierloop_imexrk, deallocate_fourierloop_imexrk
    use steptime_imexrk, only: allocate_steptime_imexrk, deallocate_steptime_imexrk, timeloop_imexrk
@@ -62,11 +60,9 @@ contains
          call allocate_steptime_imexrk(Nm_max,Nr_max)      ! Allocate timeloop variables  
       elseif (time_scheme_type=='RK') then
          call allocate_fourierloop_rk(Nm_max,Nr_max)   ! Allocate variables in 'fourier loop' for all the modes
-         call allocate_rhs_rk(Nm_max,Nr_max)           ! Allocate rhs variables
          call allocate_steptime_rk(Nm_max,Nr_max)      ! Allocate timeloop variables  
       elseif (time_scheme_type=='IMEX') then
          call allocate_fourierloop_imex(Nr_max)        ! Allocate variables in 'fourier loop' for all the modes
-         call allocate_rhs_imex(Nm_max,Nr_max)         ! Allocate rhs variables
          call allocate_steptime_imex(Nm_max,Nr_max)    ! Allocate timeloop variables  
       end if 
    end subroutine solver_init
@@ -100,11 +96,9 @@ contains
          call deallocate_fourierloop_imexrk()   ! Deallocate fourierloop variables
       elseif (time_scheme_type=='RK') then
          call deallocate_steptime_rk()      ! Deallocate timestep loop 
-         call deallocate_rhs_rk()           ! Deallocate rhs variables
          call deallocate_fourierloop_rk()   ! Deallocate fourierloop variables
       elseif (time_scheme_type=='IMEX') then
          call deallocate_steptime_imex()      ! Deallocate timestep loop 
-         call deallocate_rhs_imex()           ! Deallocate rhs variables
          call deallocate_fourierloop_imex()   ! Deallocate fourierloop variables
       end if   
       call deallocate_nonlin()        ! Deallocate nonlinear variables
