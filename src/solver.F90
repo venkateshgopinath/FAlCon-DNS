@@ -24,7 +24,6 @@ module solver
 
    use fourierloop_imexrk, only: allocate_fourierloop_imexrk, deallocate_fourierloop_imexrk
    use steptime_imexrk, only: allocate_steptime_imexrk, deallocate_steptime_imexrk, timeloop_imexrk
-   use rhs_create_imexrk, only: allocate_rhs_imexrk, deallocate_rhs_imexrk
 
    use timeschemes, only:  init_time_schemes, deallocate_time_schemes
 
@@ -56,7 +55,6 @@ contains
       call allocate_nonlin(Np_max,Nr_max)        ! Allocate variables in nonlinear products used for multiplication in physical space
       if (time_scheme_type=='IMEXRK') then 
          call allocate_fourierloop_imexrk(Nm_max,Nr_max)   ! Allocate variables in 'fourier loop' for all the modes
-         call allocate_rhs_imexrk(Nm_max,Nr_max)           ! Allocate rhs variables
          call allocate_steptime_imexrk(Nm_max,Nr_max)      ! Allocate timeloop variables  
       elseif (time_scheme_type=='RK') then
          call allocate_fourierloop_rk(Nm_max,Nr_max)   ! Allocate variables in 'fourier loop' for all the modes
@@ -92,7 +90,6 @@ contains
       call deallocate_restart()       ! Deallocate restart variables
       if (time_scheme_type=='IMEXRK') then
          call deallocate_steptime_imexrk()      ! Deallocate timestep loop 
-         call deallocate_rhs_imexrk()           ! Deallocate rhs variables
          call deallocate_fourierloop_imexrk()   ! Deallocate fourierloop variables
       elseif (time_scheme_type=='RK') then
          call deallocate_steptime_rk()      ! Deallocate timestep loop 

@@ -1,4 +1,5 @@
 module fourierloop_imexrk
+   !$ use OMP_LIB
 
    use double
    use constants, only: ii
@@ -25,7 +26,7 @@ module fourierloop_imexrk
    complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(:), real_rhs_omg(:) 
    complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(:), real_d2_rhs_psi(:) 
    complex(kind=dp), allocatable :: rhs1(:), rhs2(:), rhs(:), rhsf(:), rhs_vort(:), rhs_b(:)
-   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhf_r(:), rhf_i(:)
+   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhsf_r(:), rhsf_i(:)
    real(kind=dp), allocatable :: rhs_uphi(:)
 
    complex(kind=dp), allocatable, public :: dtempdt1_a(:,:,:), dtempdt1_d(:,:,:)
@@ -34,11 +35,6 @@ module fourierloop_imexrk
    complex(kind=dp), allocatable, public :: rhs_buo(:,:,:)
 
    character :: TRANS='N'
-
-   complex(kind=dp) :: dpsi_rmin
-   complex(kind=dp) :: d2psi_rmin
-   complex(kind=dp) :: dpsi_rmax
-   complex(kind=dp) :: d2psi_rmax
 
    public :: allocate_fourierloop_imexrk, deallocate_fourierloop_imexrk, Get_stage_var, &
              & RHS_construct_stage, Assembly_stage
@@ -54,7 +50,7 @@ contains
       allocate( rhs_omg(Nr_max),rhs_psi(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max) )
       allocate( real_d_rhs_psi(Nr_max), real_d2_rhs_psi(Nr_max) )
       allocate( rhs1(Nr_max), rhs2(Nr_max), rhs(Nr_max), rhsf(2*Nr_max), rhs_vort(Nr_max), rhs_b(Nr_max) )  
-      allocate( rhs_r(Nr_max), rhs_i(Nr_max), rhf_r(2*Nr_max), rhf_i(2*Nr_max) )
+      allocate( rhs_r(Nr_max), rhs_i(Nr_max), rhsf_r(2*Nr_max), rhsf_i(2*Nr_max) )
       allocate( rhs_uphi(Nr_max) )
       allocate( dtempdt1_a(n_order_tscheme_exp,Nm_max+1,Nr_max), &
                 & dtempdt1_d(n_order_tscheme_exp,Nm_max+1,Nr_max) )
@@ -69,7 +65,7 @@ contains
    subroutine deallocate_fourierloop_imexrk
    
       deallocate( dtempdt1_a, dtempdt1_d, duphibar_dt1_a, duphibar_dt1_d, domgdt1_a, domgdt1_d )
-      deallocate( rhs_r, rhs_i, rhf_r, rhf_i )  
+      deallocate( rhs_r, rhs_i, rhsf_r, rhsf_i )  
       deallocate( rhs1, rhs2, rhs,rhsf, rhs_uphi, rhs_vort, rhs_buo )  
       deallocate( rhs_omg,rhs_psi,real_rhs_omg,real_rhs_psi,real_d_rhs_psi, real_d2_rhs_psi )
       deallocate( real_rhs_temp )
@@ -97,10 +93,8 @@ contains
       complex(kind=dp) :: rhs_stage_omg_full(2*Nr_max)
       integer :: i,Nm,INFO1,INFO2,Nr_max2 ! Nm -> azimuthal 'n' loop over Fourier modes
       complex(kind=dp) :: D1upFR(Nr_max)
+      real(kind=dp) :: t_ref, t_final
 
-      !tguess(rk_stage,:,:) = 1.2_dp*tFR(:,:)
-      !uphibar_guess(rk_stage,:) = 1.2_dp*upFR(1,:)
-      !omg_guess(rk_stage,:,:) = 1.2_dp*omgFR(:,:)
 
       rhs1(:)=0.0_dp 
       rhsf(:)=0.0_dp 
@@ -108,6 +102,13 @@ contains
       Nr_max2=2*Nr_max
 
       !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
+      !$omp parallel & 
+      !$omp private(Nm,i,F_dtemp_d,F_dtemp_a,F_duphibar_d,F_duphibar_a,F_domg_d,F_domg_a,F_buo, &
+      !$omp & rhs_stage_temp,rhs_stage_uphibar,rhs_stage_omg,rhs_stage_omg_full,rhs_r,rhs_i,rhsf_r,rhsf_i, &
+      !$omp & D1upFR,rhs_temp_FC,real_rhs_temp,rhs_omg_FC,rhs_omg,real_rhs_omg,rhs_psi, &
+      !$omp & real_rhs_psi,real_d_rhs_psi) default(shared)  
+         t_ref= OMP_GET_WTIME ()
+      !$omp do    
       do Nm=0,Nm_max  
 
          if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then !.or. &
@@ -134,7 +135,7 @@ contains
          do i=1,rk_stage-1 
             F_dtemp_d(:)=F_dtemp_d(:)+butcher_aD(rk_stage,i)*dtempdt1_d(i,Nm+1,:) 
          end do
-         
+
          !-- Apply weights to RHS using explicit Butcher's table: summation of (\hat{a}_i F_i) 
          do i=1,rk_stage-1 
             F_dtemp_a(:)=F_dtemp_a(:)+butcher_aA(rk_stage,i)*dtempdt1_a(i,Nm+1,:) 
@@ -155,17 +156,7 @@ contains
 
          rhs_r=real(rhs_stage_temp)
          rhs_i=aimag(rhs_stage_temp)
-         ! NEWTON ITERATION ------------------------------------
-         ! Calculate initial RHS for Newton iteration ----------
-        ! F_guess(:)=0.0_dp
-        ! do i=1,Nr_max
-        !    displacement=t_guess(rk_stage,Nm+1,i) - tFR(Nm+1,i)
-        ! end do
-        ! call rhs_construct_temp_d(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,t_guess(rk_stage,:,:),Nm,F_guess, &
-        !                         & time_scheme_type,Pr)
-        ! r_guess = -(displacement) + dt_array(1)*(F_dtemp_d + F_dtemp_a) + dt_array(1)*butcher_aD(rk_stage,rk_stage)* &
-        !             & F_guess
-
+         
          ! END NEWTON ITERATION --------------------------------        
 
          !******Solve for stage temperature CALL DGETRS A*vt=rhs ****************************
@@ -234,11 +225,11 @@ contains
 
             ! --- Construct RHS Buoyancy term which goes to vorticity solve ----- 
             do i=1,Nr_max
-               rhs2(i)= - (Ra/Pr)*(ii*real(Nm,kind=dp)*(r_radius(i))*tFR(Nm+1,i))
+               rhs_buo(rk_stage,Nm+1,i)= - (Ra/Pr)*(ii*real(Nm,kind=dp)*(r_radius(i))*tFR(Nm+1,i))
                        ! buoyancy term
             end do
         
-            rhs_buo(rk_stage,Nm+1,:) = rhs2(:) ! RHS buoyancy term 
+            !rhs_buo(rk_stage,Nm+1,:) = rhs2(:) ! RHS buoyancy term 
             !-------------------------------------------------------------------- 
 
             !-- Apply weights to RHS using implicit Butcher's table: summation of (a_i F_i) 
@@ -254,7 +245,6 @@ contains
             !-- Apply weights to RHS BUO using implicit Butcher's table: summation of (a_i Fbuo_i) 
             do i=1,rk_stage ! Here the loop for full rk_stage as we use the current stage Temperature to construct buoyancy
               F_buo(:)=F_buo(:)+butcher_aD(rk_stage,i)*rhs_buo(i,Nm+1,:) 
-              !F_buo(:)=F_buo(:)+butcher_aA(rk_stage,i)*rhs_buo(i,Nm+1,:) 
             end do
 
             !-- RHS omg = Y_0 + dt * summation of (a_i * F_i) + summation of (\hat{a}_i F_i) + summation of (a_i * Fbuo_i)
@@ -269,15 +259,15 @@ contains
             end do
             !------------------------------------------------------- 
 
-            rhf_r=real(rhs_stage_omg_full)
-            rhf_i=aimag(rhs_stage_omg_full)
+            rhsf_r=real(rhs_stage_omg_full)
+            rhsf_i=aimag(rhs_stage_omg_full)
 
             !**************************** CALL DGETRS AF*vf=rhsf **************************
-            call matsolve(TRANS, Nr_max2, AF_all(:,:,Nm+1), IPIV2(:,Nm+1), rhf_r, rhf_i,INFO2)
+            call matsolve(TRANS, Nr_max2, AF_all(:,:,Nm+1), IPIV2(:,Nm+1), rhsf_r, rhsf_i,INFO2)
             !******************************************************************************
 
             do i=1,2*Nr_max
-              rhs_omg_FC(i)=cmplx(rhf_r(i),rhf_i(i),kind=dp)
+              rhs_omg_FC(i)=cmplx(rhsf_r(i),rhsf_i(i),kind=dp)
             end do
             
             do i=1,Nr_max
@@ -307,6 +297,10 @@ contains
 
          end if 
       end do
+      !$omp end do
+         t_final= OMP_GET_WTIME ()
+      !$omp end parallel
+        print *, t_final - t_ref
       
       !-------------- End loop over the Fourier modes --------------------------------------------------------------
 
@@ -326,6 +320,7 @@ contains
       complex(kind=dp), intent(in) :: uphi_omg_FR(Nm_max+1,Nr_max),ur_omg_FR(Nm_max+1,Nr_max)
       integer, intent(in) :: rk_stage
       integer :: Nm ! Nm -> azimuthal 'n' loop over Fourier modes
+      real(kind=dp) :: t_ref, t_final
       
       rhs(:)=0.0_dp 
       rhs1(:)=0.0_dp 
@@ -334,10 +329,14 @@ contains
       rhs_vort(:)=0.0_dp
       rhs_b(:)=0.0_dp
       !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
+      !$omp parallel & 
+      !$omp private(Nm,rhs,rhs_uphi,rhs_vort,rhs_b) default(shared)  
+         t_ref= OMP_GET_WTIME ()
+      !$omp do    
       do Nm=0,Nm_max  
 
          !----------- Call RHS construct for temperature advection ----------
-         call rhs_construct_temp_a(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR,Nm,rhs, &
+         call rhs_construct_temp_a(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR(Nm+1,:),Nm,rhs, &
                                  & time_scheme_type)
          
          dtempdt1_a(rk_stage,Nm+1,:) = rhs(:)
@@ -345,7 +344,7 @@ contains
 
          rhs(:)=0.0_dp 
          !----------- Call RHS construct for temperature diffusion ----------
-         call rhs_construct_temp_d(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR,Nm,rhs, &
+         call rhs_construct_temp_d(Nm_max,Nr_max,tFR(Nm+1,:),Nm,rhs, &
                                  & time_scheme_type,Pr)
          
          dtempdt1_d(rk_stage,Nm+1,:) = rhs(:)
@@ -371,7 +370,7 @@ contains
          else
 
             !----------- Call RHS construct for vorticity advection ------------
-            call rhs_construct_vort_a(Nm_max,Nr_max,uphi_omg_FR,ur_omg_FR,omgFR, &
+            call rhs_construct_vort_a(Nm_max,Nr_max,uphi_omg_FR,ur_omg_FR,omgFR(Nm+1,:), &
                                     & Nm,rhs1,rhsf,time_scheme_type,rhs_vort) 
 
             domgdt1_a(rk_stage,Nm+1,:) = rhs_vort(:)
@@ -379,7 +378,7 @@ contains
             rhs_vort(:)=0.0_dp
 
             !----------- Call RHS construct for vorticity diffusion ------------
-            call rhs_construct_vort_d(Nm_max,Nr_max,uphi_omg_FR,ur_omg_FR,omgFR, &
+            call rhs_construct_vort_d(Nm_max,Nr_max,omgFR(Nm+1,:), &
                                     & Nm,rhs1,rhsf,time_scheme_type,rhs_vort) 
 
             domgdt1_d(rk_stage,Nm+1,:) = rhs_vort(:)
@@ -387,14 +386,18 @@ contains
             rhs_b(:)=0.0_dp
             if (rk_stage==1) then
                !----------- Call RHS construct for Buoyancy term ------------
-               call rhs_construct_buo(Nm_max,Nr_max,Ra,Pr,uphi_omg_FR,ur_omg_FR,omgFR, &
-                                       & Nm,rhs1,rhsf,time_scheme_type,rhs_b,tFR) 
+               call rhs_construct_buo(Nm_max,Nr_max,Ra,Pr,uphi_omg_FR,ur_omg_FR,omgFR(Nm+1,:), &
+                                       & Nm,time_scheme_type,rhs_b,tFR(Nm+1,:)) 
 
                rhs_buo(rk_stage,Nm+1,:) = rhs_b(:)
                !-------------------------------------------------------------
             end if
          end if
       end do
+      !$omp end do
+        t_final= OMP_GET_WTIME ()
+      !$omp end parallel
+        print *, t_final - t_ref
 
       !-------------- End loop over the Fourier modes --------------------------------------------------------------
 
@@ -411,17 +414,21 @@ contains
       integer :: i,Nm,INFO1 ! Nm -> azimuthal 'n' loop over Fourier modes
       complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp(Nr_max), F_duphibar(Nr_max), F_domg(Nr_max)
       complex(kind=dp) :: D1upFR(Nr_max) 
+      real(kind=dp) :: t_ref, t_final
 
       if ( ( .not. ars_eqn_check_A ) .or. ( .not. ars_eqn_check_D ) ) then ! If not satisfying equation (2.3) in ARS_97 paper
          !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
+         !$omp parallel & 
+         !$omp private(Nm,i,F_dtemp,F_duphibar,F_domg, &
+         !$omp & rhs_r,rhs_i,rhsf_r,rhsf_i, &
+         !$omp & D1upFR,rhs_psi, &
+         !$omp & real_rhs_psi,real_d_rhs_psi) default(shared)  
+         t_ref= OMP_GET_WTIME ()
+         !$omp do     
          do Nm=0,Nm_max  
             F_dtemp(:)=0.0_dp 
             F_duphibar(:)=0.0_dp 
             F_domg(:)=0.0_dp 
-            dpsi_rmin = 0.0_dp
-            d2psi_rmin = 0.0_dp
-            dpsi_rmax = 0.0_dp
-            d2psi_rmax = 0.0_dp
 
             !-- Apply weights to RHS using Butcher's table: summation of (b_i F_i) + summation of (\hat{b}_i F_i) 
             do i=1,n_order_tscheme_exp
@@ -429,6 +436,7 @@ contains
             end do
          
             !-- y_n = y_(n-1) + dt * summation of (b_i * F_i) -------------------------
+
             temp_spec(Nm+1,:) = temp_spec(Nm+1,:) + dt*F_dtemp
 
             if (Nm==0) then
@@ -492,6 +500,10 @@ contains
             end if
 
          end do
+         !$omp end do
+        t_final= OMP_GET_WTIME ()
+      !$omp end parallel
+        print *, t_final - t_ref
          
          tFR=temp_spec ! update tFR here
          omgFR=omg_spec ! update omgFR here

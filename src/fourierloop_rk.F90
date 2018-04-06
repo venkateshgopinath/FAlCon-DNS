@@ -81,13 +81,12 @@ contains
       complex(kind=dp) :: D1upFR(Nr_max)
       integer :: i,Nm,INFO1 ! Nm -> azimuthal 'n' loop over Fourier modes
       complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp(Nr_max), F_domg(Nr_max), F_duphi_bar(Nr_max)
-      real(kind=dp) :: t_ref, t_final
 
          call rhs_update_wts_exp(time_scheme_imp,time_scheme_exp,wt_rhs_tscheme_exp,n_order_tscheme_exp)
         
 !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
          !$omp parallel & 
-         !$omp private(Nm,F_dtemp,F_duphi_bar,F_domg,dpsi_rmin,d2psi_rmin,dpsi_rmax,d2psi_rmax, &
+         !$omp private(Nm,i,F_dtemp,F_duphi_bar,F_domg,dpsi_rmin,d2psi_rmin,dpsi_rmax,d2psi_rmax, &
                !$omp & rhs_r,rhs_i,D1upFR,rhs_exp_uphi_bar,real_rhs_psi,real_d_rhs_psi, &
                !$omp & real_d2_rhs_psi,rhs_psi) default(shared)  
          !$omp do    
@@ -211,7 +210,6 @@ contains
          end do
          !$omp end do
          !$omp end parallel
-
        
 !-------------- End loop over the Fourier modes --------------------------------------------------------------
 
