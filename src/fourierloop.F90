@@ -4,23 +4,22 @@ module fourierloop
    use constants, only: ii
    use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD1D2
    use init, only: TFC, tFR, t2FR, omgFR, temp_spec, omg_spec, upFC, psii, upFR, urFR, startmatbuild, &
-                   & finishmatbuild, finishmatbuild, time_matbuild, r_radius,dt_new, tmp_rhs_exp_temp
+                   & finishmatbuild, finishmatbuild, time_matbuild, r_radius,dt_new, tmp_rhs_exp_uphi_bar
    use mat_assembly, only: AT_all, AF_all, IPIV1, IPIV2, mat_build, A_uphi_all, IPIV_uphi
    use algebra, only: matsolve, matsolve_real
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, wt_rhs_tscheme_exp, n_order_tscheme_imp, &
-                          & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, dt_array, rhs_exp_temp
+                          & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, dt_array, &
+                          & rhs_exp_uphi_bar
    use rhs_create, only: rhs_construct_temp, rhs_construct_vort, rhs_construct_uphi_bar   
 
    implicit none
 
    private 
 
-   complex(kind=dp), allocatable :: real_rhs_temp(:)
-   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(:), real_rhs_omg(:) 
-   complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(:) 
-   complex(kind=dp), allocatable :: rhs1(:), rhs(:), rhsf(:)
-   real(kind=dp), allocatable :: rhs_uphi(:)
-   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhsf_r(:), rhsf_i(:)
+   !complex(kind=dp), allocatable :: real_rhs_temp(:)
+   !complex(kind=dp), allocatable :: rhs_omg(:), real_rhs_omg(:) 
+   !complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(:) 
+   !real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhsf_r(:), rhsf_i(:)
    character :: TRANS='N'
 
    public :: allocate_fourierloop_imex, deallocate_fourierloop_imex, Nm_maxLOOP
@@ -31,19 +30,17 @@ contains
 
       integer, intent(in) :: Nr_max 
         
-      allocate( real_rhs_temp(Nr_max) )
-      allocate( rhs_omg(Nr_max),rhs_psi(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max),real_d_rhs_psi(Nr_max) )
-      allocate( rhs1(Nr_max), rhs(Nr_max), rhsf(2*Nr_max), rhs_uphi(Nr_max) )  
-      allocate( rhs_r(Nr_max), rhs_i(Nr_max), rhsf_r(2*Nr_max), rhsf_i(2*Nr_max) )  
+      !allocate( real_rhs_temp(Nr_max) )
+      !allocate( rhs_omg(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max),real_d_rhs_psi(Nr_max) )
+      !allocate( rhs_r(Nr_max), rhs_i(Nr_max), rhsf_r(2*Nr_max), rhsf_i(2*Nr_max) )  
    
    end subroutine allocate_fourierloop_imex
 
    subroutine deallocate_fourierloop_imex
       
-      deallocate( rhs_r, rhs_i, rhsf_r, rhsf_i )  
-      deallocate( rhs1, rhs, rhsf, rhs_uphi )  
-      deallocate( rhs_omg,rhs_psi,real_rhs_omg,real_rhs_psi,real_d_rhs_psi )
-      deallocate( real_rhs_temp )
+      !deallocate( rhs_r, rhs_i, rhsf_r, rhsf_i )  
+      !deallocate( rhs_omg,real_rhs_omg,real_rhs_psi,real_d_rhs_psi )
+      !deallocate( real_rhs_temp )
     
    end subroutine deallocate_fourierloop_imex
 
@@ -60,10 +57,13 @@ contains
       character(len=100), intent(in) :: time_scheme_exp
       complex(kind=dp), intent(in) :: uphi_temp_FR(Nm_max+1,Nr_max),ur_temp_FR(Nm_max+1,Nr_max) 
       complex(kind=dp), intent(in) :: uphi_omg_FR(Nm_max+1,Nr_max),ur_omg_FR(Nm_max+1,Nr_max)
+      !Local variables -----------------------------  
       complex(kind=dp) :: D1upFR(Nr_max)
+      complex(kind=dp) :: rhs(Nr_max),rhsf(2*Nr_max),rhs_psi(Nr_max),real_rhs_temp(Nr_max)
+      real(kind=dp) :: rhs_uphi(Nr_max)
+      real(kind=dp) :: rhs_r(Nr_max), rhs_i(Nr_max), rhsf_r(2*Nr_max), rhsf_i(2*Nr_max)
+      complex(kind=dp) :: rhs_omg(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max),real_d_rhs_psi(Nr_max)
       integer :: i,Nm,INFO1,INFO2,Nr_max2 ! Nm -> azimuthal 'n' loop over Fourier modes
-      complex(kind=dp) :: tspec(Nr_max)
-      complex(kind=dp) :: tmp_exp_temp(n_order_tscheme_exp,Nr_max)
       real(kind=dp) :: t_ref, t_final
 
       ! Update RHS weights ----------
@@ -80,14 +80,14 @@ contains
       end if !---------------------------------------------------------------------------------------
       
       Nr_max2=2*Nr_max
-      rhs1(:)=0.0_dp
       rhs(:)=0.0_dp
       rhs_r(:)=0.0_dp
       rhs_i(:)=0.0_dp
+      rhs_uphi(:)=0.0_dp
 !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
       !$omp parallel & 
       !$omp private(Nm,i,rhs,rhs_r,rhs_i,rhsf_r,rhsf_i,TFC,real_rhs_temp,rhs_uphi,D1upFR,real_rhs_omg,real_rhs_psi, & 
-      !$omp & real_d_rhs_psi,rhsf,rhs_omg,rhs_psi) default(shared)  
+      !$omp & real_d_rhs_psi,rhsf,rhs_omg,rhs_psi,rhs_exp_uphi_bar) default(shared)  
          t_ref= OMP_GET_WTIME ()
       !$omp do   
       do Nm=0,Nm_max   
@@ -154,10 +154,10 @@ contains
          ! ----------------------------------------------------------------------------------------------------   
          else
             !----------- Call RHS construct for vorticity ----------
-            call rhs_construct_vort(Nm_max,Nr_max,dt_new,Ra,Pr,uphi_omg_FR,ur_omg_FR, n_step,omg_spec, &
-                                    & Nm,rhs1,rhsf, n_restart,wt_rhs_tscheme_imp, &
+            call rhs_construct_vort(Nm_max,Nr_max,dt_new,Ra,Pr,uphi_omg_FR,ur_omg_FR,n_step,omg_spec(Nm+1,:), &
+                                    & Nm,rhsf,n_restart,wt_rhs_tscheme_imp, &
                                     & wt_rhs_tscheme_exp,n_order_tscheme_imp,n_order_tscheme_exp, &
-                                    & time_scheme_imp,tFR)
+                                    & time_scheme_imp,tFR(Nm+1,:))
        
             !------------------------------------------------------- 
 
@@ -198,7 +198,7 @@ contains
       !$omp end do
          t_final= OMP_GET_WTIME ()
       !$omp end parallel
-        print *, t_final - t_ref
+        !print *, t_final - t_ref
 !-------------- End loop over the Fourier modes -------------------------------------------------------------------------
 
    end subroutine Nm_maxLOOP

@@ -23,7 +23,7 @@ module fourierloop_imexrk
    private 
 
    complex(kind=dp), allocatable :: real_rhs_temp(:)
-   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(:), real_rhs_omg(:) 
+   complex(kind=dp), allocatable :: rhs_omg(:), real_rhs_omg(:) 
    complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(:), real_d2_rhs_psi(:) 
    complex(kind=dp), allocatable :: rhs1(:), rhs2(:), rhs(:), rhsf(:), rhs_vort(:), rhs_b(:)
    real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhsf_r(:), rhsf_i(:)
@@ -47,7 +47,7 @@ contains
       integer, intent(in) :: Nm_max 
 
       allocate( real_rhs_temp(Nr_max) )
-      allocate( rhs_omg(Nr_max),rhs_psi(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max) )
+      allocate( rhs_omg(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max) )
       allocate( real_d_rhs_psi(Nr_max), real_d2_rhs_psi(Nr_max) )
       allocate( rhs1(Nr_max), rhs2(Nr_max), rhs(Nr_max), rhsf(2*Nr_max), rhs_vort(Nr_max), rhs_b(Nr_max) )  
       allocate( rhs_r(Nr_max), rhs_i(Nr_max), rhsf_r(2*Nr_max), rhsf_i(2*Nr_max) )
@@ -67,7 +67,7 @@ contains
       deallocate( dtempdt1_a, dtempdt1_d, duphibar_dt1_a, duphibar_dt1_d, domgdt1_a, domgdt1_d )
       deallocate( rhs_r, rhs_i, rhsf_r, rhsf_i )  
       deallocate( rhs1, rhs2, rhs,rhsf, rhs_uphi, rhs_vort, rhs_buo )  
-      deallocate( rhs_omg,rhs_psi,real_rhs_omg,real_rhs_psi,real_d_rhs_psi, real_d2_rhs_psi )
+      deallocate( rhs_omg,real_rhs_omg,real_rhs_psi,real_d_rhs_psi, real_d2_rhs_psi )
       deallocate( real_rhs_temp )
     
    end subroutine deallocate_fourierloop_imexrk
@@ -84,7 +84,7 @@ contains
       complex(kind=dp), intent(out) :: tFR(Nm_max+1,Nr_max),omgFR(Nm_max+1,Nr_max) 
       complex(kind=dp), intent(out) :: psii(Nm_max+1,Nr_max)
       complex(kind=dp), intent(out) :: upFR(Nm_max+1,Nr_max), urFR(Nm_max+1,Nr_max)
-
+      !Local variables ---------------------------------------------------------
       complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp_d(Nr_max), F_domg_d(Nr_max)
       complex(kind=dp) :: F_dtemp_a(Nr_max), F_domg_a(Nr_max), F_buo(Nr_max)
       complex(kind=dp) :: F_duphibar_a(Nr_max), F_duphibar_d(Nr_max)
@@ -300,7 +300,7 @@ contains
       !$omp end do
          t_final= OMP_GET_WTIME ()
       !$omp end parallel
-        print *, t_final - t_ref
+        !print *, t_final - t_ref
       
       !-------------- End loop over the Fourier modes --------------------------------------------------------------
 
@@ -397,7 +397,7 @@ contains
       !$omp end do
         t_final= OMP_GET_WTIME ()
       !$omp end parallel
-        print *, t_final - t_ref
+        !print *, t_final - t_ref
 
       !-------------- End loop over the Fourier modes --------------------------------------------------------------
 
@@ -503,7 +503,7 @@ contains
          !$omp end do
         t_final= OMP_GET_WTIME ()
       !$omp end parallel
-        print *, t_final - t_ref
+        !print *, t_final - t_ref
          
          tFR=temp_spec ! update tFR here
          omgFR=omg_spec ! update omgFR here

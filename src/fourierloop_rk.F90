@@ -19,7 +19,7 @@ module fourierloop_rk
    private 
 
    complex(kind=dp), allocatable :: real_rhs_temp(:)
-   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(:), real_rhs_omg(:)
+   complex(kind=dp), allocatable :: rhs_omg(:), real_rhs_omg(:)
    real(kind=dp), allocatable :: rhs_uphi(:)
    complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(:), real_d2_rhs_psi(:) 
    complex(kind=dp), allocatable :: rhs1(:), rhs(:), rhsf(:), rhs_vort(:)
@@ -44,7 +44,7 @@ contains
       integer, intent(in) :: Nm_max 
 
       allocate( real_rhs_temp(Nr_max) )
-      allocate( rhs_omg(Nr_max),rhs_psi(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max) )
+      allocate( rhs_omg(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max) )
       allocate( rhs_uphi(Nr_max) )
       allocate( real_d_rhs_psi(Nr_max), real_d2_rhs_psi(Nr_max) )
       allocate( rhs1(Nr_max), rhs(Nr_max), rhsf(2*Nr_max), rhs_vort(Nr_max) )  
@@ -61,7 +61,7 @@ contains
       deallocate( rhs_r, rhs_i, rhf_r, rhf_i )  
       deallocate( rhs1, rhs,rhsf, rhs_vort )  
       deallocate( rhs_uphi )
-      deallocate( rhs_omg,rhs_psi,real_rhs_omg,real_rhs_psi,real_d_rhs_psi, real_d2_rhs_psi )
+      deallocate( rhs_omg,real_rhs_omg,real_rhs_psi,real_d_rhs_psi, real_d2_rhs_psi )
       deallocate( real_rhs_temp )
     
    end subroutine deallocate_fourierloop_rk
@@ -77,7 +77,7 @@ contains
       complex(kind=dp), intent(out) :: tFR(Nm_max+1,Nr_max),omgFR(Nm_max+1,Nr_max) 
       complex(kind=dp), intent(out) :: psii(Nm_max+1,Nr_max)
       complex(kind=dp), intent(out) :: upFR(Nm_max+1,Nr_max), urFR(Nm_max+1,Nr_max)
-
+      !Local variables ---------------------------------------------------
       complex(kind=dp) :: D1upFR(Nr_max)
       integer :: i,Nm,INFO1 ! Nm -> azimuthal 'n' loop over Fourier modes
       complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp(Nr_max), F_domg(Nr_max), F_duphi_bar(Nr_max)

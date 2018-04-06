@@ -128,7 +128,7 @@ contains
 
    end subroutine rhs_construct_temp
 
-   subroutine rhs_construct_vort(Nm_max,Nr_max,dt,Ra,Pr,uphi_omg_FR,ur_omg_FR,n_step,omg_specp,Nm,rhs1,rhsf, &
+   subroutine rhs_construct_vort(Nm_max,Nr_max,dt,Ra,Pr,uphi_omg_FR,ur_omg_FR,n_step,omg_specp,Nm,rhsf, &
                                  & n_restart,wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
                                  & n_order_tscheme_exp,time_scheme_imp,tFRp) 
 
@@ -143,12 +143,11 @@ contains
       real(kind=dp), intent(in) :: dt
       real(kind=dp), intent(in) :: Ra
       real(kind=dp), intent(in) :: Pr  
-      complex(kind=dp), intent(in) :: omg_specp(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: omg_specp(Nr_max)
       integer, intent(in) :: Nm
       complex(kind=dp), intent(in) :: uphi_omg_FR(Nm_max+1,Nr_max),ur_omg_FR(Nm_max+1,Nr_max)
       integer :: i, i_order
-      complex(kind=dp), intent(in) :: rhs1(Nr_max) 
-      complex(kind=dp), intent(in) :: tFRp(Nm_max+1,Nr_max) 
+      complex(kind=dp), intent(in) :: tFRp(Nr_max) 
       complex(kind=dp), intent(out) :: rhsf(2*Nr_max) 
       ! Local variables --------------------------
       complex(kind=dp) :: ur_omg_rad(Nr_max)
@@ -190,9 +189,9 @@ contains
 
       call chebtransform(Nr_max,ur_omg_rad,ur_omg_rad_spec)
 
-      call chebinvtran(Nr_max,omg_specp(Nm+1,:),real_omg_rad)
+      call chebinvtran(Nr_max,omg_specp,real_omg_rad)
 
-      call chebinvtranD1D2(Nr_max,omg_specp(Nm+1,:),real_d_omg_rad,real_d2_omg_rad)
+      call chebinvtranD1D2(Nr_max,omg_specp,real_d_omg_rad,real_d2_omg_rad)
       
       call chebinvtranD1(Nr_max,ur_omg_rad_spec,real_d_ur_omg_rad(:)) 
       
@@ -207,7 +206,7 @@ contains
                                      & real_d_omg_rad(i)+real_d2_omg_rad(i)-real(Nm,kind=dp)* &
                                      & real(Nm,kind=dp)*r_radius2(i)*real_omg_rad(i)) - (Ra/Pr)*dt*0.5_dp* &
                                      &(ii*real(Nm,kind=dp)*(r_radius( &
-                                        & i))*tFRp(Nm+1,i) + ii*real(Nm,kind=dp)*(r_radius(i))*rhs_imp_temp(1,Nm+1,i)) 
+                                        & i))*tFRp(i) + ii*real(Nm,kind=dp)*(r_radius(i))*rhs_imp_temp(1,Nm+1,i)) 
                                      ! Buoyancy is treated implicitly as Ra*Pr*dt*0.5*(dT/dphi_current + dT/dpi_old)
                                      ! (tFRp is current as it is coming after solving the temperature equation and
                                      !  rhs_imp_temp is the previous time step's temperature)  
@@ -227,14 +226,14 @@ contains
       else if (time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then
             
          do i=1,Nr_max
-            rhs_imp_vort(1,Nm+1,i)=omgFR(Nm+1,i) 
+            rhs_imp_vort(1,Nm+1,i)=omg_specp(i) 
 
             do i_order=1,n_order_tscheme_imp
                rhs2(i) = rhs2(i) + wt_rhs_tscheme_imp(i_order)*(rhs_imp_vort(i_order,Nm+1,i))
             end do
 
             rhs_buo_term(1,Nm+1,i)=-(Ra/Pr)*(ii*real(Nm,kind=dp)*(r_radius( &
-                                      & i))*tFRp(Nm+1,i))
+                                      & i))*tFRp(i))
             !rhs_buo_term(1,Nm+1,i)=(Ra/Pr)*(ii*real(Nm,kind=dp)*(r_radius( &
             !                          & i))*rhs_imp_temp(1,Nm+1,i))
             
@@ -264,7 +263,7 @@ contains
 
       do i=1,Nr_max
 
-         rhsf(i)=rhs1(i)
+         rhsf(i)=0.0_dp
          rhsf(i+Nr_max)=rhs2(i)
 
       end do
@@ -377,11 +376,12 @@ contains
             rhs_uphi(i) = real(rhs_imp_uphi_bar(1,i))+(1.0_dp-wt_rhs_tscheme_imp(1))*dt* &
                                    & real(u_diff(i)) ! Diffusive part
             
-            rhs_exp_uphi_bar(1,i)=(ur_d1up_FR(i)+r_radius(i)*ur_up_FR(i)) ! Advective part in Fourier-Real space
+            !rhs_exp_uphi_bar(1,i)=(ur_d1up_FR(i)+r_radius(i)*ur_up_FR(i)) ! Advective part in Fourier-Real space
             !rhs_exp_uphi_bar(1,i)=(ur_d1up(i)+r_radius(i)*ur_up(i)) ! Advective part in Physical space (uncomment for checking)
             !rhs_exp_uphi_bar(1,i)=(ur_omg_FR(i)) ! Advective part in Fourier-Real space
-            !rhs_exp_uphi_bar(1,i)=(ur_omg(i)) ! Advective part in Physical space (uncomment for checking)
-            
+            rhs_exp_uphi_bar(1,i)=(ur_omg(i)) ! Advective part in Physical space (uncomment for checking)
+           !( Should use physical space products as above with openmp because urFR,upFR are getting updated everywhere for all Nms )
+
             do i_order=1,n_order_tscheme_exp
                rhs_uphi(i) = rhs_uphi(i) - dt*(wt_rhs_tscheme_exp(i_order)*real(rhs_exp_uphi_bar(i_order,i))) 
             end do
