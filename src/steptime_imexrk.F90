@@ -98,11 +98,8 @@ contains
             call cpu_time(startsteptime)
          end if
         
-            dt_old=dt
-            dt_new=dt
-            dt_array(:)=dt
          !------------ Compute New dt by enforcing CFL ----------------- 
-         !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
+         call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
          !--------------------------------------------------------------
 
          if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then

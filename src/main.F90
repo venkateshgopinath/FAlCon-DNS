@@ -4,7 +4,8 @@
 ! method in the radial direction and Fourier method in the azimuthal direction.
  
  program maincode
-   !$ use OMP_LIB
+ !$ use OMP_LIB
+
  use init, only: startmain, finishmain
  use solver, only: solver_init, solver_run, solver_exit, solver_log 
   
@@ -12,12 +13,10 @@
 
  call solver_init   ! Initialize solver
 
- !call cpu_time(startmain)
  startmain = OMP_GET_WTIME () 
 
  call solver_run    ! Run the solver
 
- !call cpu_time(finishmain) 
  finishmain = OMP_GET_WTIME () 
          
  call solver_exit   ! Exit the solver and deallocate

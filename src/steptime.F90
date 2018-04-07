@@ -80,7 +80,7 @@ contains
       
       !--------- If restarting -----------------------------------------------
       if (l_restart) then
-         if (time_scheme_imp=='BDF1') then
+         if (time_scheme_imp=='BDF2') then
             ! n-1 step
             call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR1,omgFR1,upFR1,urFR1,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
                                & ur_omg_FR)
@@ -102,7 +102,7 @@ contains
                                        n_order_tscheme_exp-1) 
             !tmp_rhs_buo_term(1,:,:)=rhs_buo_term(n_order_tscheme_imp,:,:)
 
-         elseif (time_scheme_imp=='BDF1') then
+         elseif (time_scheme_imp=='BDF3') then
 
             ! n-2 step
             call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR1,omgFR1,upFR1,urFR1,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
@@ -150,8 +150,7 @@ contains
          if (n_step-n_restart==1) then
             dt_new=dt
          end if
-            dt_new=dt
-            dt_array(:)=dt
+
          if (n_step-n_restart>1) then
                    
             if (n_step-n_restart==2) then
@@ -171,7 +170,7 @@ contains
          end if 
 
          !------------ Compute New dt by enforcing CFL ----------------- 
-        ! call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
+         call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
          !--------------------------------------------------------------
 
          if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
