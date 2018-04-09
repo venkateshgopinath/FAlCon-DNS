@@ -52,9 +52,9 @@ contains
       !****************** PRODUCTS in real space (U.grad T) *************************** 
       
       !-------------Nr_max Loop begins -------------------------------------------------------------      
-      !!$omp parallel & 
-      !!$omp private(Nr,uphi_temp,ur_temp,uphi_omg,ur_omg) default(shared)  
-      !!$omp do    
+      !$omp parallel & 
+      !$omp private(Nr,uphi_temp,ur_temp,uphi_omg,ur_omg) default(shared)  
+      !$omp do    
       do Nr=1,Nr_max  
                           
          !Inverse fourier to get back real space variables
@@ -87,8 +87,8 @@ contains
          call forfft(Nm_max,Np_max,ur_omg,ur_omg_FR(:,Nr))
 
       end do
-      !!$omp end do
-      !!$omp end parallel
+      !$omp end do
+      !$omp end parallel
       !-------------Nr_max Loop ends-----------------------------------------------------------------      
 
    end subroutine Nr_maxLOOP
