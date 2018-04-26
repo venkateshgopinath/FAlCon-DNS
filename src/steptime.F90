@@ -150,7 +150,8 @@ contains
          if (n_step-n_restart==1) then
             dt_new=dt
          end if
-
+            dt_new=dt
+            dt_array(:)=dt
          if (n_step-n_restart>1) then
                    
             if (n_step-n_restart==2) then
@@ -170,7 +171,7 @@ contains
          end if 
 
          !------------ Compute New dt by enforcing CFL ----------------- 
-         call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
+         !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
          !--------------------------------------------------------------
 
          if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then

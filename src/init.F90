@@ -517,7 +517,7 @@ contains
             dt_array=dt_array_old
 
          end if
-         tot_time=tot_time+dt_new
+         !tot_time=tot_time+dt_new
 
          if (Nm_max_old==Nm_max .and. Nr_max_old==Nr_max) then
             tFR=tFRc
@@ -560,7 +560,7 @@ contains
             dt_array=dt_array_old
 
          end if
-         tot_time=tot_time+dt_new
+         !tot_time=tot_time+dt_new
 ! ----   ----------------------------------------------------------------------- 
 
 !----    If order of the schemes are different from before (Time scheme implicit) ----- 

@@ -97,14 +97,16 @@ contains
             dt_new=dt
             call cpu_time(startsteptime)
          end if
-        
+            dt_old=dt
+            dt_new=dt
+            dt_array(:)=dt 
          !------------ Compute New dt by enforcing CFL ----------------- 
-         call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
+         !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
          !--------------------------------------------------------------
 
-         if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
-            tot_time=tot_time+dt_new 
-         end if
+         !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
+         !   tot_time=tot_time+dt_new 
+         !end if
 
          do rk_stage=1,n_order_tscheme_exp ! LOOP for RK stages (rk_stage) 
                if (rk_stage>1) then
@@ -135,8 +137,8 @@ contains
          !--- Assembly of RK stages and calculation of variables at each time step----------------- 
          call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR)
          !------------------------------------------------------------------------------------------
+            tot_time=tot_time+dt_new 
 
-              ! print *, "heh", tFR(1,10), urFR(10,10)
          ! Calculate temperature in FC space at 0-mode --       
          call chebtransform(Nr_max,tFR(1,:),TFC)
          !-----------------------------------------------

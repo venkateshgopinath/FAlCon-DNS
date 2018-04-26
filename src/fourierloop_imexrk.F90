@@ -6,7 +6,7 @@ module fourierloop_imexrk
    use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD2, chebinvtranD1D2, t, D, D2
    use init, only: TFC, temp_spec,omg_spec,startmatbuild, &
                    & finishmatbuild, finishmatbuild, time_matbuild, r_radius, r_radius2, &
-                   & dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC
+                   & dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC, ur, omg
    use mat_assembly, only: LAPpsi_all, IPIV1, AT_all, AF_all, IPIV1, IPIV2, mat_build, IPIV1_lap, A_uphi_all, IPIV_uphi
    use algebra, only: matsolve
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, wt_rhs_tscheme_exp, & 
@@ -157,8 +157,6 @@ contains
          rhs_r=real(rhs_stage_temp)
          rhs_i=aimag(rhs_stage_temp)
          
-         ! END NEWTON ITERATION --------------------------------        
-
          !******Solve for stage temperature CALL DGETRS A*vt=rhs ****************************
          call matsolve(TRANS, Nr_max, AT_all(:,:,Nm+1), IPIV1(:,Nm+1), rhs_r, rhs_i,INFO1)
          !*********************************************************************************** 
@@ -197,23 +195,23 @@ contains
             rhs_stage_uphibar(Nr_max)=0.0_dp
 
             rhs_r=real(rhs_stage_uphibar)
-            rhs_i=aimag(rhs_stage_uphibar)
+            rhs_i=0.0_dp
 
             !******Solve for stage temperature CALL DGETRS A*vt=rhs ****************************
-            call matsolve(TRANS, Nr_max, A_uphi_all(:,:,Nm+1), IPIV_uphi(:,Nm+1), rhs_r, rhs_i,INFO1)
+            call matsolve(TRANS, Nr_max, A_uphi_all(:,:,1), IPIV_uphi(:,1), rhs_r, rhs_i,INFO1)
             !*********************************************************************************** 
 
             do i=1,Nr_max
-              upFC(Nm+1,i)=cmplx(rhs_r(i),rhs_i(i),kind=dp)
+              upFC(1,i)=cmplx(rhs_r(i),rhs_i(i),kind=dp)
             end do
 
-            call chebinvtran(Nr_max,upFC(Nm+1,:),upFR(Nm+1,:)) ! Update stage variable uphi_bar
-            call chebinvtranD1(Nr_max,upFC(Nm+1,:),D1upFR(:))
+            call chebinvtran(Nr_max,upFC(1,:),upFR(1,:)) ! Update stage variable uphi_bar
+            call chebinvtranD1(Nr_max,upFC(1,:),D1upFR(:))
 
-            urFR(Nm+1,:) = 0.0_dp 
+            urFR(1,:) = 0.0_dp 
 
             do i=1,Nr_max
-               omgFR(Nm+1,i)=upFR(Nm+1,i)*r_radius(i) + D1upFR(i)
+               omgFR(1,i)=upFR(1,i)*r_radius(i) + D1upFR(i)
             end do
 
             if (rk_stage==n_order_tscheme_exp) then ! STORE FOR RESTART WITH IMEX 
@@ -354,7 +352,7 @@ contains
 
             !----------- Call RHS construct for uphi_bar advection ----------
             call rhs_construct_uphibar_a(Nm_max,Nr_max,urFR,upFR,upFC,rhs_uphi, &
-                                    & time_scheme_type)
+                                    & time_scheme_type,ur,omg)
             
             duphibar_dt1_a(rk_stage,:) = rhs_uphi(:)
             !---------------------------------------------------------
@@ -448,15 +446,15 @@ contains
 
                !-- y_n = y_(n-1) + dt * summation of (b_i * F_i) -------------------------
                uphi_bar_spec(:) = uphi_bar_spec(:) + dt*F_duphibar
-               upFR(Nm+1,:) = uphi_bar_spec(:) ! update upFR here
+               upFR(1,:) = uphi_bar_spec(:) ! update upFR here
 
-               call chebtransform(Nr_max,uphi_bar_spec,upFC(Nm+1,:))
-               call chebinvtranD1(Nr_max,upFC(Nm+1,:),D1upFR(:))
+               call chebtransform(Nr_max,uphi_bar_spec,upFC(1,:))
+               call chebinvtranD1(Nr_max,upFC(1,:),D1upFR(:))
 
-               urFR(Nm+1,:) = 0.0_dp 
+               urFR(1,:) = 0.0_dp 
 
                do i=1,Nr_max
-                  omg_spec(Nm+1,i)=uphi_bar_spec(i)*r_radius(i) + D1upFR(i)
+                  omg_spec(1,i)=uphi_bar_spec(i)*r_radius(i) + D1upFR(i)
                end do
 
             else

@@ -18,6 +18,7 @@ module constants
    real(kind=dp), parameter :: sevenfourth = 7.0_dp/4.0_dp
    real(kind=dp), parameter :: fivesixth = 5.0_dp/6.0_dp
    real(kind=dp), parameter :: oneninth = 1.0_dp/9.0_dp
+   real(kind=dp), parameter :: twothird = 2.0_dp/3.0_dp
    real(kind=dp), parameter :: twoninth = 2.0_dp/9.0_dp
    real(kind=dp), parameter :: fourninth = 4.0_dp/9.0_dp
    real(kind=dp), parameter :: threehalf = 3.0_dp/2.0_dp

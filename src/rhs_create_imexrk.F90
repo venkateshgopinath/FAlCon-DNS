@@ -3,7 +3,7 @@ module rhs_create_imexrk
    use double
    use constants, only: ii
    use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD1D2, chebinvtranD2 
-   use init, only: r_radius, r_radius2, ur, up
+   use init, only: r_radius, r_radius2, up
    use timeschemes, only:  wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, rhs_exp_temp, rhs_exp_vort, &
                           & rhs_imp_temp, rhs_imp_vort, dt_array
 
@@ -100,7 +100,7 @@ contains
    end subroutine rhs_construct_temp_d  
 
    subroutine rhs_construct_uphibar_a(Nm_max,Nr_max,urFR_p,upFR_p,upFC,rhs_uphi, &
-                                 & time_scheme_type)
+                                 & time_scheme_type,urp,omgp)
              
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
@@ -108,10 +108,12 @@ contains
       complex(kind=dp), intent(in) :: urFR_p(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: upFR_p(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: upFC(Nm_max+1,Nr_max)
+      real(kind=dp), intent(in) :: urp(3*Nm_max,Nr_max)
+      real(kind=dp), intent(in) :: omgp(3*Nm_max,Nr_max)
       real(kind=dp), intent(out) :: rhs_uphi(Nr_max)
       
-      integer :: i, Nr, Nm
-      real(kind=dp) :: ur_up_FR(Nr_max)
+      integer :: i, Nr, j, Np, Np_max
+      real(kind=dp) :: ur_up_FR(Nr_max), ur_omg(Nr_max)
       real(kind=dp) :: ur_d1up_FR(Nr_max)
       complex(kind=dp) :: d1upFR(Nm_max+1,Nr_max)
 
@@ -121,31 +123,43 @@ contains
             rhs_uphi(i)=0.0_dp
          end do
 
-         do Nm=0,Nm_max
-            call chebinvtranD1(Nr_max,upFC(Nm+1,:),d1upFR(Nm+1,:))
+         do j=0,Nm_max
+            call chebinvtranD1(Nr_max,upFC(j+1,:),d1upFR(j+1,:))
          end do
 
          ur_up_FR(:)=0.0_dp
          ur_d1up_FR(:)=0.0_dp
+         ur_omg(:)=0.0_dp
+         ! ----- Product in physical space  -----------------
+         Np_max=3*Nm_max
+
+         do Nr=1,Nr_max
+            do Np=1,Np_max
+               ur_omg(Nr)=ur_omg(Nr) + urp(Np,Nr)*omgp(Np,Nr)
+            end do
+         end do 
+
+         ur_omg=ur_omg*(1.0_dp/Np_max)
 
          ! ---- Product in Fourier space using transformed variables urFR and upFR --------------------
          do Nr=1,Nr_max
-            do Nm=0,Nm_max
-               if (Nm==0) then
-                  ur_up_FR(Nr) = ur_up_FR(Nr) + real(urFR_p(Nm+1,Nr)*(upFR_p(Nm+1,Nr)))
-                  ur_d1up_FR(Nr) = ur_d1up_FR(Nr) + real(urFR_p(Nm+1,Nr)*(d1upFR(Nm+1,Nr)))
+            do j=0,Nm_max
+               if (j==0) then
+                  ur_up_FR(Nr) = ur_up_FR(Nr) + real(urFR_p(j+1,Nr)*(upFR_p(j+1,Nr))) 
+                  ur_d1up_FR(Nr) = ur_d1up_FR(Nr) + real(urFR_p(j+1,Nr)*(d1upFR(j+1,Nr)))
                else
-                  ur_up_FR(Nr)=ur_up_FR(Nr) + real(urFR_p(Nm+1,Nr)*conjg(upFR_p(Nm+1,Nr)) &
-                              & + conjg(urFR_p(Nm+1,Nr))*upFR_p(Nm+1,Nr))
-                  ur_d1up_FR(Nr)=ur_d1up_FR(Nr) + real(urFR_p(Nm+1,Nr)*conjg(d1upFR(Nm+1,Nr)) &
-                              & + conjg(urFR_p(Nm+1,Nr))*d1upFR(Nm+1,Nr))
+                  ur_up_FR(Nr)=ur_up_FR(Nr) + real(urFR_p(j+1,Nr)*conjg(upFR_p(j+1,Nr)) &
+                              & + conjg(urFR_p(j+1,Nr))*upFR_p(j+1,Nr))
+                  ur_d1up_FR(Nr)=ur_d1up_FR(Nr) + real(urFR_p(j+1,Nr)*conjg(d1upFR(j+1,Nr)) &
+                              & + conjg(urFR_p(j+1,Nr))*d1upFR(j+1,Nr))
                end if
             end do
          end do
 
          do i=1,Nr_max
 
-            rhs_uphi(i)=-(ur_d1up_FR(i)+r_radius(i)*ur_up_FR(i)) ! Advective part in Fourier-Real space
+            !rhs_uphi(i)=-(ur_d1up_FR(i)+r_radius(i)*ur_up_FR(i)) ! Advective part in Fourier-Real space
+            rhs_uphi(i)=-ur_omg(i) ! Advective part in Real space
 
          end do
 
@@ -173,14 +187,10 @@ contains
 
       if (time_scheme_type=='IMEXRK') then
      
-         do i=1,Nr_max
-            rhs_uphi(i)=0.0_dp
-         end do
+         rhs_uphi(:)=0.0_dp
           
-         do Nm=0,Nm_max 
-            call chebinvtranD1(Nr_max,upFC(Nm+1,:),d1upFR(Nm+1,:))
-            call chebinvtranD2(Nr_max,upFC(Nm+1,:),d2upFR(Nm+1,:))
-         end do
+         call chebinvtranD1(Nr_max,upFC(1,:),d1upFR(1,:))
+         call chebinvtranD2(Nr_max,upFC(1,:),d2upFR(1,:))
 
          ur_up_FR(:)=0.0_dp
          ur_d1up_FR(:)=0.0_dp
@@ -188,7 +198,7 @@ contains
 
          do i=1,Nr_max
 
-            rhs_uphi(i)= real(d2upFR(1,i) - r_radius2(i)*upFR_p(1,i) + r_radius(i)*d1upFR(1,i),kind=dp) ! Diffusive part in Fourier-Real space
+            rhs_uphi(i)= real(d2upFR(1,i) - r_radius2(i)*upFR_p(1,i) + r_radius(i)*d1upFR(1,i),kind=dp)  ! Diffusive part in Fourier-Real space
 
          end do
 

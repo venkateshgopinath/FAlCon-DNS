@@ -181,11 +181,12 @@ contains
 
       AF_all(:,:,n+1)=AF
       IPIV2(:,n+1)=PIV2
-
-      !***** CALL DGETRF factorization for A_uphi matrix
-      call factorize(Nr_max,A_uphi,PIV_uphi,INFO3)
-      A_uphi_all(:,:,n+1)=A_uphi
-      IPIV_uphi(:,n+1)=PIV_uphi
+      if (n==0) then
+         !***** CALL DGETRF factorization for A_uphi matrix
+         call factorize(Nr_max,A_uphi,PIV_uphi,INFO3)
+         A_uphi_all(:,:,1)=A_uphi
+         IPIV_uphi(:,1)=PIV_uphi
+      end if
                                     
       !end do ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
               ! for mat build outside the main Nm_max loop (when dt=constant)

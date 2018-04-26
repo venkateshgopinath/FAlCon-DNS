@@ -3,7 +3,7 @@ module timeschemes
    use double
    use constants, only: onesixth, onethird, onefourth, threefourth, threehalf, &
                         & half, eleveneighteenth, oneeighteenth, sevenfourth, fivesixth, &
-                        & fiveeighteenth, oneninth, twoninth, fourninth
+                        & fiveeighteenth, oneninth, twoninth, fourninth, twothird
    use namelists, only: dt
    implicit none
 
@@ -319,7 +319,7 @@ contains
 
             end select   
 
-         case ('BPR353') ! Boscarino, Pareschi and Russo (BPR353) 3rd order, SIAM 2013 paper
+         case ('BPR353') ! Boscarino, Pareschi and Russo (BPR353) 3rd order, SIAM Journal on Numerical Analysis 2013 paper
             n_order_tscheme_imp=5 
             allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
             allocate( butcher_bD(n_order_tscheme_imp) )
@@ -406,6 +406,50 @@ contains
                   allocate( wt_rhs_tscheme_exp(1) )  
 
          end select   
+
+         case ('CK222') ! Boscarino, Pareschi, Russo  (CK222) 2nd order, SIAM Journal on Numerical Analysis 2017 paper 
+            n_order_tscheme_imp=3 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expCK222')
+                  n_order_tscheme_exp=3
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select 
+
+         case ('BPR442') ! Boscarino, Pareschi, Russo  (BPR442) 2nd order, SIAM Journal on Numerical Analysis 2017 paper 
+            n_order_tscheme_imp=5 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expBPR442')
+                  n_order_tscheme_exp=5
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select   
 
       end select
        
@@ -637,6 +681,39 @@ contains
                                         [5,5],order=[2,1])
 
             butcher_bD = reshape([1.0_dp/6.0_dp, 1.0_dp/6.0_dp, -1.0_dp/6.0_dp, 4.0_dp/6.0_dp, 1.0_dp/6.0_dp],[5]) 
+
+            do i=1,n_order_tscheme_imp
+               if (butcher_aD(n_order_tscheme_imp,i)==butcher_bD(i)) then
+                  ars_eqn_check_D=.TRUE.
+               end if
+            end do
+
+         case ('CK222')
+
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, &
+                                  -onethird+sqrt(2.0_dp)*0.5_dp, 1.0_dp-sqrt(2.0_dp)*0.5_dp, 0.0_dp, &
+                   threefourth-sqrt(2.0_dp)*0.25_dp, -threefourth+sqrt(2.0_dp)*0.75_dp , 1.0_dp-sqrt(2.0_dp)*0.5_dp], &
+                                  [3,3],order=[2,1])  
+
+            butcher_bD = reshape([threefourth-sqrt(2.0_dp)*0.25_dp, -threefourth+sqrt(2.0_dp)*0.75_dp , &
+                  1.0_dp-sqrt(2.0_dp)*0.5_dp],[3]) 
+
+            do i=1,n_order_tscheme_imp
+               if (butcher_aD(n_order_tscheme_imp,i)==butcher_bD(i)) then
+                  ars_eqn_check_D=.TRUE.
+               end if
+            end do 
+
+         case ('BPR442')
+            
+            butcher_aD = reshape([ 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                   0.0_dp, 0.25_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                   0.0_dp, 0.0_dp, 0.25_dp, 0.0_dp, 0.0_dp, &
+                                   0.0_dp, 1.0_dp/24.0_dp, 11.0_dp/24.0_dp, 0.25_dp, 0.0_dp, &
+                                   0.0_dp, 11.0_dp/24.0_dp, 1.0_dp/6.0_dp, 1.0_dp/8.0_dp, 0.25_dp], &
+                                   [5,5],order=[2,1]) 
+
+            butcher_bD = reshape([0.0_dp, 11.0_dp/24.0_dp, 1.0_dp/6.0_dp, 1.0_dp/8.0_dp, 0.25_dp],[5]) 
 
             do i=1,n_order_tscheme_imp
                if (butcher_aD(n_order_tscheme_imp,i)==butcher_bD(i)) then
@@ -961,6 +1038,50 @@ contains
                   end do
 
             end select    
+
+         case ('CK222')
+ 
+            select case (time_scheme_exp)
+
+               case ('expCK222')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, &
+                                        twothird, 0.0_dp, 0.0_dp, &
+                                        0.25_dp, 0.75_dp, 0.0_dp], &
+                                        [3,3],order=[2,1])  
+
+                  butcher_bA = reshape([0.25_dp, 0.75_dp, 0.0_dp],[3]) 
+
+                  do i=1,n_order_tscheme_exp
+                     if (butcher_aA(n_order_tscheme_exp,i)==butcher_bA(i)) then
+                        ars_eqn_check_A=.TRUE.
+                     end if
+                  end do
+
+            end select
+
+         case ('BPR442')
+ 
+            select case (time_scheme_exp)
+
+               case ('expBPR442')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.25_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        13.0_dp/4.0_dp, -3.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.25_dp, 0.0_dp, 0.5_dp, 0.0_dp, 0.0_dp, &
+                                        0.0_dp, 1.0_dp/3.0_dp, 1.0_dp/6.0_dp, 0.5_dp, 0.0_dp], &
+                                        [5,5],order=[2,1])
+
+                  butcher_bA = reshape([0.0_dp, 1.0_dp/3.0_dp, 1.0_dp/6.0_dp, 0.5_dp, 0.0_dp],[5]) 
+
+                  do i=1,n_order_tscheme_exp
+                     if (butcher_aA(n_order_tscheme_exp,i)==butcher_bA(i)) then
+                        ars_eqn_check_A=.TRUE.
+                     end if
+                  end do
+
+            end select 
 
       end select 
 
