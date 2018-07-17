@@ -131,8 +131,8 @@ contains
                upFR(Nm+1,:) = uphi_bar_spec(:) + dt_array(1)*F_duphi_bar
 
                ! Apply BC for uphi_bar
-               !upFR(Nm+1,1)=0.0_dp
-               !upFR(Nm+1,Nr_max)=0.0_dp
+               upFR(Nm+1,1)=0.0_dp
+               upFR(Nm+1,Nr_max)=0.0_dp
 
                call chebtransform(Nr_max,upFR(Nm+1,:),upFC(Nm+1,:))
                call chebinvtranD1(Nr_max,upFC(Nm+1,:),D1upFR(:))
@@ -203,22 +203,8 @@ contains
                   ! --------------------------------------------------------------------------------------------------
                elseif (mBC=='SF') then
                   ! ------------ Use Lagrange polynomials for approximation of Stress-free boundary conditions ------------------- 
-                  !omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin + 2.0_dp*upFR(Nm+1,1)*dw_rmin(1))            ! Apply omega rmin BC 
-                  !omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax + 2.0_dp*upFR(Nm+1,Nr_max)*dw_rmax(1))  ! Apply omega rmax BC 
-                  !omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin + 2.0_dp*dpsi_rmin*dw_rmin(1))            ! Apply omega rmin BC 
-                  !omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax + 2.0_dp*dpsi_rmax*dw_rmax(1))  ! Apply omega rmax BC 
-                  !omg_spec(Nm+1,1)=-2.0_dp*r_radius(1)*(dpsi_rmin*(1.0_dp-w_rmin(1)) - upFR(Nm+1,1)*w_rmin(1))               ! Apply omega rmin BC 
-                  !omg_spec(Nm+1,Nr_max)=-2.0_dp*r_radius(Nr_max)*(dpsi_rmin*(1.0_dp-w_rmin(Nr_max)) - &
-                  !                     & upFR(Nm+1,Nr_max)*w_rmin(Nr_max))     ! Apply omega rmax BC 
                   omgFR(Nm+1,1)=-2.0_dp*r_radius(1)*dpsi_rmin               ! Apply omega rmin BC 
                   omgFR(Nm+1,Nr_max)=-2.0_dp*r_radius(Nr_max)*dpsi_rmax     ! Apply omega rmax BC 
-                  ! --------------------------------------------------------------------------------------------------
-                  !omgFR(Nm+1,1)=-2.0_dp*r_radius(1)*(dpsi_rmin-(d2psi_rmin-r_radius(1)*dpsi_rmin)*w_rmin(1))
-                  !omgFR(Nm+1,Nr_max)=-2.0_dp*r_radius(Nr_max)*(dpsi_rmax-(d2psi_rmax-r_radius(Nr_max)*dpsi_rmax)*w_rmax(1)) 
-                  !omgFR(Nm+1,1)=-1.0_dp*(d2psi_rmin-2.0_dp*(d2psi_rmin-r_radius(2)*dpsi_rmin)*dw_rmin(1) + &
-                  !                & r_radius(2)*(dpsi_rmin-(d2psi_rmin-r_radius(2)*dpsi_rmin)*w_rmin(1)))
-                  !omgFR(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax-2.0_dp*(d2psi_rmax-r_radius(Nr_max-1)*dpsi_rmax)*dw_rmax(1) + &
-                  !                & r_radius(Nr_max-1)*(dpsi_rmax-(d2psi_rmax-r_radius(Nr_max-1)*dpsi_rmax)*w_rmax(1)))
                end if 
 
                call chebtransform(Nr_max,upFR(Nm+1,:),upFC(Nm+1,:))
@@ -415,27 +401,11 @@ contains
                ! ------------ Use Lagrange polynomials for approximation of No-slip boundary conditions ------------------- 
                omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin)            ! Apply omega rmin BC 
                omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax)       ! Apply omega rmax BC 
-               !omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin)
-               !omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax)
                ! --------------------------------------------------------------------------------------------------
             elseif (mBC=='SF') then
                ! ------------ Use Lagrange polynomials for approximation of Stress-free boundary conditions ------------------- 
-               !omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin + 2.0_dp*upFR(Nm+1,1)*dw_rmin(1))            ! Apply omega rmin BC 
-               !omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax + 2.0_dp*upFR(Nm+1,Nr_max)*dw_rmax(1))  ! Apply omega rmax BC 
-               !omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin - 2.0_dp*dpsi_rmin*dw_rmin(1))            ! Apply omega rmin BC 
-               !omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax - 2.0_dp*dpsi_rmax*dw_rmax(1))  ! Apply omega rmax BC 
                omg_spec(Nm+1,1)=-2.0_dp*r_radius(1)*dpsi_rmin               ! Apply omega rmin BC 
                omg_spec(Nm+1,Nr_max)=-2.0_dp*r_radius(Nr_max)*dpsi_rmax     ! Apply omega rmax BC 
-               !omg_spec(Nm+1,1)=-2.0_dp*r_radius(1)*(dpsi_rmin*(1.0_dp-w_rmin(1)) + 0.0_dp*upFR(Nm+1,1)*w_rmin(1))               ! Apply omega rmin BC 
-               !omg_spec(Nm+1,Nr_max)=-2.0_dp*r_radius(Nr_max)*(dpsi_rmin*(1.0_dp-w_rmin(Nr_max)) + &
-               !                     & 0.0_dp*upFR(Nm+1,Nr_max)*w_rmin(Nr_max))     ! Apply omega rmax BC 
-               ! --------------------------------------------------------------------------------------------------
-               !omg_spec(Nm+1,1)=-2.0_dp*r_radius(1)*(dpsi_rmin-(d2psi_rmin-r_radius(1)*dpsi_rmin)*w_rmin(1))
-               !omg_spec(Nm+1,Nr_max)=-2.0_dp*r_radius(Nr_max)*(dpsi_rmax-(d2psi_rmax-r_radius(Nr_max)*dpsi_rmax)*w_rmax(Nr_max)) 
-               !omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin-2.0_dp*(d2psi_rmin-r_radius(2)*dpsi_rmin)*dw_rmin(1) + &
-               !                & r_radius(2)*(dpsi_rmin-(d2psi_rmin-r_radius(2)*dpsi_rmin)*w_rmin(1)))
-               !omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax-2.0_dp*(d2psi_rmax-r_radius(Nr_max-1)*dpsi_rmax)*dw_rmax(1) + &
-               !                & r_radius(Nr_max-1)*(dpsi_rmax-(d2psi_rmax-r_radius(Nr_max-1)*dpsi_rmax)*w_rmax(1)))
             end if 
 
             call chebtransform(Nr_max,upFR(Nm+1,:),upFC(Nm+1,:))
@@ -449,7 +419,6 @@ contains
       tFR=temp_spec
       omgFR=omg_spec
       upFR(1,:)=uphi_bar_spec(:) 
-      !print *, maxval(real(upFR(:,1))),maxval(aimag(upFR(:,1)))
 !-------------- End loop over the Fourier modes --------------------------------------------------------------
 
    end subroutine Assembly_stage
