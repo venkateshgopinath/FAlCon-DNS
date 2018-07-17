@@ -3,7 +3,7 @@ module rhs_create_imexrk
    use double
    use constants, only: ii
    use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD1D2, chebinvtranD2 
-   use init, only: r_radius, r_radius2, up
+   use init, only: r_radius, r_radius2, up, ur, omg
    use timeschemes, only:  wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, rhs_exp_temp, rhs_exp_vort, &
                           & rhs_imp_temp, rhs_imp_vort, dt_array
 
@@ -135,7 +135,8 @@ contains
 
          do Nr=1,Nr_max
             do Np=1,Np_max
-               ur_omg(Nr)=ur_omg(Nr) + urp(Np,Nr)*omgp(Np,Nr)
+               !ur_omg(Nr)=ur_omg(Nr) + urp(Np,Nr)*omgp(Np,Nr)
+               ur_omg(Nr)=ur_omg(Nr) + ur(Np,Nr)*omg(Np,Nr)
             end do
          end do 
 
@@ -247,8 +248,8 @@ contains
          
       end if
 
-      rhs2(1)=0.0_dp ! Apply BC for stream function in the vorticity equation
-      rhs2(Nr_max)=0.0_dp ! Apply BC for stream function in the vorticity equation
+      !rhs2(1)=0.0_dp ! Apply BC for stream function in the vorticity equation
+      !rhs2(Nr_max)=0.0_dp ! Apply BC for stream function in the vorticity equation
 
       do i=1,Nr_max
 
@@ -295,8 +296,8 @@ contains
          
       end if
 
-      rhs2(1)=0.0_dp ! Apply BC for stream function in the vorticity equation
-      rhs2(Nr_max)=0.0_dp ! Apply BC for stream function in the vorticity equation
+      !rhs2(1)=0.0_dp ! Apply BC for stream function in the vorticity equation
+      !rhs2(Nr_max)=0.0_dp ! Apply BC for stream function in the vorticity equation
 
       do i=1,Nr_max
 
@@ -335,8 +336,8 @@ contains
          
       end if
 
-      rhs2(1)=0.0_dp ! Apply BC for stream function in the vorticity equation
-      rhs2(Nr_max)=0.0_dp ! Apply BC for stream function in the vorticity equation
+      !rhs2(1)=0.0_dp ! Apply BC for stream function in the vorticity equation
+      !rhs2(Nr_max)=0.0_dp ! Apply BC for stream function in the vorticity equation
 
    end subroutine rhs_construct_buo
 

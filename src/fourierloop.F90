@@ -2,9 +2,10 @@ module fourierloop
    !$ use OMP_LIB
    use double
    use constants, only: ii
-   use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD1D2
+   use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD1D2, chebinvtranD2 
    use init, only: TFC, tFR, t2FR, omgFR, temp_spec, omg_spec, upFC, psii, upFR, urFR, startmatbuild, &
-                   & finishmatbuild, finishmatbuild, time_matbuild, r_radius,dt_new, tmp_rhs_exp_uphi_bar
+                   & finishmatbuild, finishmatbuild, time_matbuild, r_radius,dt_new, tmp_rhs_exp_uphi_bar, &
+                   & r_radius, r_radius2, omgFR_check
    use mat_assembly, only: AT_all, AF_all, IPIV1, IPIV2, mat_build, A_uphi_all, IPIV_uphi
    use algebra, only: matsolve, matsolve_real
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, wt_rhs_tscheme_exp, n_order_tscheme_imp, &
@@ -45,13 +46,14 @@ contains
    end subroutine deallocate_fourierloop_imex
 
    subroutine Nm_maxLOOP(Nm_max,Nr_max,Ra,Pr,mBC,uphi_temp_FR,ur_temp_FR,uphi_omg_FR,ur_omg_FR,n_step,n_restart,& 
-                     & time_scheme_imp, time_scheme_exp)
+                     & time_scheme_imp, time_scheme_exp,l_restart)
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       integer, intent(in) :: n_step, n_restart
       real(kind=dp), intent(in) :: Ra
       real(kind=dp), intent(in) :: Pr  
+      logical, intent(in) :: l_restart
       character(len=100), intent(in) :: mBC  
       character(len=100), intent(in) :: time_scheme_imp
       character(len=100), intent(in) :: time_scheme_exp
@@ -63,6 +65,8 @@ contains
       real(kind=dp) :: rhs_uphi(Nr_max)
       real(kind=dp) :: rhs_r(Nr_max), rhs_i(Nr_max), rhsf_r(2*Nr_max), rhsf_i(2*Nr_max)
       complex(kind=dp) :: rhs_omg(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max),real_d_rhs_psi(Nr_max)
+      complex(kind=dp) :: real_d2_rhs_psi(Nr_max)
+      complex(kind=dp) :: omgFR_check(Nr_max)
       integer :: i,Nm,INFO1,INFO2,Nr_max2 ! Nm -> azimuthal 'n' loop over Fourier modes
       real(kind=dp) :: t_ref, t_final
 
@@ -86,7 +90,7 @@ contains
       rhs_uphi(:)=0.0_dp
 !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
       !$omp parallel & 
-      !$omp private(Nm,i,rhs,rhs_r,rhs_i,rhsf_r,rhsf_i,TFC,real_rhs_temp,rhs_uphi,D1upFR,real_rhs_omg,real_rhs_psi, & 
+      !$omp private(Nm,i,rhs,rhs_r,rhs_i,rhsf_r,rhsf_i,real_rhs_temp,rhs_uphi,D1upFR,real_rhs_omg,real_rhs_psi, & 
       !$omp & real_d_rhs_psi,rhsf,rhs_omg,rhs_psi,rhs_exp_uphi_bar) default(shared)  
          t_ref= OMP_GET_WTIME ()
       !$omp do   
@@ -104,7 +108,7 @@ contains
          !----------- Call RHS construct for temperature ----------
          call rhs_construct_temp(Nm_max,Nr_max,dt_new,uphi_temp_FR,ur_temp_FR,n_step,temp_spec(Nm+1,:),Nm,rhs,n_restart, &
                                 & wt_rhs_tscheme_imp, wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp, time_scheme_imp,Pr)
+                                 & n_order_tscheme_exp, time_scheme_imp,Pr,l_restart)
          !---------------------------------------------------------  
          
          rhs_r(:)=real(rhs(:))
@@ -130,7 +134,7 @@ contains
             !----------- Call RHS construct for uphi_bar -------------
             call rhs_construct_uphi_bar(Nm_max,Nr_max,dt_new,upFR,urFR,omgFR,n_step,upFC,rhs_uphi,n_restart, &
                                        & wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                       & n_order_tscheme_exp,time_scheme_imp)
+                                       & n_order_tscheme_exp,time_scheme_imp,l_restart)
             !---------------------------------------------------------   
             rhs_r=rhs_uphi
             rhs_i=0.0_dp
@@ -157,7 +161,7 @@ contains
             call rhs_construct_vort(Nm_max,Nr_max,dt_new,Ra,Pr,uphi_omg_FR,ur_omg_FR,n_step,omg_spec(Nm+1,:), &
                                     & Nm,rhsf,n_restart,wt_rhs_tscheme_imp, &
                                     & wt_rhs_tscheme_exp,n_order_tscheme_imp,n_order_tscheme_exp, &
-                                    & time_scheme_imp,tFR(Nm+1,:))
+                                    & time_scheme_imp,tFR(Nm+1,:),l_restart)
        
             !------------------------------------------------------- 
 
@@ -183,6 +187,7 @@ contains
             omgFR(Nm+1,:)=real_rhs_omg(:)
             call chebinvtran(Nr_max,rhs_psi,real_rhs_psi)
             call chebinvtranD1(Nr_max,rhs_psi,real_d_rhs_psi)
+            call chebinvtranD2(Nr_max,rhs_psi,real_d2_rhs_psi)
 
             do i=1,Nr_max
                psii(Nm+1,i)=real_rhs_psi(i)
@@ -190,6 +195,23 @@ contains
                urFR(Nm+1,i)=ii*real(Nm,kind=dp)*r_radius(i)*real_rhs_psi(i)
             end do
 
+            ! OMEGA FIX - CHECK start
+            !omgFR(Nm+1,1) = r_radius(1)*real_d_rhs_psi(1)+real_d2_rhs_psi(1)- &
+            !                & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(1)*real_rhs_psi(1)
+            !omgFR(Nm+1,Nr_max) = r_radius(Nr_max)*real_d_rhs_psi(Nr_max)+real_d2_rhs_psi(Nr_max)- &
+            !                & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(Nr_max)*real_rhs_psi(Nr_max)
+            !omgFR_check(1) = -1.0_dp*(real_d2_rhs_psi(1))
+            !omgFR_check(Nr_max) = -1.0_dp*(real_d2_rhs_psi(Nr_max))
+            !do i=1,Nr_max
+            !   omgFR_check(i) = r_radius(i)*real_d_rhs_psi(i)+real_d2_rhs_psi(i)- &
+            !                    & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*real_rhs_psi(i)
+            !end do
+            !if (n_step==1000) then 
+            !print *, (abs(aimag(omgFR_check(1)))), (abs(aimag(omgFR(Nm+1,1)))), & 
+            !         & abs(aimag(omgFR_check(1)))-abs(aimag(omgFR(Nm+1,1))),   "comparison", Nm  
+            !end if
+            !print *, real_d2_rhs_psi(5), omgFR(Nm+1,5), "comparison"  
+            ! OMEGA FIX - CHECK end
             call chebtransform(Nr_max,upFR(Nm+1,:),upFC(Nm+1,:))
 
          end if
@@ -198,6 +220,7 @@ contains
       !$omp end do
          t_final= OMP_GET_WTIME ()
       !$omp end parallel
+      !print *, maxval(aimag(omgFR_check))
         !print *, t_final - t_ref
 !-------------- End loop over the Fourier modes -------------------------------------------------------------------------
 

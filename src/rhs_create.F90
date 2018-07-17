@@ -23,7 +23,7 @@ contains
 
    subroutine rhs_construct_temp(Nm_max,Nr_max,dt,uphi_temp_FR,ur_temp_FR,n_step,temp_specp,Nm,rhs_temp,n_restart, &
                                  & wt_rhs_tscheme_imp, wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp, time_scheme_imp,Pr)
+                                 & n_order_tscheme_exp, time_scheme_imp,Pr,l_restart)
              
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
@@ -31,6 +31,7 @@ contains
       integer, intent(in) :: n_step, n_restart
       integer, intent(in) :: n_order_tscheme_imp
       integer, intent(in) :: n_order_tscheme_exp
+      logical, intent(in) :: l_restart
       real(kind=dp), intent(in) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(in) :: wt_rhs_tscheme_exp(n_order_tscheme_exp)
       character(len=100), intent(in) :: time_scheme_imp
@@ -49,7 +50,8 @@ contains
       complex(kind=dp) :: real_d_temp_rad(Nr_max)
       complex(kind=dp) :: real_d2_temp_rad(Nr_max)
      
-      if (n_step-n_restart>1 .or. n_restart/=0) then
+      !if (n_step-n_restart>1 .or. l_restart) then
+      if (n_step-n_restart>1) then
          do i_order=1,n_order_tscheme_exp-1
             rhs_exp_temp(i_order+1,Nm+1,:) = tmp_rhs_exp_temp(i_order,Nm+1,:)
          end do
@@ -130,13 +132,14 @@ contains
 
    subroutine rhs_construct_vort(Nm_max,Nr_max,dt,Ra,Pr,uphi_omg_FR,ur_omg_FR,n_step,omg_specp,Nm,rhsf, &
                                  & n_restart,wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp,time_scheme_imp,tFRp) 
+                                 & n_order_tscheme_exp,time_scheme_imp,tFRp,l_restart) 
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       integer, intent(in) :: n_step, n_restart
       integer, intent(in) :: n_order_tscheme_exp
       integer, intent(in) :: n_order_tscheme_imp
+      logical, intent(in) :: l_restart
       real(kind=dp), intent(in) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(in) :: wt_rhs_tscheme_exp(n_order_tscheme_exp)
       character(len=100), intent(in) :: time_scheme_imp
@@ -159,7 +162,8 @@ contains
       complex(kind=dp) :: real_d2_omg_rad(Nr_max)
       complex(kind=dp) :: rhs2(Nr_max)
       
-      if (n_step-n_restart>1 .or. n_restart/=0) then
+      !if (n_step-n_restart>1 .or. l_restart) then
+      if (n_step-n_restart>1) then
          do i_order=1,n_order_tscheme_exp-1
             rhs_exp_vort(i_order+1,Nm+1,:) = tmp_rhs_exp_vort(i_order,Nm+1,:)
          end do
@@ -214,7 +218,7 @@ contains
       else if (time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then
             
          do i=1,Nr_max
-            rhs_imp_vort(1,Nm+1,i)=omg_specp(i) 
+            rhs_imp_vort(1,Nm+1,i)=real_omg_rad(i) 
 
             do i_order=1,n_order_tscheme_imp
                rhs2(i) = rhs2(i) + wt_rhs_tscheme_imp(i_order)*(rhs_imp_vort(i_order,Nm+1,i))
@@ -251,13 +255,14 @@ contains
 
    subroutine rhs_construct_uphi_bar(Nm_max,Nr_max,dt,upFR_p,urFR_p,omgFR_p,n_step,upFCp,rhs_uphi,n_restart, &
                                  & wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp,time_scheme_imp)
+                                 & n_order_tscheme_exp,time_scheme_imp,l_restart)
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       integer, intent(in) :: n_step, n_restart
       integer, intent(in) :: n_order_tscheme_imp
       integer, intent(in) :: n_order_tscheme_exp
+      logical, intent(in) :: l_restart
       real(kind=dp), intent(in) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(in) :: wt_rhs_tscheme_exp(n_order_tscheme_exp)
       character(len=100), intent(in) :: time_scheme_imp
@@ -273,7 +278,8 @@ contains
       complex(kind=dp) :: d1upFR(Nm_max+1,Nr_max)
       complex(kind=dp) :: d2upFR(Nm_max+1,Nr_max)
 
-      if (n_step-n_restart>1 .or. n_restart/=0) then
+      !if (n_step-n_restart>1 .or. l_restart) then
+      if (n_step-n_restart>1) then
          do i_order=1,n_order_tscheme_exp-1
             rhs_exp_uphi_bar(i_order+1,:) = tmp_rhs_exp_uphi_bar(i_order,:)
          end do
@@ -374,7 +380,7 @@ contains
       complex(kind=dp) :: real_d_temp_rad(Nr_max)
       complex(kind=dp) :: real_d2_temp_rad(Nr_max)
 
-      if (time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then 
+      if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then 
          do Nm=0,Nm_max
             do i=1,Nr_max
                uphi_temp_rad(i)=uphi_temp_FR(Nm+1,i)
@@ -426,7 +432,7 @@ contains
       complex(kind=dp) :: real_d2_omg_rad(Nr_max)
 
       !----- If Backward-Difference Formula (BDF) is used as the implicit scheme --------------
-      if (time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then
+      if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then 
          do Nm=0,Nm_max      
             do i=1,Nr_max
                ur_omg_rad(i)=ur_omg_FR(Nm+1,i)
@@ -441,9 +447,9 @@ contains
                rhs_imp_vort(n_order_tscheme_imp,Nm+1,i)=omg_specp(Nm+1,i) 
                         
                rhs_exp_vort(n_order_tscheme_exp,Nm+1,i)=(ii*real(Nm,kind=dp)*r_radius(i)*uphi_omg_rad(i)+ &
-                                      & real_d_ur_omg_rad(i) + r_radius(i)*ur_omg_rad(i)) &
-                                      & + (Ra/Pr)*(ii*real(Nm,kind=dp)*(r_radius( &
-                                      & i))*tFRp(Nm+1,i))
+                                      & real_d_ur_omg_rad(i) + r_radius(i)*ur_omg_rad(i)) !&
+                                      !& + (Ra/Pr)*(ii*real(Nm,kind=dp)*(r_radius( &
+                                      !& i))*tFRp(Nm+1,i))
 
                rhs_buo_term(n_order_tscheme_imp,Nm+1,i)=-(Ra/Pr)*(ii*real(Nm,kind=dp)*(r_radius( &
                                       & i))*tFRp(Nm+1,i))
@@ -478,7 +484,7 @@ contains
       complex(kind=dp) :: upFCp(Nm_max+1,Nr_max)
      
       !----- If Backward-Difference Formula (BDF) is used as the implicit scheme --------------
-      if (time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4' ) then 
+      if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then 
 
          do Nm=0,Nm_max 
             call chebtransform(Nr_max,upFR_p(Nm+1,:),upFCp(Nm+1,:))
@@ -539,7 +545,8 @@ contains
 
             rhs_imp_uphi_bar(n_order_tscheme_imp,i)=(upFR_p(1,i))
            
-            rhs_exp_uphi_bar(n_order_tscheme_exp,i)=((ur_d1up_FR(i)+r_radius(i)*ur_up_FR(i)))
+            !rhs_exp_uphi_bar(n_order_tscheme_exp,i)=((ur_d1up_FR(i)+r_radius(i)*ur_up_FR(i)))
+            rhs_exp_uphi_bar(n_order_tscheme_exp,i)=ur_omg(i)
 
          end do
 

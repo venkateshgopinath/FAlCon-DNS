@@ -364,7 +364,7 @@ contains
       integer, intent(in) :: n
       real(kind=dp), intent(in) :: xp(n)
       real(kind=dp), intent(in) :: x
-      real(kind=dp) :: w(n)
+      real(kind=dp), intent(out) :: w(n)
       integer :: i,j
 
       w(:) = 1.0_dp

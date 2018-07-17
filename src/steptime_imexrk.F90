@@ -8,10 +8,10 @@ module steptime_imexrk
 #endif
    use init, only: TFC, upFR, urFR, tFR, omgFR, startNm_maxloop, finishNm_maxloop, & 
                    & startNr_maxloop, finishNr_maxloop, timeNm_maxloop, timeNr_maxloop, startsteptime, &
-                   dt_old, dt_new, tot_time, psii
+                   dt_old, dt_new, tot_time, psii, ur, up, omg, tt, omgFR_check
    use nonlin, only: Nr_maxloop, dtval_r, dtval_p, dtval_rkr, dtval_rkp
    use output, only: init_output, calculate_spectra, final_output, writeke_spectral, &
-                     & store_checkpoint, store_snapshot
+                     & store_checkpoint, store_snapshot_imexrk
    use fourierloop_imexrk, only: Get_stage_var, RHS_construct_stage, Assembly_stage
    use timeschemes, only: rhs_update_wts_imp, wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, &
                           & n_order_tscheme_exp, n_order_tscheme_max, dt_array, rhs_imp_temp, rhs_exp_temp, &
@@ -49,9 +49,10 @@ contains
 
    subroutine timeloop_imexrk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt,Ra,Pr, &
                        & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
-                       & time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,mBC)
+                       & time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,mBC,lm,buo_tscheme)
        
       integer :: n_step
+      integer, intent(in) :: lm 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Np_max   
       integer, intent(in) :: Nr_max 
@@ -65,6 +66,7 @@ contains
       character(len=100), intent(in) :: time_scheme_imp
       character(len=100), intent(in) :: time_scheme_exp
       character(len=100), intent(in) :: mBC  
+      character(len=100), intent(in) :: buo_tscheme  
       integer, intent(in) :: n_time_steps
       integer, intent(in) :: n_checkpoint
       integer, intent(in) :: n_snapshot
@@ -100,25 +102,22 @@ contains
             dt_old=dt
             dt_new=dt
             dt_array(:)=dt 
+
          !------------ Compute New dt by enforcing CFL ----------------- 
          !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
          !--------------------------------------------------------------
-
-         !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
-         !   tot_time=tot_time+dt_new 
-         !end if
 
          do rk_stage=1,n_order_tscheme_exp ! LOOP for RK stages (rk_stage) 
                if (rk_stage>1) then
                   
                   !------ Solve for and update stage variables temp1, omg1, psi1 at each stage---- 
                   call Get_stage_var(Nm_max,Nr_max,rk_stage,tFR,omgFR,psii, &
-                                     & upFR,urFR,n_step,n_restart,Ra,Pr,mBC)
+                                     & upFR,urFR,n_step,n_restart,Ra,Pr,mBC,lm,buo_tscheme)
                   !-------------------------------------------------------------------------------
 
                end if
 
-               if ( (n_step-n_restart>1 .or. rk_stage > 1 .or. l_restart ) .and. & 
+               if ( (n_step-n_restart>1 .or. rk_stage > 1 .or. l_restart )  .and. & 
                   &   (sum(butcher_aA(:,rk_stage)) + butcher_bA(rk_stage) /=0) ) then 
                       ! Call Nrloop only if atleast one element in the column of Butcher's table for advection is non-zero)  
                   !-------------------- Call Nr_max loop ---------------------------------------------------------
@@ -126,7 +125,7 @@ contains
                                   & ur_omg_FR)
                   !-----------------------------------------------------------------------------------------------
                end if
-               
+
                !-------------------- Construct RHS for all stages --------------------------------------------- 
                call RHS_construct_stage(Nm_max,Nr_max,Ra,Pr,uphi_temp_FR,ur_temp_FR,uphi_omg_FR,ur_omg_FR,& 
                                 & time_scheme_type,rk_stage,tFR,omgFR,urFR,upFR)
@@ -135,9 +134,10 @@ contains
          end do ! End LOOP for RK stages 
 
          !--- Assembly of RK stages and calculation of variables at each time step----------------- 
-         call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR)
+         call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR,lm,mBC)
          !------------------------------------------------------------------------------------------
-            tot_time=tot_time+dt_new 
+
+         tot_time=tot_time+dt_new 
 
          ! Calculate temperature in FC space at 0-mode --       
          call chebtransform(Nr_max,tFR(1,:),TFC)
@@ -146,7 +146,7 @@ contains
          !--------------------- Store Snapshots -----------------------------
          if (mod(n_step,n_snapshot)==0) then
             count_snap = count_snap + 1 
-            call store_snapshot(Nm_max,Nr_max,Ra,Pr,eta,tot_time,dt_new,count_snap,tFR,omgFR,urFR,upFR)
+            call store_snapshot_imexrk(Nm_max,Nr_max,Ra,Pr,eta,tot_time,dt_new,count_snap,tFR,omgFR,urFR,upFR,omgFR_check)
 
          end if
          !------------------------------------------------------------------- 
@@ -158,7 +158,7 @@ contains
             call store_checkpoint(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                   & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                   & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, &
-                                  & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max)
+                                  & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max,time_scheme_type)
  
          end if
          !------------------------------------------------------------------- 

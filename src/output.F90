@@ -23,7 +23,7 @@ module output
    integer, public :: count_snap
    integer, public :: count_chkpnt
    public :: init_output, final_output, writeKE_physical, writeKE_spectral, calculate_spectra, &
-              store_checkpoint, store_snapshot
+              store_checkpoint, store_snapshot,store_snapshot_imexrk 
 
 contains
 
@@ -263,6 +263,7 @@ contains
       
       !------------------------ Write KE and Nusselt number data in a text file -------------------
 !     write(ke_unit,'(6es20.12)') dt_new, tot_time, KE_tot, maxval(real(upFR(1,:)))  ! Write KE data to a text file
+!     write(ke_unit,'(6es20.12)') dt_new, tot_time, KE_tot, maxval(real(tFR(1,2:62)))  ! Write KE data to a text file (test for adv-diff)
       write(ke_unit,'(6es20.12)')  tot_time, KE_tot, 2.0_dp * pi * urk, 2.0_dp * pi * upk, 2.0_dp * pi * upbark  ! Write KE data to a text file
       !-----------------------------------
 
@@ -304,12 +305,13 @@ contains
       
       !call radInt(Nr_max,URT,buo_term) ! Calculating from Spectral space
       call radInt(Nr_max,ur_t,buo_term) ! Calculating from Physical space
+
       buo_term=2.0_dp*pi*Ra/Pr*buo_term
 
       write(pw_unit,'(3ES20.12)') tot_time, vis_term, buo_term ! Write power budget data to text file
       !----------------------------------------
 !-----------------------------------------------------------------------------------
-     print *, dt_new, tot_time, KE_tot! Print for checking purposes only
+     print *, dt_new, tot_time, KE_tot, maxval(aimag(upFR(:,1))), maxval(real(upFR(:,1))) ! Print for checking purposes only
 !      write(6,'(6es20.12)')  tot_time, KE_tot, 2.0_dp * pi * urk, 2.0_dp * pi * upk, 2.0_dp * pi * upbark  ! Write KE data to a text file
 !#####################################  
 
@@ -351,22 +353,30 @@ contains
    subroutine store_checkpoint(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                   & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                   & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, rhs_exp_uphi_bar, &
-                                  & dt_array,n_order_tscheme_max)
+                                  & dt_array,n_order_tscheme_max,time_scheme_type)
 
       integer, intent(in) :: Nm_max   
       integer, intent(in) :: Nr_max 
       integer, intent(in) :: count_chkpnt 
       integer, intent(in) :: n_order_tscheme_imp,n_order_tscheme_exp,n_order_tscheme_max 
+      character(len=100), intent(in) :: time_scheme_type
       real(kind=dp), intent(in) :: tot_time, dt_new
       real(kind=dp), intent(in) :: dt_array(n_order_tscheme_max)
       complex(kind=dp), intent(in) :: tFR(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: omgFR(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: urFR(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: upFR(Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: rhs_imp_temp(n_order_tscheme_imp,Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: rhs_exp_temp(n_order_tscheme_exp,Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: rhs_imp_vort(n_order_tscheme_imp,Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: rhs_exp_vort(n_order_tscheme_exp,Nm_max+1,Nr_max)
+      !if (time_scheme_type=='IMEX' .or. time_scheme_type=='RK') then 
+         complex(kind=dp), intent(in) :: rhs_imp_temp(n_order_tscheme_imp,Nm_max+1,Nr_max)
+         complex(kind=dp), intent(in) :: rhs_exp_temp(n_order_tscheme_exp,Nm_max+1,Nr_max)
+         complex(kind=dp), intent(in) :: rhs_imp_vort(n_order_tscheme_imp,Nm_max+1,Nr_max)
+         complex(kind=dp), intent(in) :: rhs_exp_vort(n_order_tscheme_exp,Nm_max+1,Nr_max)
+      !else
+      !   complex(kind=dp), intent(in) :: rhs_imp_temp(1,Nm_max+1,Nr_max)
+      !   complex(kind=dp), intent(in) :: rhs_exp_temp(1,Nm_max+1,Nr_max)
+      !   complex(kind=dp), intent(in) :: rhs_imp_vort(1,Nm_max+1,Nr_max)
+      !   complex(kind=dp), intent(in) :: rhs_exp_vort(1,Nm_max+1,Nr_max)
+      !end if
       complex(kind=dp), intent(in) :: rhs_imp_uphi_bar(n_order_tscheme_imp,Nr_max)
       complex(kind=dp), intent(in) :: rhs_exp_uphi_bar(n_order_tscheme_exp,Nr_max)
 
@@ -398,21 +408,26 @@ contains
    !---------------------------------------------------------------------------------------------------------
 
    !---------------------------------------------------------------------------------------------------------
-   subroutine store_snapshot(Nm_max,Nr_max,Ra,Pr,eta,tot_time,dt_new,count_snap,tFR,omgFR,urFR,upFR)
+   subroutine store_snapshot_imexrk(Nm_max,Nr_max,Ra,Pr,eta,tot_time,dt_new,count_snap,tFRs,omgFRs,urFRs,upFRs,omgFR_check_s)
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max
       real(kind=dp), intent(in) :: Ra, Pr, eta
       real(kind=dp), intent(in) :: tot_time,dt_new
       integer, intent(in) :: count_snap
-      complex(kind=dp), intent(in) :: tFR(Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: omgFR(Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: urFR(Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: upFR(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: tFRs(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: omgFRs(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: urFRs(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: upFRs(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: omgFR_check_s(Nm_max+1,Nr_max)
 
       character(len=72) :: datafile1
-      integer :: outunit 
-
+      integer :: outunit, i 
+       
+      !do i=1,1
+      !   print *, radius(i), maxval(abs(omgFRs(:,1)))
+      !end do
+      
       !-----------------------------------------Write current time step ---------------------------------------
       write(datafile1,fmt='(a,I5.5)') "snapshot_plot_", count_snap
       open(newunit=outunit, file=datafile1, action="write", status="replace", form='unformatted' )
@@ -420,10 +435,47 @@ contains
       write(outunit) dt_new,tot_time
       write(outunit) Nm_max,Nr_max
       write(outunit) radius
-      write(outunit) tFR
-      write(outunit) omgFR
-      write(outunit) urFR
-      write(outunit) upFR
+      write(outunit) tFRs
+      write(outunit) omgFRs
+      write(outunit) urFRs
+      write(outunit) upFRs
+      write(outunit) omgFR_check_s
+      close(outunit)
+
+   end subroutine store_snapshot_imexrk
+   !-------------------------------------------------------------------------------------------------------
+
+   !---------------------------------------------------------------------------------------------------------
+   subroutine store_snapshot(Nm_max,Nr_max,Ra,Pr,eta,tot_time,dt_new,count_snap,tFRs,omgFRs,urFRs,upFRs)
+
+      integer, intent(in) :: Nm_max
+      integer, intent(in) :: Nr_max
+      real(kind=dp), intent(in) :: Ra, Pr, eta
+      real(kind=dp), intent(in) :: tot_time,dt_new
+      integer, intent(in) :: count_snap
+      complex(kind=dp), intent(in) :: tFRs(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: omgFRs(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: urFRs(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: upFRs(Nm_max+1,Nr_max)
+
+      character(len=72) :: datafile1
+      integer :: outunit, i 
+       
+      !do i=1,1
+      !   print *, radius(i), maxval(abs(omgFRs(:,1)))
+      !end do
+      
+      !-----------------------------------------Write current time step ---------------------------------------
+      write(datafile1,fmt='(a,I5.5)') "snapshot_plot_", count_snap
+      open(newunit=outunit, file=datafile1, action="write", status="replace", form='unformatted' )
+      write(outunit) Ra, Pr, eta
+      write(outunit) dt_new,tot_time
+      write(outunit) Nm_max,Nr_max
+      write(outunit) radius
+      write(outunit) tFRs
+      write(outunit) omgFRs
+      write(outunit) urFRs
+      write(outunit) upFRs
       close(outunit)
 
    end subroutine store_snapshot

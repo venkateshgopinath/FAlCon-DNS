@@ -3,10 +3,10 @@ module init
    use constants, only: one, two, three, half, pi, ii, onefourth
 #if FFTW
    use fourier, only: init_fftwplan, destroy_fftwplan, forfft, invfft
-   use chebyshev, only: init_chebfftwplan, destroy_chebfftwplan, dlagrange, d2lagrange 
+   use chebyshev, only: init_chebfftwplan, destroy_chebfftwplan, lagrange, dlagrange, d2lagrange 
 #elif GG
    use fourier, only: forfft, invfft
-   use chebyshev, only: dlagrange, d2lagrange 
+   use chebyshev, only: lagrange, dlagrange, d2lagrange 
 #endif
    use timeschemes, only: rhs_update_wts_imp, wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, &
                           & n_order_tscheme_exp, n_order_tscheme_max, dt_array, rhs_imp_temp, rhs_exp_temp, &
@@ -18,10 +18,12 @@ module init
    real(kind=dp), allocatable, public :: radius(:), r_radius(:), r_radius2(:), phi(:), dr(:)
    real(kind=dp), allocatable, public :: tt(:,:), up(:,:), ur(:,:), psi(:,:), omg(:,:), tcon(:,:), t_an(:,:)
    complex(kind=dp), allocatable, public :: omg_spec(:,:), temp_spec(:,:), upFC(:,:), tFR(:,:), omgFR(:,:), uphi_bar_spec(:)
+   complex(kind=dp), allocatable, public :: omgFR_check(:,:)
    complex(kind=dp), allocatable, public :: upFR(:,:), urFR(:,:), psii(:,:) ! FR -> quantities in Fourier-Real space
    complex(kind=dp), allocatable, public :: upFR1(:,:), urFR1(:,:), tFR1(:,:), omgFR1(:,:) ! FR -> quantities in Fourier-Real space
    complex(kind=dp), allocatable, public :: upFR2(:,:), urFR2(:,:), tFR2(:,:), omgFR2(:,:) ! FR -> quantities in Fourier-Real space
    complex(kind=dp), allocatable, public :: upFR3(:,:), urFR3(:,:), tFR3(:,:), omgFR3(:,:) ! FR -> quantities in Fourier-Real space
+   complex(kind=dp), allocatable, public :: upFR4(:,:), urFR4(:,:), tFR4(:,:), omgFR4(:,:) ! FR -> quantities in Fourier-Real space
    complex(kind=dp), allocatable, public :: TFC(:)
    complex(kind=dp), allocatable, public :: t2FR(:,:)
    complex(kind=dp), allocatable, public :: upFR_prev(:,:), urFR_prev(:,:)
@@ -43,8 +45,10 @@ module init
    complex(kind=dp), allocatable, public :: tmp_rhs_imp_uphi_bar(:,:),tmp_rhs_exp_uphi_bar(:,:) 
    complex(kind=dp), allocatable, public :: tmp_rhs_buo_term(:,:,:)
 
+   real(kind=dp), allocatable, public :: w_rmin(:)
    real(kind=dp), allocatable, public :: dw_rmin(:)
    real(kind=dp), allocatable, public :: d2w_rmin(:)
+   real(kind=dp), allocatable, public :: w_rmax(:)
    real(kind=dp), allocatable, public :: dw_rmax(:)
    real(kind=dp), allocatable, public :: d2w_rmax(:)
 #if FFTW
@@ -72,6 +76,7 @@ contains
                 & omg(Np_max,Nr_max), tcon(Np_max,Nr_max), t_an(Np_max,Nr_max) )
       allocate( omg_spec(Nm_max+1,Nr_max), temp_spec(Nm_max+1,Nr_max), upFC(Nm_max+1,Nr_max), &
                 & tFR(Nm_max+1,Nr_max), omgFR(Nm_max+1,Nr_max), uphi_bar_spec(Nr_max) )
+      allocate( omgFR_check(Nm_max+1,Nr_max) )
       allocate( psii(Nm_max+1,Nr_max), upFR(Nm_max+1,Nr_max), urFR(Nm_max+1,Nr_max) )
       allocate( TFC(Nr_max) )
       allocate( t2FR(Nm_max+1,Nr_max), upFR_prev(Nm_max+1,Nr_max), urFR_prev(Nm_max+1,Nr_max))
@@ -83,8 +88,8 @@ contains
                 & tmp_rhs_exp_uphi_bar(n_order_tscheme_exp,Nr_max), &   
                 & tmp_rhs_buo_term(n_order_tscheme_imp,Nm_max+1,Nr_max) )
       allocate( upFR1(Nm_max+1,Nr_max), urFR1(Nm_max+1,Nr_max), tFR1(Nm_max+1,Nr_max), omgFR1(Nm_max+1,Nr_max) )
-      if (time_scheme_type=='RK') then 
-         allocate( dw_rmin(lm), d2w_rmin(lm), dw_rmax(lm), d2w_rmax(lm) )
+      if (time_scheme_type=='RK' .or. time_scheme_type=='IMEXRK' ) then 
+         allocate( w_rmin(lm), dw_rmin(lm), d2w_rmin(lm), w_rmax(lm), dw_rmax(lm), d2w_rmax(lm) )
       end if
 
    end subroutine fields_alloc
@@ -100,10 +105,11 @@ contains
       deallocate( TFC )
       deallocate( psii, upFR, urFR )
       deallocate( omg_spec, temp_spec, upFC, tFR, omgFR, uphi_bar_spec )
+      deallocate( omgFR_check )
       deallocate( tt, up, ur, psi, omg, tcon,t_an )
       deallocate( radius, r_radius, r_radius2, dr, phi )
-      if (time_scheme_type=='RK') then 
-         deallocate( dw_rmin, d2w_rmin, dw_rmax, d2w_rmax )
+      if (time_scheme_type=='RK' .or. time_scheme_type=='IMEXRK') then 
+         deallocate( w_rmin, dw_rmin, d2w_rmin, w_rmax, dw_rmax, d2w_rmax )
       end if
    end subroutine fields_dealloc
 
@@ -167,9 +173,11 @@ contains
          omg_spec=omgFR
          uphi_bar_spec=upFR(1,:)
 
-         if (time_scheme_type=='RK') then
+         if (time_scheme_type=='RK' .or. time_scheme_type=='IMEXRK') then
+            call lagrange(lm,radius(2:lm+1),rmin,w_rmin)
             call dlagrange(lm,radius(2:lm+1),rmin,dw_rmin)
             call d2lagrange(lm,radius(2:lm+1),rmin,d2w_rmin)
+            call lagrange(lm,radius(Nr_max-1:Nr_max-lm:-1),rmin,w_rmax)
             call dlagrange(lm,radius(Nr_max-1:Nr_max-lm:-1),rmax,dw_rmax)
             call d2lagrange(lm,radius(Nr_max-1:Nr_max-lm:-1),rmax,d2w_rmax)
          end if
@@ -237,7 +245,7 @@ contains
 
          tot_time=0.0_dp
          
-         if (time_scheme_type=='RK') then
+         if (time_scheme_type=='RK' .or. time_scheme_type=='IMEXRK') then
             call dlagrange(lm,radius(2:lm+1),rmin,dw_rmin)
             call d2lagrange(lm,radius(2:lm+1),rmin,d2w_rmin)
             call dlagrange(lm,radius(Nr_max-1:Nr_max-lm:-1),rmax,dw_rmax)
@@ -270,6 +278,8 @@ contains
          if (n_init==0) then ! If n_init=0, then initialize with a Gaussian perturbation (from Gaspari 1999 paper) on top of conducting state
             sigma_r = 0.1_dp/sqrt(two) 
             sigma_p = 0.2
+            !sigma_r = 0.25 
+            !sigma_p = 0.25
             rc = half*(rmax+rmin) 
             !-- Find the closest point to the middle radius 
             ir=minloc(abs(radius-rc),1) 
@@ -431,7 +441,7 @@ contains
       character(len=100), intent(in) :: time_scheme_imp
       
 
-      if (time_scheme_imp=='BDF1') then
+      if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2') then
          call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
                               & n_order_tscheme_exp_old,Nrestart_point-1,tFR1,omgFR1,urFR1,upFR1, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
@@ -448,8 +458,6 @@ contains
 
          dt_array(1)=dt_array_old(1)
          
-         tot_time=tot_time+dt_new
-
          if (Nm_max_old==Nm_max .and. Nr_max_old==Nr_max) then
             tFR=tFR2
             omgFR=omgFR2
@@ -457,7 +465,7 @@ contains
             upFR=upFR2
          end if  
 
-      elseif (time_scheme_imp=='BDF1') then
+      elseif (time_scheme_imp=='BDF3') then
          
          call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
                               & n_order_tscheme_exp_old,Nrestart_point-2,tFR1,omgFR1,urFR1,upFR1, &    
@@ -483,13 +491,52 @@ contains
 
          dt_array(1)=dt_array_old(1)
          
-         tot_time=tot_time+dt_new
-
          if (Nm_max_old==Nm_max .and. Nr_max_old==Nr_max) then
             tFR=tFR3
             omgFR=omgFR3
             urFR=urFR3
             upFR=upFR3
+         end if  
+
+      elseif (time_scheme_imp=='BDF4') then
+         
+         call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
+                              & n_order_tscheme_exp_old,Nrestart_point-3,tFR1,omgFR1,urFR1,upFR1, &    
+                              & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
+                              & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
+                              & n_order_tscheme_max_old) 
+
+         dt_array(4)=dt_array_old(1)
+         
+         call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
+                              & n_order_tscheme_exp_old,Nrestart_point-2,tFR2,omgFR2,urFR2,upFR2, &    
+                              & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
+                              & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
+                              & n_order_tscheme_max_old) 
+
+         dt_array(3)=dt_array_old(1)
+         
+         call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
+                              & n_order_tscheme_exp_old,Nrestart_point-1,tFR3,omgFR3,urFR3,upFR3, &    
+                              & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
+                              & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
+                              & n_order_tscheme_max_old)
+
+         dt_array(2)=dt_array_old(1)
+
+         call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
+                              & n_order_tscheme_exp_old,Nrestart_point,tFR4,omgFR4,urFR4,upFR4, &    
+                              & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
+                              & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
+                              & n_order_tscheme_max_old)
+
+         dt_array(1)=dt_array_old(1)
+         
+         if (Nm_max_old==Nm_max .and. Nr_max_old==Nr_max) then
+            tFR=tFR4
+            omgFR=omgFR4
+            urFR=urFR4
+            upFR=upFR4
          end if  
 
       elseif(time_scheme_type=='IMEXRK') then
@@ -526,15 +573,6 @@ contains
             upFR=upFRc
          end if  
           
-         !  ----- Create temporary rhs from previously stored rhs -----------  
-         tmp_rhs_imp_temp=rhs_imp_temp 
-         tmp_rhs_exp_temp=rhs_exp_temp
-         tmp_rhs_imp_vort=rhs_imp_vort
-         tmp_rhs_exp_vort=rhs_exp_vort
-         tmp_rhs_imp_uphi_bar=rhs_imp_uphi_bar
-         tmp_rhs_exp_uphi_bar=rhs_exp_uphi_bar
-         !  -----------------------------------------------------------------
-
       else 
 
          !---- Get previously saved data ----
@@ -560,7 +598,6 @@ contains
             dt_array=dt_array_old
 
          end if
-         !tot_time=tot_time+dt_new
 ! ----   ----------------------------------------------------------------------- 
 
 !----    If order of the schemes are different from before (Time scheme implicit) ----- 
@@ -639,8 +676,8 @@ contains
       end if
    end subroutine get_checkpoint_data
 
-   subroutine read_checkpoint(dt_new,tot_time,Nm_max,Nr_max,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp,Nrestart_point,tFRn,omgFRn,urFRn,upFRn, &
+   subroutine read_checkpoint(dt_new,tot_time,Nm_max,Nr_max,n_order_tscheme_imp_old, &
+                                 & n_order_tscheme_exp_old,Nrestart_point,tFRn,omgFRn,urFRn,upFRn, &
                                  & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old,rhs_imp_uphi_bar_old, &
                                  & rhs_exp_uphi_bar_old, dt_array_old, &
                                  & n_order_tscheme_max_old)  
@@ -649,7 +686,7 @@ contains
       real(kind=dp), intent(out) :: tot_time
       integer, intent(out) :: Nm_max   
       integer, intent(out) :: Nr_max 
-      integer, intent(out) :: n_order_tscheme_imp, n_order_tscheme_exp 
+      integer, intent(out) :: n_order_tscheme_imp_old, n_order_tscheme_exp_old 
       integer, intent(out) :: n_order_tscheme_max_old 
       integer, intent(in) :: Nrestart_point
       complex(kind=dp), allocatable, intent(out) :: tFRn(:,:)
@@ -669,19 +706,26 @@ contains
       !----------------------------- Read latest files -------------------------------
       write(datafile1,'("checkpoint_",I5.5)') Nrestart_point
       open(newunit=inunit, status='old',file=datafile1,form='unformatted')
-      read(inunit) dt_new,tot_time,Nm_max,Nr_max,n_order_tscheme_imp, &
-                   & n_order_tscheme_exp, n_order_tscheme_max_old
+      read(inunit) dt_new,tot_time,Nm_max,Nr_max,n_order_tscheme_imp_old, &
+                   & n_order_tscheme_exp_old, n_order_tscheme_max_old
       allocate(dt_array_old(n_order_tscheme_max_old))
       allocate(tFRn(Nm_max+1,Nr_max))
       allocate(omgFRn(Nm_max+1,Nr_max))
       allocate(urFRn(Nm_max+1,Nr_max))
       allocate(upFRn(Nm_max+1,Nr_max))
-      allocate(rhs_imp_temp_old(n_order_tscheme_imp,Nm_max+1,Nr_max)) 
-      allocate(rhs_exp_temp_old(n_order_tscheme_exp,Nm_max+1,Nr_max)) 
-      allocate(rhs_imp_vort_old(n_order_tscheme_imp,Nm_max+1,Nr_max)) 
-      allocate(rhs_exp_vort_old(n_order_tscheme_exp,Nm_max+1,Nr_max)) 
-      allocate(rhs_imp_uphi_bar_old(n_order_tscheme_imp,Nr_max)) 
-      allocate(rhs_exp_uphi_bar_old(n_order_tscheme_exp,Nr_max)) 
+      allocate(rhs_imp_temp_old(n_order_tscheme_imp_old,Nm_max+1,Nr_max)) 
+      allocate(rhs_exp_temp_old(n_order_tscheme_exp_old,Nm_max+1,Nr_max)) 
+      allocate(rhs_imp_vort_old(n_order_tscheme_imp_old,Nm_max+1,Nr_max)) 
+      allocate(rhs_exp_vort_old(n_order_tscheme_exp_old,Nm_max+1,Nr_max)) 
+      allocate(rhs_imp_uphi_bar_old(n_order_tscheme_imp_old,Nr_max)) 
+      allocate(rhs_exp_uphi_bar_old(n_order_tscheme_exp_old,Nr_max)) 
+
+      !allocate(rhs_imp_temp_old(1,Nm_max+1,Nr_max)) 
+      !allocate(rhs_exp_temp_old(1,Nm_max+1,Nr_max)) 
+      !allocate(rhs_imp_vort_old(1,Nm_max+1,Nr_max)) 
+      !allocate(rhs_exp_vort_old(1,Nm_max+1,Nr_max)) 
+      !allocate(rhs_imp_uphi_bar_old(1,Nr_max)) 
+      !allocate(rhs_exp_uphi_bar_old(1,Nr_max)) 
 
       read(inunit) dt_array_old
       read(inunit) tFRn
@@ -689,12 +733,12 @@ contains
       read(inunit) urFRn
       read(inunit) upFRn
       
-      read(inunit) rhs_imp_temp_old   
-      read(inunit) rhs_exp_temp_old   
-      read(inunit) rhs_imp_vort_old   
-      read(inunit) rhs_exp_vort_old   
-      read(inunit) rhs_imp_uphi_bar_old   
-      read(inunit) rhs_exp_uphi_bar_old   
+      !read(inunit) rhs_imp_temp_old   
+      !read(inunit) rhs_exp_temp_old   
+      !read(inunit) rhs_imp_vort_old   
+      !read(inunit) rhs_exp_vort_old   
+      !read(inunit) rhs_imp_uphi_bar_old   
+      !read(inunit) rhs_exp_uphi_bar_old   
 
       close(inunit)
 

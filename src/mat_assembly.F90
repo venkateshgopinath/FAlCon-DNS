@@ -71,6 +71,7 @@ contains
       real(kind=dp) :: A_uphi(Nr_max,Nr_max)
       real(kind=dp) :: AF(2*Nr_max,2*Nr_max)
       real(kind=dp) :: bctemp(2,Nr_max), bcpsi1(2,Nr_max), bcpsi2(2,Nr_max)
+      real(kind=dp) :: bcuphibar(2,Nr_max)
       integer :: PIV1(Nr_max), PIV2(2*Nr_max), PIV_uphi(Nr_max)
       
       AT(:,:)=0.0_dp
@@ -96,14 +97,18 @@ contains
       if (mBC=='NS') then ! Enforce no-slip boundary condition
                bcpsi2(1,:)=D(1,:)        ! 2nd BC for psi (bottom BC)
                bcpsi2(2,:)=D(Nr_max,:)   ! 2nd BC for psi (top BC)
+               bcuphibar(1,:)=t(1,:)        ! BC for uphibar (bottom BC)
+               bcuphibar(2,:)=t(Nr_max,:)   ! BC for uphibar (top BC)
       elseif (mBC=='SF') then ! Enforce stress-free boundary condition
                bcpsi2(1,:)=D2(1,:)-r_radius(1)*D(1,:)                ! 2nd BC for psi (bottom BC)
                bcpsi2(2,:)=D2(Nr_max,:)-r_radius(Nr_max)*D(Nr_max,:) ! 2nd BC for psi (top BC)
+               bcuphibar(1,:)=r_radius(1)*D(1,:)-r_radius2(1)*t(1,:)        ! BC for uphibar (bottom BC)
+               bcuphibar(2,:)=r_radius(Nr_max)*D(Nr_max,:)-r_radius2(Nr_max)*t(Nr_max,:)   ! BC for uphibar (top BC)
       end if
       !------------------------------------------------------------------------
 
       !do n=0,Nm_max ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-                 ! for mat build outside the main Nm_max loop (when dt=constant)
+                     ! for mat build outside the main Nm_max loop (when dt=constant)
       do j=1,Nr_max
          do i=1,Nr_max
             AT(i,j)=t(i,j)-wt_lhs_tscheme_imp*dt*(1.0_dp/Pr)*(r_radius(i)*D(i,j)+D2(i,j)-real(n,kind=dp)* & 
@@ -112,8 +117,8 @@ contains
          end do
             AT(1,j)=bctemp(1,j)
             AT(Nr_max,j)=bctemp(2,j)
-            A_uphi(1,j)=bctemp(1,j)
-            A_uphi(Nr_max,j)=bctemp(2,j)
+            A_uphi(1,j)=bcuphibar(1,j)
+            A_uphi(Nr_max,j)=bcuphibar(2,j)
       end do
 
       do i=1,Nr_max
@@ -139,14 +144,20 @@ contains
                           & r_radius2(i)*t(i,j))
 
          end do
-         AF(1,j)=bcpsi1(1,j)
-         AF(Nr_max,j)=bcpsi1(2,j)
+         AF(1,j)=bcpsi2(1,j)
+         AF(Nr_max,j)=bcpsi2(2,j)
 
          AF(1,Nr_max+j)=0.0_dp
          AF(Nr_max,Nr_max+j)=0.0_dp
 
-         AF(Nr_max+1,j)=bcpsi2(1,j)
-         AF(Nr_max+Nr_max,j)=bcpsi2(2,j)
+         !AF(Nr_max+1,j)=D2(1,j)
+         !AF(Nr_max+Nr_max,j)=D2(Nr_max,j)
+
+         !AF(Nr_max+1,Nr_max+j)=bcpsi1(1,j)
+         !AF(Nr_max+Nr_max,Nr_max+j)=bcpsi1(2,j)
+
+         AF(Nr_max+1,j)=bcpsi1(1,j)
+         AF(Nr_max+Nr_max,j)=bcpsi1(2,j)
 
          AF(Nr_max+1,Nr_max+j)=0.0_dp
          AF(Nr_max+Nr_max,Nr_max+j)=0.0_dp

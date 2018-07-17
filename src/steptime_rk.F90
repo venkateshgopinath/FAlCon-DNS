@@ -47,7 +47,7 @@ contains
 
    subroutine timeloop_rk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt,Ra,Pr, &
                        & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
-                       & time_scheme_imp,time_scheme_exp,tag,lm,dt_coef,dt_max)
+                       & time_scheme_imp,time_scheme_exp,tag,lm,dt_coef,dt_max,time_scheme_type,mBC)
        
       integer :: n_step
       integer, intent(in) :: Nm_max
@@ -59,8 +59,10 @@ contains
       integer, intent(in) :: n_KE, n_KEspec
       real(kind=dp), intent(in) :: eta, CFL
       real(kind=dp), intent(in) :: dt_coef, dt_max
+      character(len=100), intent(in) :: mBC  
       character(len=100), intent(in) :: time_scheme_imp
       character(len=100), intent(in) :: time_scheme_exp
+      character(len=100), intent(in) :: time_scheme_type
       integer, intent(in) :: n_time_steps
       integer, intent(in) :: n_checkpoint
       integer, intent(in) :: n_snapshot
@@ -107,7 +109,7 @@ contains
                   
                   !-------------------- Update stage variables temp1, omg1, psi1 at each stage---- 
                   call Get_stage_var(Nm_max,Nr_max,time_scheme_imp,time_scheme_exp,rk_stage,lm,tFR,omgFR,psii, &
-                                     & upFR,urFR)
+                                     & upFR,urFR,mBC)
                   !-------------------------------------------------------------------------------
                end if
 
@@ -126,7 +128,7 @@ contains
          end do ! End LOOP for RK stages 
 
          !--- Assembly of RK stages and calculation of variables at each time step----------------- 
-         call Assembly_stage(Nm_max,Nr_max,dt_new,lm,tFR,omgFR,psii,upFR,urFR)
+         call Assembly_stage(Nm_max,Nr_max,dt_new,lm,tFR,omgFR,psii,upFR,urFR,mBC)
          !------------------------------------------------------------------------------------------
 
          ! Calculate temperature in FC space at 0-mode --       
@@ -148,7 +150,7 @@ contains
             call store_checkpoint(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                   & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                   & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, &
-                                  & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max)
+                                  & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max,time_scheme_type)
  
          end if
          !------------------------------------------------------------------- 

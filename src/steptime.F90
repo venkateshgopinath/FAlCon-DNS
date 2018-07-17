@@ -10,7 +10,8 @@ module steptime
                    & startNr_maxloop, finishNr_maxloop, timeNm_maxloop, timeNr_maxloop, startsteptime, &
                    & dt_new, tot_time, tmp_rhs_imp_temp, tmp_rhs_exp_temp, tmp_rhs_imp_vort, tmp_rhs_exp_vort, &
                    & tmp_rhs_imp_uphi_bar, tmp_rhs_exp_uphi_bar, tmp_rhs_buo_term, upFR_prev, urFR_prev, up, &
-                   & urFR3,upFR3, tFR3, omgFR3, urFR2,upFR2, tFR2, omgFR2, urFR1,upFR1, tFR1, omgFR1  
+                   & urFR4, upFR4, tFR4, omgFR4, &
+                   & urFR3, upFR3, tFR3, omgFR3, urFR2,upFR2, tFR2, omgFR2, urFR1,upFR1, tFR1, omgFR1  
    use nonlin, only: Nr_maxloop, dtval_p, dtval_r
    use output, only: init_output, calculate_spectra, final_output, writeke_spectral, &
                      & store_checkpoint, store_snapshot, writeke_physical
@@ -49,7 +50,7 @@ contains
 
    subroutine timeloop_imex(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt, Ra,Pr,mBC, &
                        & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
-                       & time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max)
+                       & time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,time_scheme_type)
        
       integer :: n_step  
       character(len=100), intent(in) :: tag
@@ -64,6 +65,7 @@ contains
       real(kind=dp), intent(in) :: dt_coef, dt_max
       character(len=100), intent(in) :: time_scheme_imp
       character(len=100), intent(in) :: time_scheme_exp
+      character(len=100), intent(in) :: time_scheme_type
       integer, intent(in) :: n_time_steps
       integer, intent(in) :: n_checkpoint
       integer, intent(in) :: n_snapshot
@@ -73,14 +75,13 @@ contains
       character(len=100), intent(in) :: mBC
       integer :: count_snap
       integer :: count_chkpnt
-      
 
       count_snap = n_snapshot_point
       count_chkpnt = n_restart_point
       
       !--------- If restarting -----------------------------------------------
       if (l_restart) then
-         if (time_scheme_imp=='BDF2') then
+         if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2') then
             ! n-1 step
             call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR1,omgFR1,upFR1,urFR1,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
                                & ur_omg_FR)
@@ -100,7 +101,6 @@ contains
                                        & n_order_tscheme_imp-1, n_order_tscheme_exp-1)
             call rhs_uphibar_from_restart(Nm_max,Nr_max,upFR2,urFR2,omgFR2,time_scheme_imp,n_order_tscheme_imp-1, &
                                        n_order_tscheme_exp-1) 
-            !tmp_rhs_buo_term(1,:,:)=rhs_buo_term(n_order_tscheme_imp,:,:)
 
          elseif (time_scheme_imp=='BDF3') then
 
@@ -136,6 +136,50 @@ contains
                                        n_order_tscheme_exp-2) 
             tmp_rhs_buo_term(1,:,:)=rhs_buo_term(n_order_tscheme_imp-2,:,:)
 
+         elseif (time_scheme_imp=='BDF4') then
+
+            ! n-2 step
+            call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR1,omgFR1,upFR1,urFR1,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
+                               & ur_omg_FR)
+            call rhs_temp_from_restart(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR1,time_scheme_imp,n_order_tscheme_imp, &
+                                       n_order_tscheme_exp)   
+            call rhs_vort_from_restart(Nm_max,Nr_max,Ra,Pr,tFR1,uphi_omg_FR,ur_omg_FR,omgFR1,time_scheme_imp, &
+                                       & n_order_tscheme_imp, n_order_tscheme_exp)
+            call rhs_uphibar_from_restart(Nm_max,Nr_max,upFR1,urFR1,omgFR1,time_scheme_imp,n_order_tscheme_imp, &
+                                       n_order_tscheme_exp) 
+
+            ! n-1 step
+            call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR2,omgFR2,upFR2,urFR2,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
+                               & ur_omg_FR)
+            call rhs_temp_from_restart(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR2,time_scheme_imp,n_order_tscheme_imp-1, &
+                                       n_order_tscheme_exp-1)   
+            call rhs_vort_from_restart(Nm_max,Nr_max,Ra,Pr,tFR2,uphi_omg_FR,ur_omg_FR,omgFR2,time_scheme_imp, &
+                                       & n_order_tscheme_imp-1, n_order_tscheme_exp-1)
+            call rhs_uphibar_from_restart(Nm_max,Nr_max,upFR2,urFR2,omgFR2,time_scheme_imp,n_order_tscheme_imp-1, &
+                                       n_order_tscheme_exp-1) 
+            tmp_rhs_buo_term(3,:,:)=rhs_buo_term(n_order_tscheme_imp-1,:,:)
+           
+            ! n step
+            call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR3,omgFR3,upFR3,urFR3,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
+                               & ur_omg_FR)
+            call rhs_temp_from_restart(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR3,time_scheme_imp,n_order_tscheme_imp-2, &
+                                       n_order_tscheme_exp-2)   
+            call rhs_vort_from_restart(Nm_max,Nr_max,Ra,Pr,tFR3,uphi_omg_FR,ur_omg_FR,omgFR3,time_scheme_imp, &
+                                       & n_order_tscheme_imp-2, n_order_tscheme_exp-2)
+            call rhs_uphibar_from_restart(Nm_max,Nr_max,upFR3,urFR3,omgFR3,time_scheme_imp,n_order_tscheme_imp-2, &
+                                       n_order_tscheme_exp-2) 
+            tmp_rhs_buo_term(2,:,:)=rhs_buo_term(n_order_tscheme_imp-2,:,:)
+
+            ! n step
+            call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR4,omgFR4,upFR4,urFR4,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
+                               & ur_omg_FR)
+            call rhs_temp_from_restart(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR4,time_scheme_imp,n_order_tscheme_imp-3, &
+                                       n_order_tscheme_exp-3)   
+            call rhs_vort_from_restart(Nm_max,Nr_max,Ra,Pr,tFR4,uphi_omg_FR,ur_omg_FR,omgFR4,time_scheme_imp, &
+                                       & n_order_tscheme_imp-3, n_order_tscheme_exp-3)
+            call rhs_uphibar_from_restart(Nm_max,Nr_max,upFR4,urFR4,omgFR4,time_scheme_imp,n_order_tscheme_imp-3, &
+                                       n_order_tscheme_exp-3) 
+            tmp_rhs_buo_term(1,:,:)=rhs_buo_term(n_order_tscheme_imp-3,:,:)
 
          else 
 
@@ -174,9 +218,9 @@ contains
          !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
          !--------------------------------------------------------------
 
-         if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
-            tot_time=tot_time+dt_new 
-         end if
+         !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
+         !   tot_time=tot_time+dt_new 
+         !end if
 
          if (n_step-n_restart>1) then
              tmp_rhs_imp_temp=rhs_imp_temp
@@ -191,10 +235,12 @@ contains
          call cpu_time(startNm_maxloop) 
          !-------------------- Call Nm_max loop ------------------------------------------------------------ 
          call Nm_maxLOOP(Nm_max,Nr_max,Ra,Pr,mBC,uphi_temp_FR,ur_temp_FR,uphi_omg_FR,ur_omg_FR,&
-                     & n_step,n_restart,time_scheme_imp,time_scheme_exp)
+                     & n_step,n_restart,time_scheme_imp,time_scheme_exp,l_restart)
          !--------------------------------------------------------------------------------------------------
          call cpu_time(finishNm_maxloop)
          timeNm_maxloop = timeNm_maxloop + finishNm_maxloop-startNm_maxloop
+
+         tot_time=tot_time+dt_new 
 
             
          
@@ -213,7 +259,7 @@ contains
             call store_checkpoint(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                   & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                   & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar,rhs_exp_uphi_bar, &
-                                  & dt_array,n_order_tscheme_max)
+                                  & dt_array,n_order_tscheme_max,time_scheme_type)
  
          end if
          !------------------------------------------------------------------- 
