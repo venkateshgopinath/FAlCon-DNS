@@ -217,7 +217,7 @@ contains
             do i=1,Nr_max
                omgFR(1,i)=upFR(1,i)*r_radius(i) + D1upFR(i)
             end do
-
+            
          !--------------------------------------------------------------------------------------------
          else
 
@@ -361,10 +361,10 @@ contains
       rhs_vort(:)=0.0_dp
       rhs_b(:)=0.0_dp
       !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
-      !$omp parallel & 
-      !$omp private(Nm,rhs,rhs_uphi,rhs_vort,rhs_b) default(shared)  
-         t_ref= OMP_GET_WTIME ()
-      !$omp do    
+      !!$omp parallel & 
+      !!$omp private(Nm,rhs,rhs_uphi,rhs_vort,rhs_b) default(shared)  
+      !   t_ref= OMP_GET_WTIME ()
+      !!$omp do    
       do Nm=0,Nm_max  
 
          !----------- Call RHS construct for temperature advection ----------
@@ -424,10 +424,10 @@ contains
             end if
          end if
       end do
-      !$omp end do
-        t_final= OMP_GET_WTIME ()
-      !$omp end parallel
-      !print *, t_final - t_ref
+      !!$omp end do
+      !  t_final= OMP_GET_WTIME ()
+      !!$omp end parallel
+      !!print *, t_final - t_ref
 
       !-------------- End loop over the Fourier modes --------------------------------------------------------------
 
@@ -497,10 +497,9 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                   !F_duphibar(:)=F_duphibar(:) + duphibar_dt1_d(n_order_tscheme_exp,:)
                !-- y_n = y_(n-1) + dt * summation of (b_i * F_i) -------------------------
                uphi_bar_spec(:) = uphi_bar_spec(:) + dt*F_duphibar
-               if (mBC=='NS') then ! Johnston's strategy
-                  uphi_bar_spec(1)=0.0_dp
-                  uphi_bar_spec(Nr_max)=0.0_dp
-               end if
+               uphi_bar_spec(1)=0.0_dp
+               uphi_bar_spec(Nr_max)=0.0_dp
+
                upFR(1,:) = uphi_bar_spec(:) ! update upFR here
 
                call chebtransform(Nr_max,uphi_bar_spec,upFC(1,:))

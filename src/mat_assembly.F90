@@ -23,7 +23,7 @@ module mat_assembly
    real(kind=dp), allocatable, public :: LAPpsi(:,:) 
    real(kind=dp), allocatable, public :: LAPpsi_all(:,:,:) 
 
-   public :: allocate_mat, deallocate_mat, mat_build, mat_build_rk
+   public :: allocate_mat, deallocate_mat, mat_build, mat_build_uphibar, mat_build_rk
 
 contains
 
@@ -54,7 +54,7 @@ contains
 
    end subroutine deallocate_mat
 
-   subroutine mat_build(Nr_max,dt,n,mBC,wt_lhs_tscheme_imp,Pr)
+      subroutine mat_build(Nr_max,dt,n,mBC,wt_lhs_tscheme_imp,Pr)
 
       integer, intent(in) :: Nr_max 
       integer, intent(in) :: n
@@ -64,19 +64,16 @@ contains
       real(kind=dp) :: C
       integer :: Nr_max2
       integer :: i,j 
-      integer :: INFO1, INFO2, INFO3
+      integer :: INFO1, INFO2
       real(kind=dp), intent(in) :: wt_lhs_tscheme_imp
        
       real(kind=dp) :: AT(Nr_max,Nr_max)
-      real(kind=dp) :: A_uphi(Nr_max,Nr_max)
       real(kind=dp) :: AF(2*Nr_max,2*Nr_max)
       real(kind=dp) :: bctemp(2,Nr_max), bcpsi1(2,Nr_max), bcpsi2(2,Nr_max)
-      real(kind=dp) :: bcuphibar(2,Nr_max)
-      integer :: PIV1(Nr_max), PIV2(2*Nr_max), PIV_uphi(Nr_max)
+      integer :: PIV1(Nr_max), PIV2(2*Nr_max)
       
       AT(:,:)=0.0_dp
       AF(:,:)=0.0_dp
-      A_uphi(:,:)=0.0_dp
       PIV1(:)=0
       PIV2(:)=0
       !print *, wt_lhs_tscheme_imp, "wt imp"
@@ -97,13 +94,9 @@ contains
       if (mBC=='NS') then ! Enforce no-slip boundary condition
                bcpsi2(1,:)=D(1,:)        ! 2nd BC for psi (bottom BC)
                bcpsi2(2,:)=D(Nr_max,:)   ! 2nd BC for psi (top BC)
-               bcuphibar(1,:)=t(1,:)        ! BC for uphibar (bottom BC)
-               bcuphibar(2,:)=t(Nr_max,:)   ! BC for uphibar (top BC)
       elseif (mBC=='SF') then ! Enforce stress-free boundary condition
                bcpsi2(1,:)=D2(1,:)-r_radius(1)*D(1,:)                ! 2nd BC for psi (bottom BC)
                bcpsi2(2,:)=D2(Nr_max,:)-r_radius(Nr_max)*D(Nr_max,:) ! 2nd BC for psi (top BC)
-               bcuphibar(1,:)=r_radius(1)*D(1,:)-r_radius2(1)*t(1,:)        ! BC for uphibar (bottom BC)
-               bcuphibar(2,:)=r_radius(Nr_max)*D(Nr_max,:)-r_radius2(Nr_max)*t(Nr_max,:)   ! BC for uphibar (top BC)
       end if
       !------------------------------------------------------------------------
 
@@ -113,23 +106,17 @@ contains
          do i=1,Nr_max
             AT(i,j)=t(i,j)-wt_lhs_tscheme_imp*dt*(1.0_dp/Pr)*(r_radius(i)*D(i,j)+D2(i,j)-real(n,kind=dp)* & 
                     & real(n,kind=dp)*r_radius2(i)*t(i,j))
-            A_uphi(i,j)=t(i,j)-wt_lhs_tscheme_imp*dt*(r_radius(i)*D(i,j)+D2(i,j) - r_radius2(i)*t(i,j))
          end do
             AT(1,j)=bctemp(1,j)
             AT(Nr_max,j)=bctemp(2,j)
-            A_uphi(1,j)=bcuphibar(1,j)
-            A_uphi(Nr_max,j)=bcuphibar(2,j)
       end do
 
       do i=1,Nr_max
          AT(i,1)=0.5_dp*AT(i,1)
          AT(i,Nr_max)=0.5_dp*AT(i,Nr_max)
-         A_uphi(i,1)=0.5_dp*A_uphi(i,1)
-         A_uphi(i,Nr_max)=0.5_dp*A_uphi(i,Nr_max)
       end do 
                             
       AT=C*AT
-      A_uphi=C*A_uphi
 
       !****** AF is coupled operator matrix for psi and omega *****************************************************
       do j=1,Nr_max
@@ -192,17 +179,72 @@ contains
 
       AF_all(:,:,n+1)=AF
       IPIV2(:,n+1)=PIV2
-      if (n==0) then
-         !***** CALL DGETRF factorization for A_uphi matrix
-         call factorize(Nr_max,A_uphi,PIV_uphi,INFO3)
-         A_uphi_all(:,:,1)=A_uphi
-         IPIV_uphi(:,1)=PIV_uphi
-      end if
                                     
       !end do ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
               ! for mat build outside the main Nm_max loop (when dt=constant)
 
    end subroutine mat_build
+
+   subroutine mat_build_uphibar(Nr_max,dt,mBC,wt_lhs_tscheme_imp,Pr)
+
+      integer, intent(in) :: Nr_max 
+      character(len=100), intent(in) :: mBC 
+      real(kind=dp), intent(in) :: dt
+      real(kind=dp), intent(in) :: Pr
+      real(kind=dp) :: C
+      integer :: i,j 
+      integer :: INFO3
+      real(kind=dp), intent(in) :: wt_lhs_tscheme_imp
+      real(kind=dp) :: A_uphi(Nr_max,Nr_max)
+      real(kind=dp) :: bcuphibar(2,Nr_max)
+      integer :: PIV_uphi(Nr_max)
+      
+      A_uphi(:,:)=0.0_dp
+      PIV_uphi(:)=0
+      A_uphi_all(:,:,1)=0.0_dp
+      IPIV_uphi(:,1)=0
+
+      !print *, wt_lhs_tscheme_imp, "wt imp"
+                           ! OPERATOR MATRIX ASSEMBLY and LU Factorization 
+      !**************** AT is the operator matrix for temperature equation *************************************
+      C=((2.0_dp/real(Nr_max-1,kind=dp))**(0.5_dp))
+
+      if (mBC=='NS') then ! Enforce no-slip boundary condition
+               bcuphibar(1,:)=t(1,:)        ! BC for uphibar (bottom BC)
+               bcuphibar(2,:)=t(Nr_max,:)   ! BC for uphibar (top BC)
+      elseif (mBC=='SF') then ! Enforce stress-free boundary condition
+               bcuphibar(1,:)=r_radius(1)*D(1,:)-r_radius2(1)*t(1,:)        ! BC for uphibar (bottom BC)
+               bcuphibar(2,:)=r_radius(Nr_max)*D(Nr_max,:)-r_radius2(Nr_max)*t(Nr_max,:)   ! BC for uphibar (top BC)
+      end if
+      !------------------------------------------------------------------------
+
+      !do n=0,Nm_max ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
+                     ! for mat build outside the main Nm_max loop (when dt=constant)
+      do j=1,Nr_max
+         do i=1,Nr_max
+            A_uphi(i,j)=t(i,j)-wt_lhs_tscheme_imp*dt*(r_radius(i)*D(i,j)+D2(i,j) - r_radius2(i)*t(i,j))
+         end do
+            A_uphi(1,j)=bcuphibar(1,j)
+            A_uphi(Nr_max,j)=bcuphibar(2,j)
+      end do
+
+      do i=1,Nr_max
+         A_uphi(i,1)=0.5_dp*A_uphi(i,1)
+         A_uphi(i,Nr_max)=0.5_dp*A_uphi(i,Nr_max)
+      end do 
+                            
+      A_uphi=C*A_uphi
+
+
+      !***** CALL DGETRF factorization for A_uphi matrix
+      call factorize(Nr_max,A_uphi,PIV_uphi,INFO3)
+      A_uphi_all(:,:,1)=A_uphi
+      IPIV_uphi(:,1)=PIV_uphi
+                                    
+      !end do ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
+              ! for mat build outside the main Nm_max loop (when dt=constant)
+
+   end subroutine mat_build_uphibar
 
    subroutine mat_build_rk(Nr_max,n)
 

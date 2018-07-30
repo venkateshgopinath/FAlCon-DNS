@@ -218,9 +218,9 @@ contains
          !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
          !--------------------------------------------------------------
 
-         !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
-         !   tot_time=tot_time+dt_new 
-         !end if
+         if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
+            tot_time=tot_time+dt_new 
+         end if
 
          if (n_step-n_restart>1) then
              tmp_rhs_imp_temp=rhs_imp_temp
@@ -240,7 +240,7 @@ contains
          call cpu_time(finishNm_maxloop)
          timeNm_maxloop = timeNm_maxloop + finishNm_maxloop-startNm_maxloop
 
-         tot_time=tot_time+dt_new 
+         !tot_time=tot_time+dt_new 
 
             
          

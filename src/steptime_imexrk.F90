@@ -17,8 +17,8 @@ module steptime_imexrk
                           & n_order_tscheme_exp, n_order_tscheme_max, dt_array, rhs_imp_temp, rhs_exp_temp, &
                           & rhs_imp_vort, rhs_exp_vort, rhs_imp_uphi_bar, rhs_exp_uphi_bar, &
                           & n_order_tscheme_exp, butcher_aA, butcher_bA, rhs_update_wts_exp, &
-                          & wt_rhs_tscheme_exp
-   use mat_assembly, only: mat_build_rk
+                          & wt_rhs_tscheme_exp, butcher_aD
+   use mat_assembly, only: mat_build_rk, mat_build_uphibar
 
    implicit none
 
@@ -86,6 +86,7 @@ contains
 
       do Nm=0,Nm_max
             call mat_build_rk(Nr_max,Nm) ! Build the operator matrix solving for psi and factorize them 
+            call mat_build_uphibar(Nr_max,dt,mBC,butcher_aD(rk_stage,rk_stage),Pr)
       end do
 
       call rhs_update_wts_imp(time_scheme_imp,wt_lhs_tscheme_imp,wt_rhs_tscheme_imp,n_order_tscheme_imp)

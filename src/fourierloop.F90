@@ -6,7 +6,7 @@ module fourierloop
    use init, only: TFC, tFR, t2FR, omgFR, temp_spec, omg_spec, upFC, psii, upFR, urFR, startmatbuild, &
                    & finishmatbuild, finishmatbuild, time_matbuild, r_radius,dt_new, tmp_rhs_exp_uphi_bar, &
                    & r_radius, r_radius2, omgFR_check
-   use mat_assembly, only: AT_all, AF_all, IPIV1, IPIV2, mat_build, A_uphi_all, IPIV_uphi
+   use mat_assembly, only: AT_all, AF_all, IPIV1, IPIV2, mat_build, mat_build_uphibar, A_uphi_all, IPIV_uphi
    use algebra, only: matsolve, matsolve_real
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, wt_rhs_tscheme_exp, n_order_tscheme_imp, &
                           & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, dt_array, &
@@ -90,7 +90,7 @@ contains
       rhs_uphi(:)=0.0_dp
 !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
       !$omp parallel & 
-      !$omp private(Nm,i,rhs,rhs_r,rhs_i,rhsf_r,rhsf_i,real_rhs_temp,rhs_uphi,D1upFR,real_rhs_omg,real_rhs_psi, & 
+      !$omp private(Nm,rhs,rhs_r,rhs_i,rhsf_r,rhsf_i,real_rhs_temp,rhs_uphi,D1upFR,real_rhs_omg,real_rhs_psi, & 
       !$omp & real_d_rhs_psi,rhsf,rhs_omg,rhs_psi,rhs_exp_uphi_bar) default(shared)  
          t_ref= OMP_GET_WTIME ()
       !$omp do   
@@ -99,6 +99,7 @@ contains
          if (n_step-n_restart==1 .or. dt_array(1)/=dt_array(2)) then ! Call 'mat_build' only if dt_current and dt_previous are different 
             call cpu_time(startmatbuild)
             call mat_build(Nr_max,dt_array(1),Nm,mBC,wt_lhs_tscheme_imp,Pr) ! Build the operator matrices and factorize them 
+            call mat_build_uphibar(Nr_max,dt_array(1),mBC,wt_lhs_tscheme_imp,Pr)
             call cpu_time(finishmatbuild) 
             time_matbuild=time_matbuild + finishmatbuild - startmatbuild
          end if
@@ -221,7 +222,7 @@ contains
          t_final= OMP_GET_WTIME ()
       !$omp end parallel
       !print *, maxval(aimag(omgFR_check))
-        !print *, t_final - t_ref
+        print *, t_final - t_ref
 !-------------- End loop over the Fourier modes -------------------------------------------------------------------------
 
    end subroutine Nm_maxLOOP

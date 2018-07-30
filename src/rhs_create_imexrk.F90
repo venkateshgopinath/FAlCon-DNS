@@ -159,8 +159,8 @@ contains
 
          do i=1,Nr_max
 
-            !rhs_uphi(i)=-(ur_d1up_FR(i)+r_radius(i)*ur_up_FR(i)) ! Advective part in Fourier-Real space
-            rhs_uphi(i)=-ur_omg(i) ! Advective part in Real space
+            rhs_uphi(i)=-(ur_d1up_FR(i)+r_radius(i)*ur_up_FR(i)) ! Advective part in Fourier-Real space
+            !rhs_uphi(i)=-ur_omg(i) ! Advective part in Real space
 
          end do
 
