@@ -84,14 +84,13 @@ contains
       count_snap = n_snapshot_point
       count_chkpnt = n_restart_point
 
-      do Nm=0,Nm_max
-            call mat_build_rk(Nr_max,Nm) ! Build the operator matrix solving for psi and factorize them 
-            call mat_build_uphibar(Nr_max,dt,mBC,butcher_aD(rk_stage,rk_stage),Pr)
-      end do
-
       call rhs_update_wts_imp(time_scheme_imp,wt_lhs_tscheme_imp,wt_rhs_tscheme_imp,n_order_tscheme_imp)
       call rhs_update_wts_exp(time_scheme_imp,time_scheme_exp,wt_rhs_tscheme_exp,n_order_tscheme_exp)
 
+      do Nm=0,Nm_max
+            call mat_build_rk(Nr_max,Nm) ! Build the operator matrix solving for psi and factorize them 
+            call mat_build_uphibar(Nr_max,dt,mBC,butcher_aD(2,2),Pr)
+      end do
 !------------------------- Time loop begins ----------------------------------------------------------   
       do n_step=1+n_restart,n_time_steps+n_restart 
           
