@@ -792,11 +792,7 @@ contains
 
             butcher_bD = reshape([0.5_dp, 0.0_dp, 0.0_dp, 0.5_dp],[4]) 
 
-            do i=1,n_order_tscheme_imp
-               if (butcher_aD(n_order_tscheme_imp,i)==butcher_bD(i)) then
-                  ars_eqn_check_D=.TRUE.
-               end if
-            end do   
+            ars_eqn_check_D=.TRUE.
 
          case ('SSP332')
 
@@ -1219,11 +1215,7 @@ contains
 
                   butcher_bA = reshape([0.5_dp, 0.0_dp, 0.5_dp, 0.0_dp],[4]) 
 
-                  do i=1,n_order_tscheme_exp
-                     if (butcher_aA(n_order_tscheme_exp,i)==butcher_bA(i)) then
-                        ars_eqn_check_A=.TRUE.
-                     end if
-                  end do
+                  ars_eqn_check_A=.TRUE.
 
             end select  
 

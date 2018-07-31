@@ -12,12 +12,12 @@ module steptime_imexrk
    use nonlin, only: Nr_maxloop, dtval_r, dtval_p, dtval_rkr, dtval_rkp
    use output, only: init_output, calculate_spectra, final_output, writeke_spectral, &
                      & store_checkpoint, store_snapshot_imexrk
-   use fourierloop_imexrk, only: Get_stage_var, RHS_construct_stage, Assembly_stage
+   use fourierloop_imexrk, only: Get_stage_var, RHS_construct_stage, Assembly_stage, Assembly_stage_SA
    use timeschemes, only: rhs_update_wts_imp, wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, &
                           & n_order_tscheme_exp, n_order_tscheme_max, dt_array, rhs_imp_temp, rhs_exp_temp, &
                           & rhs_imp_vort, rhs_exp_vort, rhs_imp_uphi_bar, rhs_exp_uphi_bar, &
                           & n_order_tscheme_exp, butcher_aA, butcher_bA, rhs_update_wts_exp, &
-                          & wt_rhs_tscheme_exp, butcher_aD
+                          & wt_rhs_tscheme_exp, butcher_aD, ars_eqn_check_A, ars_eqn_check_D 
    use mat_assembly, only: mat_build_rk, mat_build_uphibar
 
    implicit none
@@ -133,9 +133,15 @@ contains
 
          end do ! End LOOP for RK stages 
 
-         !--- Assembly of RK stages and calculation of variables at each time step----------------- 
-         call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR,lm,mBC)
-         !------------------------------------------------------------------------------------------
+         ! ASSEMBLY STAGE ------------------------------------------------------
+         if ( ( .not. ars_eqn_check_A ) .or. ( .not. ars_eqn_check_D ) ) then ! If not satisfying equation (2.3) in ARS_97 paper
+            !--- Assembly for non-stiffly accurate schemes ---------------------
+            call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR,lm,mBC)
+         else
+            !--- Assembly for stiffly accurate schemes -------------------------
+            call Assembly_stage_SA(Nm_max,Nr_max,tFR,omgFR,upFR)
+         end if
+         !----------------------------------------------------------------------     
 
          tot_time=tot_time+dt_new 
 

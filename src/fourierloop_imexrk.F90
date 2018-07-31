@@ -37,7 +37,7 @@ module fourierloop_imexrk
    character :: TRANS='N'
 
    public :: allocate_fourierloop_imexrk, deallocate_fourierloop_imexrk, Get_stage_var, &
-             & RHS_construct_stage, Assembly_stage
+             & RHS_construct_stage, Assembly_stage, Assembly_stage_SA
 
 contains
 
@@ -452,7 +452,6 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
       complex(kind=dp) :: dpsi_rmax
       complex(kind=dp) :: d2psi_rmax
 
-      if ( ( .not. ars_eqn_check_A ) .or. ( .not. ars_eqn_check_D ) ) then ! If not satisfying equation (2.3) in ARS_97 paper
          !!-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
          !$omp parallel & 
          !$omp private(Nm,i,j,k,F_dtemp,F_duphibar,F_domg, &
@@ -499,7 +498,6 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                uphi_bar_spec(:) = uphi_bar_spec(:) + dt*F_duphibar
                uphi_bar_spec(1)=0.0_dp
                uphi_bar_spec(Nr_max)=0.0_dp
-
                upFR(1,:) = uphi_bar_spec(:) ! update upFR here
 
                call chebtransform(Nr_max,uphi_bar_spec,upFC(1,:))
@@ -586,13 +584,20 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
           
          tFR=temp_spec ! update tFR here
          omgFR=omg_spec ! update omgFR here
-      else ! If satisfying equation (2.3) in ARS_97 paper
-         temp_spec = tFR
-         omg_spec = omgFR
-         uphi_bar_spec = upFR(1,:)
-      end if
-!-------------- End loop over the Fourier modes --------------------------------------------------------------
 
    end subroutine Assembly_stage
+
+   subroutine Assembly_stage_SA(Nm_max,Nr_max,tFR,omgFR,upFR)
+
+   integer, intent(in) :: Nm_max
+   integer, intent(in) :: Nr_max 
+   complex(kind=dp), intent(in) :: tFR(Nm_max+1,Nr_max),omgFR(Nm_max+1,Nr_max) 
+   complex(kind=dp), intent(in) :: upFR(Nm_max+1,Nr_max)
+
+   temp_spec = tFR
+   omg_spec = omgFR
+   uphi_bar_spec = upFR(1,:)
+
+   end subroutine Assembly_stage_SA
 
 end module fourierloop_imexrk
