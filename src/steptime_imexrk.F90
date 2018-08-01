@@ -89,7 +89,6 @@ contains
 
       do Nm=0,Nm_max
             call mat_build_rk(Nr_max,Nm) ! Build the operator matrix solving for psi and factorize them 
-            call mat_build_uphibar(Nr_max,dt,mBC,butcher_aD(2,2),Pr)
       end do
 !------------------------- Time loop begins ----------------------------------------------------------   
       do n_step=1+n_restart,n_time_steps+n_restart 

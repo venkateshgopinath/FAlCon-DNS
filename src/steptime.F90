@@ -82,7 +82,7 @@ contains
       
       !--------- If restarting -----------------------------------------------
       if (l_restart) then
-         if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .and. l_imexrk_started) then
+         if ((time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2') .and. l_imexrk_started) then
             ! n-1 step
             call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR1,omgFR1,upFR1,urFR1,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
                                & ur_omg_FR)
@@ -219,9 +219,9 @@ contains
          !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
          !--------------------------------------------------------------
 
-         if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
-            tot_time=tot_time+dt_new 
-         end if
+         !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
+         !   tot_time=tot_time+dt_new 
+         !end if
 
          if (n_step-n_restart>1) then
              tmp_rhs_imp_temp=rhs_imp_temp
@@ -241,7 +241,7 @@ contains
          call cpu_time(finishNm_maxloop)
          timeNm_maxloop = timeNm_maxloop + finishNm_maxloop-startNm_maxloop
 
-         !tot_time=tot_time+dt_new 
+         tot_time=tot_time+dt_new 
 
             
          

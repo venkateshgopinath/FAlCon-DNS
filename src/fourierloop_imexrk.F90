@@ -7,7 +7,8 @@ module fourierloop_imexrk
    use init, only: TFC, temp_spec,omg_spec,startmatbuild, &
                    & finishmatbuild, finishmatbuild, time_matbuild, radius, r_radius, r_radius2, &
                    & dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC, ur, omg, omgFR_check
-   use mat_assembly, only: LAPpsi_all, IPIV1, AT_all, AF_all, IPIV1, IPIV2, mat_build, IPIV1_lap, A_uphi_all, IPIV_uphi
+   use mat_assembly, only: LAPpsi_all, IPIV1, AT_all, AF_all, IPIV1, IPIV2, mat_build, mat_build_uphibar, &
+                           & IPIV1_lap, A_uphi_all, IPIV_uphi
    use algebra, only: matsolve
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, wt_rhs_tscheme_exp, & 
                           & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, &
@@ -121,6 +122,7 @@ contains
             ! Call 'mat_build' only if dt_current and dt_previous are different OR if the butcher table for implicit part has unequal diagonal values
             call cpu_time(startmatbuild) 
             call mat_build(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),Pr) ! Build the operator matrices and factorize them 
+            call mat_build_uphibar(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),Pr)
             call cpu_time(finishmatbuild) 
             time_matbuild=time_matbuild + finishmatbuild - startmatbuild
          end if
@@ -601,7 +603,7 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
    temp_spec = tFR
    omg_spec = omgFR
    uphi_bar_spec = upFR(1,:)
-   print *, maxval(real(upFR(1,:))), "in assembly"
+
    end subroutine Assembly_stage_SA
 
 end module fourierloop_imexrk

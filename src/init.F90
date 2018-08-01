@@ -3,10 +3,10 @@ module init
    use constants, only: one, two, three, half, pi, ii, onefourth
 #if FFTW
    use fourier, only: init_fftwplan, destroy_fftwplan, forfft, invfft
-   use chebyshev, only: init_chebfftwplan, destroy_chebfftwplan, lagrange, dlagrange, d2lagrange 
+   use chebyshev, only: init_chebfftwplan, destroy_chebfftwplan, lagrange, dlagrange, d2lagrange, chebtransform, chebinvtran 
 #elif GG
    use fourier, only: forfft, invfft
-   use chebyshev, only: lagrange, dlagrange, d2lagrange 
+   use chebyshev, only: lagrange, dlagrange, d2lagrange, chebtransform, chebinvtran 
 #endif
    use timeschemes, only: rhs_update_wts_imp, wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, &
                           & n_order_tscheme_exp, n_order_tscheme_max, dt_array, rhs_imp_temp, rhs_exp_temp, &
@@ -35,7 +35,9 @@ module init
    real(kind=dp), public :: start_tran, finish_tran, time_tran
    real(kind=dp), public :: dt_old, dt_new, tot_time 
 
-   complex(kind=dp), allocatable :: tFRc(:,:), omgFRc(:,:), urFRc(:,:), upFRc(:,:) ! Previously saved data (small 'c' denotes current timestep)
+   complex(kind=dp), allocatable :: tFRc(:,:), omgFRc(:,:), urFRc(:,:), upFRc(:,:) ! Previously saved data (small 'c' denotes latest timestep from checkpoint)
+   complex(kind=dp), allocatable :: tFCc(:,:), omgFCc(:,:), urFCc(:,:), upFCc(:,:) ! Previously saved data (small 'c' denotes latest timestep from checkpoint)
+   complex(kind=dp), allocatable :: tFCn(:,:), omgFCn(:,:), urFCn(:,:), upFCn(:,:) ! Previously saved data (small 'n' denotes latest timestep from checkpoint adapted if Nm or Nr different to current )
    complex(kind=dp), allocatable :: rhs_imp_temp_old(:,:,:), rhs_exp_temp_old(:,:,:)
    complex(kind=dp), allocatable :: rhs_imp_vort_old(:,:,:), rhs_exp_vort_old(:,:,:) 
    complex(kind=dp), allocatable :: rhs_imp_uphi_bar_old(:,:), rhs_exp_uphi_bar_old(:,:) 
@@ -409,6 +411,10 @@ contains
 
       allocate( tFRc(Nm_max+1,Nr_max), omgFRc(Nm_max+1,Nr_max), urFRc(Nm_max+1,Nr_max), &
                 & upFRc(Nm_max+1,Nr_max) )
+      allocate( tFCc(Nm_max+1,Nr_max), omgFCc(Nm_max+1,Nr_max), urFCc(Nm_max+1,Nr_max), &
+                & upFCc(Nm_max+1,Nr_max) )
+      allocate( tFCn(Nm_max+1,Nr_max), omgFCn(Nm_max+1,Nr_max), urFCn(Nm_max+1,Nr_max), &
+                & upFCn(Nm_max+1,Nr_max) )
       allocate( rhs_imp_temp_old(n_order_tscheme_imp,Nm_max+1,Nr_max),rhs_exp_temp_old( &
                 & n_order_tscheme_exp, Nm_max+1, Nr_max),rhs_imp_vort_old(n_order_tscheme_imp, &
                 & Nm_max+1, Nr_max),rhs_exp_vort_old(n_order_tscheme_exp,Nm_max+1,Nr_max), &
@@ -423,6 +429,8 @@ contains
       deallocate( dt_array_old )
       deallocate( rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old )    
       deallocate( rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old )
+      deallocate( tFCn, omgFCn, urFCn, upFCn )
+      deallocate( tFCc, omgFCc, urFCc, upFCc )
       deallocate( tFRc, omgFRc, urFRc, upFRc )
 
    end subroutine deallocate_restart
@@ -438,14 +446,13 @@ contains
       real(kind=dp), intent(out) :: tot_time
       integer :: Nm_max_old, Nr_max_old
       integer :: n_order_tscheme_imp_old, n_order_tscheme_exp_old, n_order_tscheme_max_old 
-      integer :: i,j
+      integer :: i,j,Nm,Nr
       
       real(kind=dp), intent(out) :: dt_array(n_order_tscheme_max)
       character(len=100), intent(in) :: time_scheme_type
       character(len=100), intent(in) :: time_scheme_imp
-      
 
-      if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .and. l_imexrk_started) then
+      if ((time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2') .and. l_imexrk_started) then
          call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
                               & n_order_tscheme_exp_old,Nrestart_point-1,tFR1,omgFR1,urFR1,upFR1, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
@@ -543,7 +550,6 @@ contains
          end if  
 
       elseif(time_scheme_type=='IMEXRK') then
-
          !---- Get previously saved data ----
          call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
                                  & n_order_tscheme_exp_old,Nrestart_point,tFRc,omgFRc,urFRc,upFRc, &    
@@ -577,7 +583,6 @@ contains
          end if  
           
       else 
-
          !---- Get previously saved data ----
          call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
                                  & n_order_tscheme_exp_old,Nrestart_point,tFRc,omgFRc,urFRc,upFRc, &    
@@ -606,66 +611,154 @@ contains
 !----    If order of the schemes are different from before (Time scheme implicit) ----- 
          if (n_order_tscheme_imp > n_order_tscheme_imp_old) then
             do i=1,n_order_tscheme_imp_old
-               rhs_imp_temp(i,:,:)=rhs_imp_temp_old(i,:,:)
-               rhs_imp_vort(i,:,:)=rhs_imp_vort_old(i,:,:)
-               rhs_imp_uphi_bar(i,:)=rhs_imp_uphi_bar_old(i,:)
+               do Nm=0,Nm_max_old
+                  do Nr=1,Nr_max_old
+                     rhs_imp_temp(i,Nm+1,Nr)=rhs_imp_temp_old(i,Nm+1,Nr)
+                     rhs_imp_vort(i,Nm+1,Nr)=rhs_imp_vort_old(i,Nm+1,Nr)
+                     rhs_imp_uphi_bar(i,Nr)=rhs_imp_uphi_bar_old(i,Nr)
+                  end do
+               end do 
             end do
             do j=n_order_tscheme_imp_old+1,n_order_tscheme_imp
-               rhs_imp_temp(j,:,:)=rhs_imp_temp(n_order_tscheme_imp_old,:,:)
-               rhs_imp_vort(j,:,:)=rhs_imp_vort(n_order_tscheme_imp_old,:,:)
-               rhs_imp_uphi_bar(j,:)=rhs_imp_uphi_bar(n_order_tscheme_imp_old,:)
+               do Nm=0,Nm_max_old
+                  do Nr=1,Nr_max_old
+                     rhs_imp_temp(j,Nm+1,Nr)=rhs_imp_temp(n_order_tscheme_imp_old,Nm+1,Nr)
+                     rhs_imp_vort(j,Nm+1,Nr)=rhs_imp_vort(n_order_tscheme_imp_old,Nm+1,Nr)
+                     rhs_imp_uphi_bar(j,Nr)=rhs_imp_uphi_bar(n_order_tscheme_imp_old,Nr)
+                  end do
+               end do 
             end do
 
          else if (n_order_tscheme_imp < n_order_tscheme_imp_old) then
             do i=1,n_order_tscheme_imp
-               rhs_imp_temp(i,:,:)=rhs_imp_temp_old(i,:,:)
-               rhs_imp_vort(i,:,:)=rhs_imp_vort_old(i,:,:)
-               rhs_imp_uphi_bar(i,:)=rhs_imp_uphi_bar_old(i,:)
+               do Nm=0,Nm_max_old
+                  do Nr=1,Nr_max_old
+                     rhs_imp_temp(i,Nm+1,Nr)=rhs_imp_temp_old(i,Nm+1,Nr)
+                     rhs_imp_vort(i,Nm+1,Nr)=rhs_imp_vort_old(i,Nm+1,Nr)
+                     rhs_imp_uphi_bar(i,Nr)=rhs_imp_uphi_bar_old(i,Nr)
+                  end do
+               end do 
             end do
 
 !----    If order of the schemes are same as before (Time scheme implicit) ------------ 
          else if (n_order_tscheme_imp == n_order_tscheme_imp_old) then
-            rhs_imp_temp=rhs_imp_temp_old
-            rhs_imp_vort=rhs_imp_vort_old
-            rhs_imp_uphi_bar=rhs_imp_uphi_bar_old
-
+            do i=1,n_order_tscheme_imp
+               do Nm=0,Nm_max_old
+                  do Nr=1,Nr_max_old
+                     rhs_imp_temp(i,Nm+1,Nr)=rhs_imp_temp_old(i,Nm+1,Nr)
+                     rhs_imp_vort(i,Nm+1,Nr)=rhs_imp_vort_old(i,Nm+1,Nr)
+                     rhs_imp_uphi_bar(i,Nr)=rhs_imp_uphi_bar_old(i,Nr)
+                  end do
+               end do 
+            end do
          end if
                
 !----    If order of the schemes are different from before (Time scheme explicit) ----- 
          if (n_order_tscheme_exp > n_order_tscheme_exp_old) then
             do i=1,n_order_tscheme_exp_old
-               rhs_exp_temp(i,:,:)=rhs_exp_temp_old(i,:,:)
-               rhs_exp_vort(i,:,:)=rhs_exp_vort_old(i,:,:)
-               rhs_exp_uphi_bar(i,:)=rhs_exp_uphi_bar_old(i,:)
+               do Nm=0,Nm_max_old
+                  do Nr=1,Nr_max_old
+                     rhs_exp_temp(i,Nm+1,Nr)=rhs_exp_temp_old(i,Nm+1,Nr)
+                     rhs_exp_vort(i,Nm+1,Nr)=rhs_exp_vort_old(i,Nm+1,Nr)
+                     rhs_exp_uphi_bar(i,Nr)=rhs_exp_uphi_bar_old(i,Nr)
+                  end do
+               end do 
             end do
             do j=n_order_tscheme_exp_old+1,n_order_tscheme_exp
-               rhs_exp_temp(j,:,:)=rhs_imp_temp(n_order_tscheme_exp_old,:,:)
-               rhs_exp_vort(j,:,:)=rhs_imp_vort(n_order_tscheme_exp_old,:,:)
-               rhs_exp_uphi_bar(j,:)=rhs_imp_uphi_bar(n_order_tscheme_exp_old,:)
+               do Nm=0,Nm_max_old
+                  do Nr=1,Nr_max_old
+                     rhs_exp_temp(j,Nm+1,Nr)=rhs_imp_temp(n_order_tscheme_exp_old,Nm+1,Nr)
+                     rhs_exp_vort(j,Nm+1,Nr)=rhs_imp_vort(n_order_tscheme_exp_old,Nm+1,Nr)
+                     rhs_exp_uphi_bar(j,Nr)=rhs_imp_uphi_bar(n_order_tscheme_exp_old,Nr)
+                  end do
+               end do 
             end do
          
          else if (n_order_tscheme_exp < n_order_tscheme_exp_old) then
             do i=1,n_order_tscheme_exp
-               rhs_exp_temp(i,:,:)=rhs_exp_temp_old(i,:,:)
-               rhs_exp_vort(i,:,:)=rhs_exp_vort_old(i,:,:)
-               rhs_exp_uphi_bar(i,:)=rhs_exp_uphi_bar_old(i,:)
+               do Nm=0,Nm_max_old
+                  do Nr=1,Nr_max_old
+                     rhs_exp_temp(i,Nm+1,Nr)=rhs_exp_temp_old(i,Nm+1,Nr)
+                     rhs_exp_vort(i,Nm+1,Nr)=rhs_exp_vort_old(i,Nm+1,Nr)
+                     rhs_exp_uphi_bar(i,Nr)=rhs_exp_uphi_bar_old(i,Nr)
+                  end do
+               end do 
             end do
 
 !----    If order of the schemes are same as before (Time scheme explicit) ------------ 
          else if (n_order_tscheme_exp == n_order_tscheme_exp_old) then
-            rhs_exp_temp=rhs_exp_temp_old
-            rhs_exp_vort=rhs_exp_vort_old
-            rhs_exp_uphi_bar=rhs_exp_uphi_bar_old
-
+            do i=1,n_order_tscheme_exp
+               do Nm=0,Nm_max_old
+                  do Nr=1,Nr_max_old
+                     rhs_exp_temp(i,Nm+1,Nr)=rhs_exp_temp_old(i,Nm+1,Nr)
+                     rhs_exp_vort(i,Nm+1,Nr)=rhs_exp_vort_old(i,Nm+1,Nr)
+                     rhs_exp_uphi_bar(i,Nr)=rhs_exp_uphi_bar_old(i,Nr)
+                  end do
+               end do 
+            end do
          end if
 !-----   -------------------------------------------------------------------------------
-     
+
+         do Nm=0,Nm_max_old 
+            call chebtransform(Nr_max,tFRc(Nm+1,:),tFCc(Nm+1,:))
+            call chebtransform(Nr_max,omgFRc(Nm+1,:),omgFCc(Nm+1,:))
+            call chebtransform(Nr_max,urFRc(Nm+1,:),urFCc(Nm+1,:))
+            call chebtransform(Nr_max,upFRc(Nm+1,:),upFCc(Nm+1,:))
+         end do
+            
          if (Nm_max_old==Nm_max .and. Nr_max_old==Nr_max) then
             tFR=tFRc
             omgFR=omgFRc
             urFR=urFRc
             upFR=upFRc
-         end if  
+         else if (Nm_max>Nm_max_old .and. Nr_max==Nr_max_old) then
+            do Nm=0,Nm_max_old
+               do Nr=1,Nr_max_old
+                  tFCn(Nm+1,Nr)=tFCc(Nm+1,Nr) 
+                  omgFCn(Nm+1,Nr)=omgFCc(Nm+1,Nr) 
+                  urFCn(Nm+1,Nr)=urFCc(Nm+1,Nr) 
+                  upFCn(Nm+1,Nr)=upFCc(Nm+1,Nr) 
+               end do
+            end do
+            do Nm=Nm_max_old+1,Nm_max
+               do Nr=1,Nr_max_old
+                  tFCn(Nm+1,Nr)=0.0_dp
+                  omgFCn(Nm+1,Nr)=0.0_dp
+                  urFCn(Nm+1,Nr)=0.0_dp
+                  upFCn(Nm+1,Nr)=0.0_dp
+               end do
+            end do
+            do Nm=0,Nm_max
+               call chebinvtran(Nr_max,tFCn(Nm+1,:),tFR(Nm+1,:))
+               call chebinvtran(Nr_max,omgFCn(Nm+1,:),omgFR(Nm+1,:))
+               call chebinvtran(Nr_max,urFCn(Nm+1,:),urFR(Nm+1,:))
+               call chebinvtran(Nr_max,upFCn(Nm+1,:),upFR(Nm+1,:))
+            end do
+         else if (Nm_max==Nm_max_old .and. Nr_max>Nr_max_old) then
+            do Nm=0,Nm_max_old
+               do Nr=1,Nr_max_old
+                  tFCn(Nm+1,Nr)=tFCc(Nm+1,Nr) 
+                  omgFCn(Nm+1,Nr)=omgFCc(Nm+1,Nr) 
+                  urFCn(Nm+1,Nr)=urFCc(Nm+1,Nr) 
+                  upFCn(Nm+1,Nr)=upFCc(Nm+1,Nr) 
+               end do
+            end do
+            do Nm=0,Nm_max_old
+               do Nr=Nr_max_old+1,Nr_max
+                  tFCn(Nm+1,Nr)=0.0_dp
+                  omgFCn(Nm+1,Nr)=0.0_dp
+                  urFCn(Nm+1,Nr)=0.0_dp
+                  upFCn(Nm+1,Nr)=0.0_dp
+               end do
+            end do
+            do Nm=0,Nm_max
+               call chebinvtran(Nr_max,tFCn(Nm+1,:),tFR(Nm+1,:))
+               call chebinvtran(Nr_max,omgFCn(Nm+1,:),omgFR(Nm+1,:))
+               call chebinvtran(Nr_max,urFCn(Nm+1,:),urFR(Nm+1,:))
+               call chebinvtran(Nr_max,upFCn(Nm+1,:),upFR(Nm+1,:))
+            end do
+         end if
+
           
          !  ----- Create temporary rhs from previously stored rhs -----------  
          tmp_rhs_imp_temp=rhs_imp_temp 
@@ -707,6 +800,7 @@ contains
       character(len=72) :: datafile1
       integer :: inunit
       !----------------------------- Read latest files -------------------------------
+      print *, Nrestart_point
       write(datafile1,'("checkpoint_",I5.5)') Nrestart_point
       open(newunit=inunit, status='old',file=datafile1,form='unformatted')
       read(inunit) dt_new,tot_time,Nm_max,Nr_max,n_order_tscheme_imp_old, &
