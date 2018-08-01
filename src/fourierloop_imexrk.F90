@@ -181,12 +181,14 @@ contains
 
             !-- Apply weights to RHS using implicit Butcher's table: summation of (a_i F_i) 
             do i=1,rk_stage-1 
-               F_duphibar_d(:)=F_duphibar_d(:)+butcher_aD(rk_stage,i)*duphibar_dt1_d(i,:) 
+               !F_duphibar_d(:)=F_duphibar_d(:)+butcher_aD(rk_stage,i)*duphibar_dt1_d(i,:) 
+               F_duphibar_d(:)=F_duphibar_d(:)+butcher_aD(rk_stage,i)*domgdt1_d(i,Nm+1,:) 
             end do
             
             !-- Apply weights to RHS using explicit Butcher's table: summation of (\hat{a}_i F_i) 
             do i=1,rk_stage-1 
-               F_duphibar_a(:)=F_duphibar_a(:)+butcher_aA(rk_stage,i)*duphibar_dt1_a(i,:) 
+               !F_duphibar_a(:)=F_duphibar_a(:)+butcher_aA(rk_stage,i)*duphibar_dt1_a(i,:) 
+               F_duphibar_a(:)=F_duphibar_a(:)+butcher_aA(rk_stage,i)*domgdt1_a(i,Nm+1,:) 
             end do
 
             !-- RHS temp = Y_0 + dt * summation of (a_i * F_i) + summation of (\hat{a}_i F_i) 
@@ -206,12 +208,12 @@ contains
             !*********************************************************************************** 
 
             do i=1,Nr_max
-              upFC(1,i)=cmplx(rhs_r(i),rhs_i(i),kind=dp)
+              !upFC(1,i)=cmplx(rhs_r(i),rhs_i(i),kind=dp)
+              upFC(1,i)=cmplx(rhs_r(i),0.0_dp,kind=dp)
             end do
 
             call chebinvtran(Nr_max,upFC(1,:),upFR(1,:)) ! Update stage variable uphi_bar
             call chebinvtranD1(Nr_max,upFC(1,:),D1upFR(:))
-
             urFR(1,:) = 0.0_dp 
 
             do i=1,Nr_max
@@ -388,7 +390,8 @@ contains
             call rhs_construct_uphibar_a(Nm_max,Nr_max,urFR,upFR,upFC,rhs_uphi, &
                                     & time_scheme_type,ur,omg)
             
-            duphibar_dt1_a(rk_stage,:) = rhs_uphi(:)
+            !duphibar_dt1_a(rk_stage,:) = rhs_uphi(:)
+            domgdt1_a(rk_stage,Nm+1,:) = rhs_uphi(:)
             !---------------------------------------------------------
 
             rhs_uphi(:)=0.0_dp 
@@ -396,7 +399,8 @@ contains
             call rhs_construct_uphibar_d(Nm_max,Nr_max,upFR,upFC,rhs_uphi, &
                                     & time_scheme_type)
             
-            duphibar_dt1_d(rk_stage,:) = rhs_uphi(:)
+            !duphibar_dt1_d(rk_stage,:) = rhs_uphi(:)
+            domgdt1_d(rk_stage,Nm+1,:) = rhs_uphi(:)
             !---------------------------------------------------------
 
          else
@@ -490,7 +494,7 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
 
                !-- Apply weights to RHS using Butcher's table: summation of (b_i F_i) + summation of (\hat{b}_i F_i) 
                do i=1,n_order_tscheme_exp
-                  F_duphibar(:)=F_duphibar(:) + butcher_bA(i)*duphibar_dt1_a(i,:) + butcher_bD(i)*duphibar_dt1_d(i,:)
+                  F_duphibar(:)=F_duphibar(:) + butcher_bA(i)*domgdt1_a(i,Nm+1,:) + butcher_bD(i)*domgdt1_d(i,Nm+1,:)
                end do
 
                   !F_duphibar(:)=F_duphibar(:) + duphibar_dt1_d(n_order_tscheme_exp,:)
@@ -597,7 +601,7 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
    temp_spec = tFR
    omg_spec = omgFR
    uphi_bar_spec = upFR(1,:)
-
+   print *, maxval(real(upFR(1,:))), "in assembly"
    end subroutine Assembly_stage_SA
 
 end module fourierloop_imexrk

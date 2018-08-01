@@ -50,7 +50,7 @@ contains
 
    subroutine timeloop_imex(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt, Ra,Pr,mBC, &
                        & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
-                       & time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,time_scheme_type)
+                       & time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,time_scheme_type,l_imexrk_started)
        
       integer :: n_step  
       character(len=100), intent(in) :: tag
@@ -73,6 +73,7 @@ contains
       real(kind=dp), intent(in) :: Ra
       real(kind=dp), intent(in) :: Pr
       character(len=100), intent(in) :: mBC
+      logical, intent(in) :: l_imexrk_started 
       integer :: count_snap
       integer :: count_chkpnt
 
@@ -81,7 +82,7 @@ contains
       
       !--------- If restarting -----------------------------------------------
       if (l_restart) then
-         if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2') then
+         if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .and. l_imexrk_started) then
             ! n-1 step
             call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR1,omgFR1,upFR1,urFR1,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
                                & ur_omg_FR)
@@ -102,7 +103,7 @@ contains
             call rhs_uphibar_from_restart(Nm_max,Nr_max,upFR2,urFR2,omgFR2,time_scheme_imp,n_order_tscheme_imp-1, &
                                        n_order_tscheme_exp-1) 
 
-         elseif (time_scheme_imp=='BDF3') then
+         elseif (time_scheme_imp=='BDF3' .and. l_imexrk_started ) then
 
             ! n-2 step
             call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR1,omgFR1,upFR1,urFR1,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
@@ -136,7 +137,7 @@ contains
                                        n_order_tscheme_exp-2) 
             tmp_rhs_buo_term(1,:,:)=rhs_buo_term(n_order_tscheme_imp-2,:,:)
 
-         elseif (time_scheme_imp=='BDF4') then
+         elseif (time_scheme_imp=='BDF4' .and. l_imexrk_started) then
 
             ! n-2 step
             call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR1,omgFR1,upFR1,urFR1,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
@@ -235,7 +236,7 @@ contains
          call cpu_time(startNm_maxloop) 
          !-------------------- Call Nm_max loop ------------------------------------------------------------ 
          call Nm_maxLOOP(Nm_max,Nr_max,Ra,Pr,mBC,uphi_temp_FR,ur_temp_FR,uphi_omg_FR,ur_omg_FR,&
-                     & n_step,n_restart,time_scheme_imp,time_scheme_exp,l_restart)
+                     & n_step,n_restart,time_scheme_imp,time_scheme_exp,l_restart,l_imexrk_started)
          !--------------------------------------------------------------------------------------------------
          call cpu_time(finishNm_maxloop)
          timeNm_maxloop = timeNm_maxloop + finishNm_maxloop-startNm_maxloop

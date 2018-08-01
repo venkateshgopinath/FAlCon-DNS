@@ -169,37 +169,31 @@ contains
 
    end subroutine rhs_construct_uphibar_a
 
-   subroutine rhs_construct_uphibar_d(Nm_max,Nr_max,upFR_p,upFC,rhs_uphi, &
+   subroutine rhs_construct_uphibar_d(Nm_max,Nr_max,upFR_p,upFC_p,rhs_uphi, &
                                  & time_scheme_type)
              
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: time_scheme_type
-      complex(kind=dp), intent(in) :: upFC(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: upFC_p(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: upFR_p(Nm_max+1,Nr_max)
+      complex(kind=dp) :: upFC_t(Nr_max)
       real(kind=dp), intent(out) :: rhs_uphi(Nr_max)
       
       integer :: i, Nm
-      real(kind=dp) :: ur_up_FR(Nr_max)
-      real(kind=dp) :: ur_omg_FR(Nr_max)
-      real(kind=dp) :: ur_d1up_FR(Nr_max)
-      complex(kind=dp) :: d1upFR(Nm_max+1,Nr_max)
-      complex(kind=dp) :: d2upFR(Nm_max+1,Nr_max)
+      complex(kind=dp) :: d1upFR(Nr_max)
+      complex(kind=dp) :: d2upFR(Nr_max)
 
       if (time_scheme_type=='IMEXRK') then
      
          rhs_uphi(:)=0.0_dp
           
-         call chebinvtranD1(Nr_max,upFC(1,:),d1upFR(1,:))
-         call chebinvtranD2(Nr_max,upFC(1,:),d2upFR(1,:))
-
-         ur_up_FR(:)=0.0_dp
-         ur_d1up_FR(:)=0.0_dp
-         ur_omg_FR(:)=0.0_dp
+         call chebtransform(Nr_max,upFR_p(1,:),upFC_t)
+         call chebinvtranD1D2(Nr_max,upFC_t,d1upFR,d2upFR)
 
          do i=1,Nr_max
 
-            rhs_uphi(i)= real(d2upFR(1,i) - r_radius2(i)*upFR_p(1,i) + r_radius(i)*d1upFR(1,i),kind=dp)  ! Diffusive part in Fourier-Real space
+            rhs_uphi(i)= real(d2upFR(i) - r_radius2(i)*upFR_p(1,i) + r_radius(i)*d1upFR(i),kind=dp)  ! Diffusive part in Fourier-Real space
 
          end do
 

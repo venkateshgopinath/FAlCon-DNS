@@ -16,6 +16,7 @@ module namelists
    character(len=100), public :: time_scheme_type
    character(len=100), public :: time_scheme_imp
    character(len=100), public :: time_scheme_exp
+   logical, public :: l_imexrk_started 
    real(kind=dp), public :: CFL
    integer, public :: n_time_steps
    real(kind=dp), public :: dt 
@@ -50,8 +51,8 @@ contains
 
       namelist/physics/eta,Ra,Pr,mBC,ampT,l_add_pert,lagpts,n_init,buo_tscheme
 
-      namelist/timecontrol/n_time_steps,dt,time_scheme_type,time_scheme_imp,time_scheme_exp,dt_coef,dt_max,CFL,l_restart,&
-              & n_restart,n_restart_point,n_snapshot_point
+      namelist/timecontrol/n_time_steps,dt,time_scheme_type,time_scheme_imp,time_scheme_exp,l_imexrk_started, &
+               & dt_coef,dt_max,CFL,l_restart,n_restart,n_restart_point,n_snapshot_point
 
       namelist/output/tag,n_checkpoint,n_snapshot,n_KE,n_KEspec
 
@@ -118,12 +119,14 @@ contains
       ampT = 0.00001_dp        ! Amplitude of the perturbation given on Temperature
       l_add_pert = .FALSE.     ! Give 'True' if a perturbation on the variables is required when restarting
       lagpts = 14              ! Number of lagrange interpolation points for vorticity boundary condition
+      buo_tscheme = "IMP"
       n_init = 0               ! Specify type of Gaussian perturbation 
       n_time_steps = 100       ! No. of time steps
       dt = 0.01_dp             ! Time step size 
       time_scheme_type = "IMEXRK" ! Specify type of time integration scheme
       time_scheme_imp = "ARS222" ! State the implicit time scheme
       time_scheme_exp = "expARS222"  ! State the explicit time scheme
+      l_imexrk_started = .TRUE.
       dt_coef=2.0_dp           ! Coefficient for dt while calculating min dt 
       dt_max=3.e-5             ! Threshold for max dt  
       CFL=0.9_dp               ! Courant-Friedrichs-Lewy (CFL) condition

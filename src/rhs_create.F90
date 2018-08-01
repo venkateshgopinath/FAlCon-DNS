@@ -23,7 +23,7 @@ contains
 
    subroutine rhs_construct_temp(Nm_max,Nr_max,dt,uphi_temp_FR,ur_temp_FR,n_step,temp_specp,Nm,rhs_temp,n_restart, &
                                  & wt_rhs_tscheme_imp, wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp, time_scheme_imp,Pr,l_restart)
+                                 & n_order_tscheme_exp, time_scheme_imp,Pr,l_restart,l_imexrk_started)
              
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
@@ -32,6 +32,7 @@ contains
       integer, intent(in) :: n_order_tscheme_imp
       integer, intent(in) :: n_order_tscheme_exp
       logical, intent(in) :: l_restart
+      logical, intent(in) :: l_imexrk_started 
       real(kind=dp), intent(in) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(in) :: wt_rhs_tscheme_exp(n_order_tscheme_exp)
       character(len=100), intent(in) :: time_scheme_imp
@@ -50,8 +51,16 @@ contains
       complex(kind=dp) :: real_d_temp_rad(Nr_max)
       complex(kind=dp) :: real_d2_temp_rad(Nr_max)
      
-      !if (n_step-n_restart>1 .or. l_restart) then
-      if (n_step-n_restart>1) then
+      if (n_step-n_restart>1 .and. l_imexrk_started) then
+         do i_order=1,n_order_tscheme_exp-1
+            rhs_exp_temp(i_order+1,Nm+1,:) = tmp_rhs_exp_temp(i_order,Nm+1,:)
+         end do
+         do i_order=1,n_order_tscheme_imp-1
+            rhs_imp_temp(i_order+1,Nm+1,:) = tmp_rhs_imp_temp(i_order,Nm+1,:)
+         end do
+      end if
+
+      if (n_step-n_restart>1 .or. l_restart .and. (.not. l_imexrk_started) ) then
          do i_order=1,n_order_tscheme_exp-1
             rhs_exp_temp(i_order+1,Nm+1,:) = tmp_rhs_exp_temp(i_order,Nm+1,:)
          end do
@@ -132,7 +141,7 @@ contains
 
    subroutine rhs_construct_vort(Nm_max,Nr_max,dt,Ra,Pr,uphi_omg_FR,ur_omg_FR,n_step,omg_specp,Nm,rhsf, &
                                  & n_restart,wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp,time_scheme_imp,tFRp,l_restart) 
+                                 & n_order_tscheme_exp,time_scheme_imp,tFRp,l_restart,l_imexrk_started) 
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
@@ -140,6 +149,7 @@ contains
       integer, intent(in) :: n_order_tscheme_exp
       integer, intent(in) :: n_order_tscheme_imp
       logical, intent(in) :: l_restart
+      logical, intent(in) :: l_imexrk_started 
       real(kind=dp), intent(in) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(in) :: wt_rhs_tscheme_exp(n_order_tscheme_exp)
       character(len=100), intent(in) :: time_scheme_imp
@@ -162,8 +172,15 @@ contains
       complex(kind=dp) :: real_d2_omg_rad(Nr_max)
       complex(kind=dp) :: rhs2(Nr_max)
       
-      !if (n_step-n_restart>1 .or. l_restart) then
-      if (n_step-n_restart>1) then
+      if (n_step-n_restart>1 .and. l_imexrk_started) then
+         do i_order=1,n_order_tscheme_exp-1
+            rhs_exp_vort(i_order+1,Nm+1,:) = tmp_rhs_exp_vort(i_order,Nm+1,:)
+         end do
+         do i_order=1,n_order_tscheme_imp-1
+            rhs_imp_vort(i_order+1,Nm+1,:) = tmp_rhs_imp_vort(i_order,Nm+1,:)
+         end do
+      end if
+      if (n_step-n_restart>1 .or. l_restart .and. (.not. l_imexrk_started) ) then
          do i_order=1,n_order_tscheme_exp-1
             rhs_exp_vort(i_order+1,Nm+1,:) = tmp_rhs_exp_vort(i_order,Nm+1,:)
          end do
@@ -255,7 +272,7 @@ contains
 
    subroutine rhs_construct_uphi_bar(Nm_max,Nr_max,dt,upFR_p,urFR_p,omgFR_p,n_step,upFCp,rhs_uphi,n_restart, &
                                  & wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp,time_scheme_imp,l_restart)
+                                 & n_order_tscheme_exp,time_scheme_imp,l_restart,l_imexrk_started)
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
@@ -263,6 +280,7 @@ contains
       integer, intent(in) :: n_order_tscheme_imp
       integer, intent(in) :: n_order_tscheme_exp
       logical, intent(in) :: l_restart
+      logical, intent(in) :: l_imexrk_started 
       real(kind=dp), intent(in) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(in) :: wt_rhs_tscheme_exp(n_order_tscheme_exp)
       character(len=100), intent(in) :: time_scheme_imp
@@ -278,8 +296,15 @@ contains
       complex(kind=dp) :: d1upFR(Nm_max+1,Nr_max)
       complex(kind=dp) :: d2upFR(Nm_max+1,Nr_max)
 
-      !if (n_step-n_restart>1 .or. l_restart) then
-      if (n_step-n_restart>1) then
+      if (n_step-n_restart>1 .and. l_imexrk_started) then
+         do i_order=1,n_order_tscheme_exp-1
+            rhs_exp_uphi_bar(i_order+1,:) = tmp_rhs_exp_uphi_bar(i_order,:)
+         end do
+         do i_order=1,n_order_tscheme_imp-1
+            rhs_imp_uphi_bar(i_order+1,:) = tmp_rhs_imp_uphi_bar(i_order,:)
+         end do
+      end if
+      if (n_step-n_restart>1 .or. l_restart .and. (.not. l_imexrk_started) ) then
          do i_order=1,n_order_tscheme_exp-1
             rhs_exp_uphi_bar(i_order+1,:) = tmp_rhs_exp_uphi_bar(i_order,:)
          end do

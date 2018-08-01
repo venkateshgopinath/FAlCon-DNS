@@ -46,7 +46,7 @@ contains
    end subroutine deallocate_fourierloop_imex
 
    subroutine Nm_maxLOOP(Nm_max,Nr_max,Ra,Pr,mBC,uphi_temp_FR,ur_temp_FR,uphi_omg_FR,ur_omg_FR,n_step,n_restart,& 
-                     & time_scheme_imp, time_scheme_exp,l_restart)
+                     & time_scheme_imp, time_scheme_exp,l_restart,l_imexrk_started)
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
@@ -54,6 +54,7 @@ contains
       real(kind=dp), intent(in) :: Ra
       real(kind=dp), intent(in) :: Pr  
       logical, intent(in) :: l_restart
+      logical, intent(in) :: l_imexrk_started 
       character(len=100), intent(in) :: mBC  
       character(len=100), intent(in) :: time_scheme_imp
       character(len=100), intent(in) :: time_scheme_exp
@@ -109,7 +110,7 @@ contains
          !----------- Call RHS construct for temperature ----------
          call rhs_construct_temp(Nm_max,Nr_max,dt_new,uphi_temp_FR,ur_temp_FR,n_step,temp_spec(Nm+1,:),Nm,rhs,n_restart, &
                                 & wt_rhs_tscheme_imp, wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                 & n_order_tscheme_exp, time_scheme_imp,Pr,l_restart)
+                                 & n_order_tscheme_exp, time_scheme_imp,Pr,l_restart,l_imexrk_started)
          !---------------------------------------------------------  
          
          rhs_r(:)=real(rhs(:))
@@ -135,7 +136,7 @@ contains
             !----------- Call RHS construct for uphi_bar -------------
             call rhs_construct_uphi_bar(Nm_max,Nr_max,dt_new,upFR,urFR,omgFR,n_step,upFC,rhs_uphi,n_restart, &
                                        & wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
-                                       & n_order_tscheme_exp,time_scheme_imp,l_restart)
+                                       & n_order_tscheme_exp,time_scheme_imp,l_restart,l_imexrk_started)
             !---------------------------------------------------------   
             rhs_r=rhs_uphi
             rhs_i=0.0_dp
@@ -162,7 +163,7 @@ contains
             call rhs_construct_vort(Nm_max,Nr_max,dt_new,Ra,Pr,uphi_omg_FR,ur_omg_FR,n_step,omg_spec(Nm+1,:), &
                                     & Nm,rhsf,n_restart,wt_rhs_tscheme_imp, &
                                     & wt_rhs_tscheme_exp,n_order_tscheme_imp,n_order_tscheme_exp, &
-                                    & time_scheme_imp,tFR(Nm+1,:),l_restart)
+                                    & time_scheme_imp,tFR(Nm+1,:),l_restart,l_imexrk_started)
        
             !------------------------------------------------------- 
 

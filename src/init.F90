@@ -145,7 +145,7 @@ contains
    end subroutine init_grid
 
    subroutine init_fields(Nm_max,Np_max,Nr_max,rmin,rmax,l_restart,Nrestart_point,l_add_pert, &
-                          & ampT,lm,time_scheme_type,time_scheme_imp)
+                          & ampT,lm,time_scheme_type,time_scheme_imp,l_imexrk_started)
 
       integer :: i,j
       integer, intent(in) :: lm 
@@ -157,6 +157,7 @@ contains
       logical, intent(in) :: l_restart  
       integer, intent(in) :: Nrestart_point
       logical, intent(in) :: l_add_pert
+      logical, intent(in) :: l_imexrk_started 
       real(kind=dp), intent(in) :: ampT
       character(len=100), intent(in) :: time_scheme_type
       character(len=100), intent(in) :: time_scheme_imp
@@ -164,7 +165,8 @@ contains
      !--------- If restarting -----------------------------------------------
       if (l_restart) then   
          print *, "restarting"
-         call get_checkpoint_data(Nm_max,Nr_max,Nrestart_point,dt_new,tot_time,dt_array,time_scheme_type,time_scheme_imp) 
+         call get_checkpoint_data(Nm_max,Nr_max,Nrestart_point,dt_new,tot_time,dt_array,time_scheme_type, &
+                                  & time_scheme_imp,l_imexrk_started) 
          t2FR=tFR
          if (l_add_pert) then
             tFR(:,:) = ampT + tFR(:,:) 
@@ -425,11 +427,13 @@ contains
 
    end subroutine deallocate_restart
 
-   subroutine get_checkpoint_data(Nm_max,Nr_max,Nrestart_point,dt_new,tot_time,dt_array,time_scheme_type,time_scheme_imp)
+   subroutine get_checkpoint_data(Nm_max,Nr_max,Nrestart_point,dt_new,tot_time,dt_array,time_scheme_type, &
+                                  & time_scheme_imp,l_imexrk_started)
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       integer, intent(in) :: Nrestart_point
+      logical, intent(in) :: l_imexrk_started 
       real(kind=dp), intent(out) :: dt_new
       real(kind=dp), intent(out) :: tot_time
       integer :: Nm_max_old, Nr_max_old
@@ -441,7 +445,7 @@ contains
       character(len=100), intent(in) :: time_scheme_imp
       
 
-      if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2') then
+      if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .and. l_imexrk_started) then
          call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
                               & n_order_tscheme_exp_old,Nrestart_point-1,tFR1,omgFR1,urFR1,upFR1, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
@@ -465,8 +469,7 @@ contains
             upFR=upFR2
          end if  
 
-      elseif (time_scheme_imp=='BDF3') then
-         
+      elseif (time_scheme_imp=='BDF3' .and. l_imexrk_started) then
          call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
                               & n_order_tscheme_exp_old,Nrestart_point-2,tFR1,omgFR1,urFR1,upFR1, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
@@ -498,7 +501,7 @@ contains
             upFR=upFR3
          end if  
 
-      elseif (time_scheme_imp=='BDF4') then
+      elseif (time_scheme_imp=='BDF4' .and. l_imexrk_started) then
          
          call read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &           
                               & n_order_tscheme_exp_old,Nrestart_point-3,tFR1,omgFR1,urFR1,upFR1, &    
@@ -733,12 +736,12 @@ contains
       read(inunit) urFRn
       read(inunit) upFRn
       
-      !read(inunit) rhs_imp_temp_old   
-      !read(inunit) rhs_exp_temp_old   
-      !read(inunit) rhs_imp_vort_old   
-      !read(inunit) rhs_exp_vort_old   
-      !read(inunit) rhs_imp_uphi_bar_old   
-      !read(inunit) rhs_exp_uphi_bar_old   
+      read(inunit) rhs_imp_temp_old   
+      read(inunit) rhs_exp_temp_old   
+      read(inunit) rhs_imp_vort_old   
+      read(inunit) rhs_exp_vort_old   
+      read(inunit) rhs_imp_uphi_bar_old   
+      read(inunit) rhs_exp_uphi_bar_old   
 
       close(inunit)
 
