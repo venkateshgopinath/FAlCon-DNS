@@ -21,7 +21,8 @@ module timeschemes
    real(kind=dp), allocatable, public :: butcher_b(:)
    real(kind=dp), allocatable, public :: butcher_aD(:,:),butcher_aA(:,:) 
    real(kind=dp), allocatable, public :: butcher_bD(:),butcher_bA(:)
-   logical, public :: ars_eqn_check_A, ars_eqn_check_D
+   logical, public :: ars_eqn_check_A, ars_eqn_check_D, diag_diff
+   integer, public :: diag_index
    real(kind=dp) :: gammaa, delta, alphaa, betaa, etaa, lambda
    real(kind=dp) :: a31, a32, a41, a42, a43, bb1, bb2, bb3, bb4, c3, c4 
    real(kind=dp) :: aa31, aa32, aa41, aa42, aa43, aa51, aa52, aa53, aa54 
@@ -750,7 +751,7 @@ contains
             r_dt1=dt_array(2)/dt_array(1)
             a0=(2.0_dp+r_dt1)/(1.0_dp+r_dt1)
             a1=1.0_dp+1.0_dp/r_dt1
-            a2=-1.0_dp*(1.0_dp/(r_dt1)/(1.0_dp+r_dt1)) ! Thomas found mistake here to fix on Sept 20th 2017
+            a2=-1.0_dp*(1.0_dp/(r_dt1)/(1.0_dp+r_dt1)) ! Thomas found mistake here to fix on Sept 20th 2017 (fixed)
             wt_lhs_tscheme_imp=1.0_dp/a0
             wt_rhs_tscheme_imp(1) = a1/a0
             wt_rhs_tscheme_imp(2) = a2/a0
@@ -787,6 +788,9 @@ contains
 
             butcher_bD = reshape([0.0_dp, 1.0_dp],[2]) 
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('ARS222')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, &
@@ -801,6 +805,9 @@ contains
                   ars_eqn_check_D=.TRUE.
                end if
             end do 
+
+            diag_diff = .FALSE.
+            diag_index = 2
 
          case ('ARS232')
 
@@ -817,6 +824,9 @@ contains
                end if
             end do  
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('ARS233')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, &
@@ -831,6 +841,9 @@ contains
                   ars_eqn_check_D=.TRUE.
                end if
             end do  
+
+            diag_diff = .FALSE.
+            diag_index = 2
 
          case ('ARS343')
 
@@ -848,6 +861,9 @@ contains
                end if
             end do   
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('MARS343')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -860,6 +876,9 @@ contains
 
             ars_eqn_check_D=.TRUE.
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('IJ3')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -871,7 +890,8 @@ contains
             butcher_bD = reshape([0.0_dp, 0.0_dp, 0.75_dp, 0.25_dp],[4]) 
             ars_eqn_check_D=.FALSE.
 
-
+            diag_diff = .FALSE.
+            diag_index = 2
 
          case ('PC2')
 
@@ -885,6 +905,9 @@ contains
 
             ars_eqn_check_D=.TRUE.
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('SSP332')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -896,6 +919,9 @@ contains
             butcher_bD = reshape([0.0_dp, 1.0_dp, -0.5_dp, 0.5_dp],[4]) 
 
             ars_eqn_check_D=.TRUE.
+
+            diag_diff = .FALSE.
+            diag_index = 2
 
          case ('SSP543')
   
@@ -910,6 +936,9 @@ contains
             butcher_bD = reshape([0.0_dp, 2.0_dp/3.0_dp, -1.0_dp/3.0_dp, 0.0_dp, 1.0_dp/6.0_dp, 0.5_dp],[6]) 
 
             ars_eqn_check_D=.TRUE.
+
+            diag_diff = .FALSE.
+            diag_index = 2
  
          case ('ARS443')
             
@@ -927,6 +956,9 @@ contains
                   ars_eqn_check_D=.TRUE.
                end if
             end do
+
+            diag_diff = .FALSE.
+            diag_index = 2
 
          case ('PR433')
             
@@ -948,6 +980,9 @@ contains
 
             ars_eqn_check_D=.FALSE.
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('BPR353')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -964,6 +999,9 @@ contains
                   ars_eqn_check_D=.TRUE.
                end if
             end do
+
+            diag_diff = .FALSE.
+            diag_index = 2
 
          case ('KC343')
  
@@ -988,6 +1026,9 @@ contains
                end if
             end do
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('KC564')
   
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -1008,6 +1049,9 @@ contains
             !      ars_eqn_check_D=.TRUE.
             !   end if
             !end do
+
+            diag_diff = .FALSE.
+            diag_index = 2
             
          case ('FW53')
             
@@ -1026,6 +1070,9 @@ contains
                end if
             end do
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('CK222')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, &
@@ -1042,6 +1089,9 @@ contains
                end if
             end do 
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('BPR442')
             
             butcher_aD = reshape([ 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -1055,6 +1105,9 @@ contains
 
             ars_eqn_check_D=.TRUE.
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('CFN343') 
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -1066,6 +1119,9 @@ contains
             butcher_bD = reshape([0.0_dp, 1.208496649176010_dp, -0.644363170684469_dp, gammaa],[4]) 
 
             ars_eqn_check_D=.TRUE.
+
+            diag_diff = .FALSE.
+            diag_index = 2
 
          case ('BHR553')
             
@@ -1080,6 +1136,9 @@ contains
 
             ars_eqn_check_D=.TRUE.
 
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('CB3e')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -1091,6 +1150,9 @@ contains
             butcher_bD = reshape([0.0_dp, 0.75_dp, -0.25_dp, 0.5_dp],[4]) 
 
             ars_eqn_check_D=.TRUE.
+
+            diag_diff = .TRUE.
+            diag_index = 3
 
          case ('CFN564')
   
@@ -1105,6 +1167,9 @@ contains
             butcher_bD = reshape([0.0_dp, 25.0_dp/24.0_dp, -49.0_dp/48.0_dp, 125.0_dp/16.0_dp, -85.0_dp/12.0_dp, 0.25_dp],[6]) 
           
             ars_eqn_check_D=.TRUE.
+
+            diag_diff = .FALSE.
+            diag_index = 2
 
       end select            
       

@@ -7,14 +7,14 @@ module fourierloop_imexrk
    use init, only: TFC, temp_spec,omg_spec,startmatbuild, &
                    & finishmatbuild, finishmatbuild, time_matbuild, radius, r_radius, r_radius2, &
                    & dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC, ur, omg, omgFR_check
-   use mat_assembly, only: LAPpsi_all, IPIV1, AT_all, AF_all, IPIV1, IPIV2, mat_build, mat_build_uphibar, &
-                           & IPIV1_lap, A_uphi_all, IPIV_uphi
+   use mat_assembly, only: LAPpsi_all, AT_all_IRK, AF_all_IRK, A_uphi_all_IRK, IPIV_uphi_IRK, IPIV1_IRK, IPIV2_IRK, &
+                           & mat_build_IRK, mat_build_uphibar_IRK, IPIV1_lap
    use algebra, only: matsolve
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, wt_rhs_tscheme_exp, & 
                           & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, &
                           & irk_max, dt_array, butcher_aA, butcher_bA, butcher_aD, butcher_bD, &
                           & ars_eqn_check_A, ars_eqn_check_D, rhs_imp_temp, rhs_exp_temp, rhs_imp_vort, &
-                          & rhs_exp_vort, rhs_imp_uphi_bar, rhs_exp_uphi_bar
+                          & rhs_exp_vort, rhs_imp_uphi_bar, rhs_exp_uphi_bar, diag_diff, diag_index
    use rhs_create_imexrk, only: rhs_construct_temp_a, rhs_construct_vort_a, rhs_construct_temp_d, &
                                 & rhs_construct_uphibar_a, rhs_construct_uphibar_d, &
                                 & rhs_construct_vort_d, rhs_construct_buo   
@@ -106,17 +106,52 @@ contains
       rhsf(:)=0.0_dp 
       
       Nr_max2=2*Nr_max
- 
-      do Nm=0,Nm_max  
-         if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then !.or. &
-            call cpu_time(startmatbuild) 
-            call mat_build(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),Pr) ! Build the operator matrices and factorize them 
-            call mat_build_uphibar(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),Pr)
-            call cpu_time(finishmatbuild) 
-            time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+      
+      if ( diag_diff .eqv. .FALSE. ) then ! If implicit Butcher's table has all diagonal elements equal to each other
+         do Nm=0,Nm_max  
+            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+               call cpu_time(startmatbuild) 
+               call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+               call cpu_time(finishmatbuild) 
+               time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+            end if
+         end do
+         AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
+         AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
+         A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
+         IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
+         IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
+         IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
+      elseif ( diag_diff .eqv. .TRUE. ) then ! If implicit Butcher's table has all diagonal elements unequal to each other
+         do Nm=0,Nm_max  
+            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+               call cpu_time(startmatbuild) 
+               call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+               call cpu_time(finishmatbuild) 
+               time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+            end if
+         end do
+         if ( rk_stage/=diag_index ) then
+            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+               if ( butcher_aD(rk_stage,rk_stage)==butcher_aD(diag_index,diag_index) ) then
+                  AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
+                  AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
+                  A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
+                  IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
+                  IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
+                  IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
+               else
+                  do Nm=0,Nm_max  
+                        call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+                        call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operatir matrix for uphibar and factorize them
+                  end do
+               end if
+            end if
          end if
-      end do
-
+      end if
+      
       !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
       !$omp parallel & 
       !$omp private(Nm,i,j,F_dtemp_d,F_dtemp_a,F_duphibar_d,F_duphibar_a,F_domg_d,F_domg_a,F_buo, &
@@ -179,7 +214,7 @@ contains
          rhs_i=aimag(rhs_stage_temp)
          
          !******Solve for stage temperature CALL DGETRS A*vt=rhs ****************************
-         call matsolve(TRANS, Nr_max, AT_all(:,:,Nm+1), IPIV1(:,Nm+1), rhs_r, rhs_i,INFO1)
+         call matsolve(TRANS, Nr_max, AT_all_IRK(:,:,Nm+1,rk_stage), IPIV1_IRK(:,Nm+1,rk_stage), rhs_r, rhs_i,INFO1)
          !*********************************************************************************** 
          do i=1,Nr_max
            rhs_temp_FC(i)=cmplx(rhs_r(i),rhs_i(i),kind=dp)
@@ -216,7 +251,7 @@ contains
             rhs_i=0.0_dp
 
             !******Solve for stage temperature CALL DGETRS A*vt=rhs ****************************
-            call matsolve(TRANS, Nr_max, A_uphi_all(:,:,1), IPIV_uphi(:,1), rhs_r, rhs_i,INFO1)
+            call matsolve(TRANS, Nr_max, A_uphi_all_IRK(:,:,1,rk_stage), IPIV_uphi_IRK(:,1,rk_stage), rhs_r, rhs_i,INFO1)
             !*********************************************************************************** 
 
             do i=1,Nr_max
@@ -280,7 +315,7 @@ contains
             rhsf_i=aimag(rhs_stage_omg_full)
 
             !**************************** CALL DGETRS AF*vf=rhsf **************************
-            call matsolve(TRANS, Nr_max2, AF_all(:,:,Nm+1), IPIV2(:,Nm+1), rhsf_r, rhsf_i,INFO2)
+            call matsolve(TRANS, Nr_max2, AF_all_IRK(:,:,Nm+1,rk_stage), IPIV2_IRK(:,Nm+1,rk_stage), rhsf_r, rhsf_i,INFO2)
             !******************************************************************************
 
             do i=1,2*Nr_max
