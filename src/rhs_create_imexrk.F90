@@ -188,7 +188,7 @@ contains
      
          rhs_uphi(:)=0.0_dp
           
-         call chebtransform(Nr_max,upFR_p(1,:),upFC_t)
+         call chebtransform(Nr_max,upFR_p(1,:),upFC_t) ! Error found here: When uphibar not 0, all CK type schemes went 1st order, this Chebyshev transform was not there and instead we were passing the uphibar in Fourier-Chebyshev space upFC   
          call chebinvtranD1D2(Nr_max,upFC_t,d1upFR,d2upFR)
 
          do i=1,Nr_max

@@ -106,6 +106,16 @@ contains
       rhsf(:)=0.0_dp 
       
       Nr_max2=2*Nr_max
+ 
+      do Nm=0,Nm_max  
+         if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then !.or. &
+            call cpu_time(startmatbuild) 
+            call mat_build(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),Pr) ! Build the operator matrices and factorize them 
+            call mat_build_uphibar(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),Pr)
+            call cpu_time(finishmatbuild) 
+            time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+         end if
+      end do
 
       !-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
       !$omp parallel & 
@@ -117,15 +127,15 @@ contains
       !$omp do    
       do Nm=0,Nm_max  
 
-         if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then !.or. &
-            !& (butcher_aD(rk_stage,rk_stage)/=butcher_aD(rk_stage-1,rk_stage-1)) ) then ! Have to generalize 19/3/18 
-            ! Call 'mat_build' only if dt_current and dt_previous are different OR if the butcher table for implicit part has unequal diagonal values
-            call cpu_time(startmatbuild) 
-            call mat_build(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),Pr) ! Build the operator matrices and factorize them 
-            call mat_build_uphibar(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),Pr)
-            call cpu_time(finishmatbuild) 
-            time_matbuild=time_matbuild + finishmatbuild - startmatbuild
-         end if
+         !if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then !.or. &
+         !   !& (butcher_aD(rk_stage,rk_stage)/=butcher_aD(rk_stage-1,rk_stage-1)) ) then ! Have to generalize 19/3/18 
+         !   ! Call 'mat_build' only if dt_current and dt_previous are different OR if the butcher table for implicit part has unequal diagonal values
+         !   call cpu_time(startmatbuild) 
+         !   call mat_build(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),Pr) ! Build the operator matrices and factorize them 
+         !   call mat_build_uphibar(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),Pr)
+         !   call cpu_time(finishmatbuild) 
+         !   time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+         !end if
 
          F_dtemp_d(:)=0.0_dp 
          F_dtemp_a(:)=0.0_dp 
@@ -184,13 +194,13 @@ contains
             !-- Apply weights to RHS using implicit Butcher's table: summation of (a_i F_i) 
             do i=1,rk_stage-1 
                !F_duphibar_d(:)=F_duphibar_d(:)+butcher_aD(rk_stage,i)*duphibar_dt1_d(i,:) 
-               F_duphibar_d(:)=F_duphibar_d(:)+butcher_aD(rk_stage,i)*domgdt1_d(i,Nm+1,:) 
+               F_duphibar_d(:)=F_duphibar_d(:)+butcher_aD(rk_stage,i)*domgdt1_d(i,1,:) 
             end do
             
             !-- Apply weights to RHS using explicit Butcher's table: summation of (\hat{a}_i F_i) 
             do i=1,rk_stage-1 
                !F_duphibar_a(:)=F_duphibar_a(:)+butcher_aA(rk_stage,i)*duphibar_dt1_a(i,:) 
-               F_duphibar_a(:)=F_duphibar_a(:)+butcher_aA(rk_stage,i)*domgdt1_a(i,Nm+1,:) 
+               F_duphibar_a(:)=F_duphibar_a(:)+butcher_aA(rk_stage,i)*domgdt1_a(i,1,:) 
             end do
 
             !-- RHS temp = Y_0 + dt * summation of (a_i * F_i) + summation of (\hat{a}_i F_i) 

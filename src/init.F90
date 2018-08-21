@@ -759,6 +759,10 @@ contains
             end do
          end if
 
+         !tFR=tFR*(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
+         !omgFR=omgFR*(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
+         !urFR=urFR*(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
+         !upFR=upFR*(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
           
          !  ----- Create temporary rhs from previously stored rhs -----------  
          tmp_rhs_imp_temp=rhs_imp_temp 

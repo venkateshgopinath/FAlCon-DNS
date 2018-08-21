@@ -76,7 +76,6 @@ contains
       AF(:,:)=0.0_dp
       PIV1(:)=0
       PIV2(:)=0
-      !print *, wt_lhs_tscheme_imp, "wt imp"
                            ! OPERATOR MATRIX ASSEMBLY and LU Factorization 
       !**************** AT is the operator matrix for temperature equation *************************************
       C=((2.0_dp/real(Nr_max-1,kind=dp))**(0.5_dp))

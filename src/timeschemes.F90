@@ -22,7 +22,7 @@ module timeschemes
    real(kind=dp), allocatable, public :: butcher_aD(:,:),butcher_aA(:,:) 
    real(kind=dp), allocatable, public :: butcher_bD(:),butcher_bA(:)
    logical, public :: ars_eqn_check_A, ars_eqn_check_D
-   real(kind=dp) :: gammaa, delta, alphaa, betaa, etaa
+   real(kind=dp) :: gammaa, delta, alphaa, betaa, etaa, lambda
    real(kind=dp) :: a31, a32, a41, a42, a43, bb1, bb2, bb3, bb4, c3, c4 
    real(kind=dp) :: aa31, aa32, aa41, aa42, aa43, aa51, aa52, aa53, aa54 
 
@@ -299,6 +299,51 @@ contains
 
             end select   
 
+         case ('MARS343') ! Modified ARS343 Boscarino et. al. (MARS343) 3rd order, Communications to SIMAI Congress. 2007 paper
+            n_order_tscheme_imp=4 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expMARS343')
+                  n_order_tscheme_exp=4
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select   
+
+         case ('IJ3') ! Izzo, Jackiewicz (IMEX-RK33pi/2) 3rd order, Appl. Numer. Math. 2016 paper
+            n_order_tscheme_imp=4 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+            lambda = 0.7886866510998523_dp
+
+            select case (time_scheme_exp)
+
+              case ('expIJ3')
+                  n_order_tscheme_exp=4
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select   
+
          case ('PC2') ! Predictor-corrector 2nd order, given by N. Schaeffer 
             n_order_tscheme_imp=4 
             allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
@@ -544,7 +589,7 @@ contains
 
             end select
 
-         case ('CFN343') ! Boscarino, Pareschi, Russo  (BPR442) 2nd order, SIAM Journal on Numerical Analysis 2017 paper 
+         case ('CFN343') ! Calvo, Frutos, Novo  (CFN343) 3rd order, Applied Numerical Analysis 2001 paper 
             n_order_tscheme_imp=4 
             allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
             allocate( butcher_bD(n_order_tscheme_imp) )
@@ -633,6 +678,27 @@ contains
 
             end select      
 
+         case ('CFN564') ! Calvo, Frutos, Novo  (CFN564) 4th order, Applied Numerical Analysis 2001 paper 
+            n_order_tscheme_imp=6 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expCFN564')  
+                  n_order_tscheme_exp=6
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select 
 
       end select
        
@@ -781,6 +847,31 @@ contains
                   ars_eqn_check_D=.TRUE.
                end if
             end do   
+
+         case ('MARS343')
+
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, 0.435866521508458_dp, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, 0.28206673924577_dp, 0.435866521508458_dp, 0.0_dp, &
+                                  0.0_dp, 1.20849664917601_dp, -0.64436317068446_dp, 0.435866521508458_dp], &
+                                  [4,4],order=[2,1])  
+
+            butcher_bD = reshape([0.0_dp, 1.20849664917601_dp, -0.64436317068446_dp, 0.435866521508458_dp],[4]) 
+
+            ars_eqn_check_D=.TRUE.
+
+         case ('IJ3')
+
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, lambda, 0.0_dp, 0.0_dp, &
+                  0.0_dp, lambda/(3.0_dp*(1.0_dp-2.0_dp*lambda)), (1.0_dp-3.0_dp*lambda)/(3.0_dp*(1.0_dp-2.0_dp*lambda)), 0.0_dp, &
+                  0.0_dp, -1.0_dp*lambda/(1.0_dp-2.0_dp*lambda), (1.0_dp-lambda)/(1.0_dp-2.0_dp*lambda), 0.0_dp], &
+                                  [4,4],order=[2,1])  
+
+            butcher_bD = reshape([0.0_dp, 0.0_dp, 0.75_dp, 0.25_dp],[4]) 
+            ars_eqn_check_D=.FALSE.
+
+
 
          case ('PC2')
 
@@ -964,7 +1055,7 @@ contains
 
             ars_eqn_check_D=.TRUE.
 
-         case ('CFN343')
+         case ('CFN343') 
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
                                   0.0_dp, gammaa, 0.0_dp, 0.0_dp, &
@@ -1001,6 +1092,19 @@ contains
 
             ars_eqn_check_D=.TRUE.
 
+         case ('CFN564')
+  
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, 0.25_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, 0.5_dp, 0.25_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, 17.0_dp/50.0_dp, -1.0_dp/25.0_dp, 0.25_dp, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, 371.0_dp/1360.0_dp, -137.0_dp/2720.0_dp, 15.0_dp/544.0_dp, 0.25_dp, 0.0_dp, &
+                                  0.0_dp, 25.0_dp/24.0_dp, -49.0_dp/48.0_dp, 125.0_dp/16.0_dp, -85.0_dp/12.0_dp, 0.25_dp], &
+                                  [6,6],order=[2,1]) 
+
+            butcher_bD = reshape([0.0_dp, 25.0_dp/24.0_dp, -49.0_dp/48.0_dp, 125.0_dp/16.0_dp, -85.0_dp/12.0_dp, 0.25_dp],[6]) 
+          
+            ars_eqn_check_D=.TRUE.
 
       end select            
       
@@ -1198,6 +1302,42 @@ contains
                         ars_eqn_check_A=.TRUE.
                      end if
                   end do
+
+            end select  
+
+         case ('MARS343')
+ 
+            select case (time_scheme_exp)
+
+               case ('expMARS343')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.435866521508458_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.535396540307354_dp, 0.182536720446875_dp, 0.0_dp, 0.0_dp, &
+                                        0.63041255815287_dp, -0.83193390106308_dp, 1.20152134291021_dp, 0.0_dp], &
+                                        [4,4],order=[2,1])  
+
+                  butcher_bA = reshape([0.0_dp, 1.20849664917601_dp, -0.64436317068446_dp, 0.435866521508458_dp],[4]) 
+
+                  ars_eqn_check_A=.FALSE.
+
+            end select  
+
+         case ('IJ3')
+ 
+            select case (time_scheme_exp)
+
+               case ('expIJ3')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.0_dp, onethird, 0.0_dp, 0.0_dp, &
+                                        0.0_dp, -1.0_dp, 2.0_dp, 0.0_dp], &
+                                        [4,4],order=[2,1])  
+
+                  butcher_bA = reshape([0.0_dp, 0.0_dp, 0.75_dp, 0.25_dp],[4]) 
+
+                  ars_eqn_check_A=.FALSE.
 
             end select  
 
@@ -1516,6 +1656,25 @@ contains
 
             end select              
 
+         case ('CFN564')
+ 
+            select case (time_scheme_exp)
+
+               case ('expCFN564')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  0.25_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  -0.25_dp, 1.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  -13.0_dp/100.0_dp, 43.0_dp/75.0_dp, 8.0_dp/75.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  -6.0_dp/85.0_dp, 42.0_dp/85.0_dp, 179.0_dp/1360.0_dp, -15.0_dp/272.0_dp, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, 79.0_dp/24.0_dp, -5.0_dp/8.0_dp, 25.0_dp/2.0_dp, -85.0_dp/6.0_dp, 0.0_dp], &
+                                  [6,6],order=[2,1]) 
+
+                  butcher_bA = reshape([0.0_dp, 25.0_dp/24.0_dp, -49.0_dp/48.0_dp, 125.0_dp/16.0_dp, -85.0_dp/12.0_dp, 0.25_dp],[6]) 
+
+                  ars_eqn_check_A=.FALSE.
+
+            end select  
 
       end select 
 
