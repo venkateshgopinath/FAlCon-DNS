@@ -84,6 +84,17 @@ contains
          end do
       end if !---------------------------------------------------------------------------------------
       
+      do Nm=0,Nm_max   
+         if (n_step-n_restart==1 .or. dt_array(1)/=dt_array(2)) then ! Call 'mat_build' only if dt_current and dt_previous are different 
+            call cpu_time(startmatbuild)
+            call mat_build(Nr_max,dt_array(1),Nm,mBC,wt_lhs_tscheme_imp,Pr) ! Build the operator matrices and factorize them 
+            call mat_build_uphibar(Nr_max,dt_array(1),mBC,wt_lhs_tscheme_imp,Pr)
+            call cpu_time(finishmatbuild) 
+            time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+         end if
+      end do
+
+
       Nr_max2=2*Nr_max
       rhs(:)=0.0_dp
       rhs_r(:)=0.0_dp
@@ -97,13 +108,13 @@ contains
       !$omp do   
       do Nm=0,Nm_max   
            
-         if (n_step-n_restart==1 .or. dt_array(1)/=dt_array(2)) then ! Call 'mat_build' only if dt_current and dt_previous are different 
-            call cpu_time(startmatbuild)
-            call mat_build(Nr_max,dt_array(1),Nm,mBC,wt_lhs_tscheme_imp,Pr) ! Build the operator matrices and factorize them 
-            call mat_build_uphibar(Nr_max,dt_array(1),mBC,wt_lhs_tscheme_imp,Pr)
-            call cpu_time(finishmatbuild) 
-            time_matbuild=time_matbuild + finishmatbuild - startmatbuild
-         end if
+         !if (n_step-n_restart==1 .or. dt_array(1)/=dt_array(2)) then ! Call 'mat_build' only if dt_current and dt_previous are different 
+         !   call cpu_time(startmatbuild)
+         !   call mat_build(Nr_max,dt_array(1),Nm,mBC,wt_lhs_tscheme_imp,Pr) ! Build the operator matrices and factorize them 
+         !   call mat_build_uphibar(Nr_max,dt_array(1),mBC,wt_lhs_tscheme_imp,Pr)
+         !   call cpu_time(finishmatbuild) 
+         !   time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+         !end if
       
 ! -------------------------------------------------------------------------------------------------
 
