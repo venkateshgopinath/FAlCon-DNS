@@ -23,7 +23,7 @@ module output
    integer, public :: count_snap
    integer, public :: count_chkpnt
    public :: init_output, final_output, writeKE_physical, writeKE_spectral, calculate_spectra, &
-              store_checkpoint, store_snapshot,store_snapshot_imexrk 
+              store_checkpoint, store_checkpoint_imexrk, store_snapshot,store_snapshot_imexrk 
 
 contains
 
@@ -366,17 +366,10 @@ contains
       complex(kind=dp), intent(in) :: omgFR(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: urFR(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: upFR(Nm_max+1,Nr_max)
-      !if (time_scheme_type=='IMEX' .or. time_scheme_type=='RK') then 
-         complex(kind=dp), intent(in) :: rhs_imp_temp(n_order_tscheme_imp,Nm_max+1,Nr_max)
-         complex(kind=dp), intent(in) :: rhs_exp_temp(n_order_tscheme_exp,Nm_max+1,Nr_max)
-         complex(kind=dp), intent(in) :: rhs_imp_vort(n_order_tscheme_imp,Nm_max+1,Nr_max)
-         complex(kind=dp), intent(in) :: rhs_exp_vort(n_order_tscheme_exp,Nm_max+1,Nr_max)
-      !else
-      !   complex(kind=dp), intent(in) :: rhs_imp_temp(1,Nm_max+1,Nr_max)
-      !   complex(kind=dp), intent(in) :: rhs_exp_temp(1,Nm_max+1,Nr_max)
-      !   complex(kind=dp), intent(in) :: rhs_imp_vort(1,Nm_max+1,Nr_max)
-      !   complex(kind=dp), intent(in) :: rhs_exp_vort(1,Nm_max+1,Nr_max)
-      !end if
+      complex(kind=dp), intent(in) :: rhs_imp_temp(n_order_tscheme_imp,Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_exp_temp(n_order_tscheme_exp,Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_imp_vort(n_order_tscheme_imp,Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_exp_vort(n_order_tscheme_exp,Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: rhs_imp_uphi_bar(n_order_tscheme_imp,Nr_max)
       complex(kind=dp), intent(in) :: rhs_exp_uphi_bar(n_order_tscheme_exp,Nr_max)
 
@@ -404,8 +397,54 @@ contains
    
    end subroutine store_checkpoint
    !-------------------------------------------------------------------------------------------------------
- 
-   !---------------------------------------------------------------------------------------------------------
+   !--------------------------------------------------------------------------------------------------------
+   subroutine store_checkpoint_imexrk(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
+                                  & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
+                                  & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, rhs_exp_uphi_bar, &
+                                  & dt_array,n_order_tscheme_max,time_scheme_type)
+
+      integer, intent(in) :: Nm_max   
+      integer, intent(in) :: Nr_max 
+      integer, intent(in) :: count_chkpnt 
+      integer, intent(in) :: n_order_tscheme_imp,n_order_tscheme_exp,n_order_tscheme_max 
+      character(len=100), intent(in) :: time_scheme_type
+      real(kind=dp), intent(in) :: tot_time, dt_new
+      real(kind=dp), intent(in) :: dt_array(n_order_tscheme_max)
+      complex(kind=dp), intent(in) :: tFR(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: omgFR(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: urFR(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: upFR(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_imp_temp(1,Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_exp_temp(1,Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_imp_vort(1,Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_exp_vort(1,Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_imp_uphi_bar(1,Nr_max)
+      complex(kind=dp), intent(in) :: rhs_exp_uphi_bar(1,Nr_max)
+
+      character(len=72) :: datafile1
+      integer :: outunit 
+      
+     
+      !-----------------------------------------Write current time step -----------------------------------------
+      write(datafile1,fmt='(a,I5.5)') "checkpoint_", count_chkpnt  
+      open(newunit=outunit, file=datafile1, action="write", status="replace", form='unformatted' )
+      write(outunit) dt_new,tot_time,Nm_max,Nr_max,n_order_tscheme_imp,n_order_tscheme_exp, &
+                     & n_order_tscheme_max
+      write(outunit) dt_array
+      write(outunit) tFR
+      write(outunit) omgFR
+      write(outunit) urFR
+      write(outunit) upFR
+      write(outunit) rhs_imp_temp
+      write(outunit) rhs_exp_temp
+      write(outunit) rhs_imp_vort
+      write(outunit) rhs_exp_vort
+      write(outunit) rhs_imp_uphi_bar
+      write(outunit) rhs_exp_uphi_bar
+      close(outunit)
+   
+   end subroutine store_checkpoint_imexrk
+   !-------------------------------------------------------------------------------------------------------
 
    !---------------------------------------------------------------------------------------------------------
    subroutine store_snapshot_imexrk(Nm_max,Nr_max,Ra,Pr,eta,tot_time,dt_new,count_snap,tFRs,omgFRs,urFRs,upFRs,omgFR_check_s)

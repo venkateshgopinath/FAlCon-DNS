@@ -195,8 +195,8 @@ contains
          if (n_step-n_restart==1) then
             dt_new=dt
          end if
-            dt_new=dt
-            dt_array(:)=dt
+         !   dt_new=dt
+         !   dt_array(:)=dt
          if (n_step-n_restart>1) then
                    
             if (n_step-n_restart==2) then
@@ -216,12 +216,14 @@ contains
          end if 
 
          !------------ Compute New dt by enforcing CFL ----------------- 
-         !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
+         call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
          !--------------------------------------------------------------
 
-         !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
-         !   tot_time=tot_time+dt_new 
-         !end if
+         print *, dt_array(1), dt_array(2), dt_array(3), dt_array(4), "heh"  
+
+         if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
+            tot_time=tot_time+dt_new 
+         end if
 
          if (n_step-n_restart>1) then
              tmp_rhs_imp_temp=rhs_imp_temp
@@ -243,8 +245,6 @@ contains
 
          tot_time=tot_time+dt_new 
 
-            
-         
          !--------------------- Store Snapshots -----------------------------
          if (mod(n_step,n_snapshot)==0) then
             count_snap = count_snap + 1 

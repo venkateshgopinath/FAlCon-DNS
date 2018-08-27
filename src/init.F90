@@ -457,7 +457,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point-1,tFR1,omgFR1,urFR1,upFR1, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old) 
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(2)=dt_array_old(1)
          
@@ -465,7 +465,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point,tFR2,omgFR2,urFR2,upFR2, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old)
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(1)=dt_array_old(1)
          
@@ -481,7 +481,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point-2,tFR1,omgFR1,urFR1,upFR1, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old) 
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(3)=dt_array_old(1)
          
@@ -489,7 +489,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point-1,tFR2,omgFR2,urFR2,upFR2, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old) 
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(2)=dt_array_old(1)
          
@@ -497,7 +497,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point,tFR3,omgFR3,urFR3,upFR3, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old)
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(1)=dt_array_old(1)
          
@@ -514,7 +514,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point-3,tFR1,omgFR1,urFR1,upFR1, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old) 
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(4)=dt_array_old(1)
          
@@ -522,7 +522,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point-2,tFR2,omgFR2,urFR2,upFR2, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old) 
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(3)=dt_array_old(1)
          
@@ -530,7 +530,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point-1,tFR3,omgFR3,urFR3,upFR3, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old)
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(2)=dt_array_old(1)
 
@@ -538,7 +538,7 @@ contains
                               & n_order_tscheme_exp_old,Nrestart_point,tFR4,omgFR4,urFR4,upFR4, &    
                               & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                               & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                              & n_order_tscheme_max_old)
+                              & n_order_tscheme_max_old,l_imexrk_started) 
 
          dt_array(1)=dt_array_old(1)
          
@@ -555,7 +555,7 @@ contains
                                  & n_order_tscheme_exp_old,Nrestart_point,tFRc,omgFRc,urFRc,upFRc, &    
                                  & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                                  & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                                 & n_order_tscheme_max_old) 
+                                 & n_order_tscheme_max_old,l_imexrk_started) 
 !----    If order of the schemes are different from before (dt Array) ---------------- 
          if (n_order_tscheme_max > n_order_tscheme_max_old) then
             do i=1,n_order_tscheme_max_old
@@ -588,7 +588,7 @@ contains
                                  & n_order_tscheme_exp_old,Nrestart_point,tFRc,omgFRc,urFRc,upFRc, &    
                                  & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old, &
                                  & rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old,dt_array_old, &
-                                 & n_order_tscheme_max_old) 
+                                 & n_order_tscheme_max_old,l_imexrk_started) 
 !----    If order of the schemes are different from before (dt Array) ---------------- 
          if (n_order_tscheme_max > n_order_tscheme_max_old) then
             do i=1,n_order_tscheme_max_old
@@ -780,7 +780,7 @@ contains
                                  & n_order_tscheme_exp_old,Nrestart_point,tFRn,omgFRn,urFRn,upFRn, &
                                  & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old,rhs_imp_uphi_bar_old, &
                                  & rhs_exp_uphi_bar_old, dt_array_old, &
-                                 & n_order_tscheme_max_old)  
+                                 & n_order_tscheme_max_old,l_imexrk_started)  
 
       real(kind=dp), intent(out) :: dt_new
       real(kind=dp), intent(out) :: tot_time
@@ -800,6 +800,7 @@ contains
       complex(kind=dp), allocatable, intent(out) :: rhs_imp_uphi_bar_old(:,:)
       complex(kind=dp), allocatable, intent(out) :: rhs_exp_uphi_bar_old(:,:)
       real(kind=dp), allocatable, intent(out) :: dt_array_old(:)
+      logical, intent(in) :: l_imexrk_started
 
       character(len=72) :: datafile1
       integer :: inunit
@@ -814,19 +815,22 @@ contains
       allocate(omgFRn(Nm_max+1,Nr_max))
       allocate(urFRn(Nm_max+1,Nr_max))
       allocate(upFRn(Nm_max+1,Nr_max))
-      allocate(rhs_imp_temp_old(n_order_tscheme_imp_old,Nm_max+1,Nr_max)) 
-      allocate(rhs_exp_temp_old(n_order_tscheme_exp_old,Nm_max+1,Nr_max)) 
-      allocate(rhs_imp_vort_old(n_order_tscheme_imp_old,Nm_max+1,Nr_max)) 
-      allocate(rhs_exp_vort_old(n_order_tscheme_exp_old,Nm_max+1,Nr_max)) 
-      allocate(rhs_imp_uphi_bar_old(n_order_tscheme_imp_old,Nr_max)) 
-      allocate(rhs_exp_uphi_bar_old(n_order_tscheme_exp_old,Nr_max)) 
-
-      !allocate(rhs_imp_temp_old(1,Nm_max+1,Nr_max)) 
-      !allocate(rhs_exp_temp_old(1,Nm_max+1,Nr_max)) 
-      !allocate(rhs_imp_vort_old(1,Nm_max+1,Nr_max)) 
-      !allocate(rhs_exp_vort_old(1,Nm_max+1,Nr_max)) 
-      !allocate(rhs_imp_uphi_bar_old(1,Nr_max)) 
-      !allocate(rhs_exp_uphi_bar_old(1,Nr_max)) 
+      
+      if (l_imexrk_started) then
+         allocate(rhs_imp_temp_old(1,Nm_max+1,Nr_max)) 
+         allocate(rhs_exp_temp_old(1,Nm_max+1,Nr_max)) 
+         allocate(rhs_imp_vort_old(1,Nm_max+1,Nr_max)) 
+         allocate(rhs_exp_vort_old(1,Nm_max+1,Nr_max)) 
+         allocate(rhs_imp_uphi_bar_old(1,Nr_max)) 
+         allocate(rhs_exp_uphi_bar_old(1,Nr_max)) 
+      else
+         allocate(rhs_imp_temp_old(n_order_tscheme_imp_old,Nm_max+1,Nr_max)) 
+         allocate(rhs_exp_temp_old(n_order_tscheme_exp_old,Nm_max+1,Nr_max)) 
+         allocate(rhs_imp_vort_old(n_order_tscheme_imp_old,Nm_max+1,Nr_max)) 
+         allocate(rhs_exp_vort_old(n_order_tscheme_exp_old,Nm_max+1,Nr_max)) 
+         allocate(rhs_imp_uphi_bar_old(n_order_tscheme_imp_old,Nr_max)) 
+         allocate(rhs_exp_uphi_bar_old(n_order_tscheme_exp_old,Nr_max)) 
+      end if
 
       read(inunit) dt_array_old
       read(inunit) tFRn

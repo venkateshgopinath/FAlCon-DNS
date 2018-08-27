@@ -145,8 +145,8 @@ contains
                else
                   do Nm=0,Nm_max  
                         call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operator matrices for (T, omega) and factorize them 
-                        call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operatir matrix for uphibar and factorize them
                   end do
+                        call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operatir matrix for uphibar and factorize them
                end if
             end if
          end if

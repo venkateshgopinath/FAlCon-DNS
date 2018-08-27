@@ -11,7 +11,7 @@ module steptime_imexrk
                    dt_old, dt_new, tot_time, psii, ur, up, omg, tt, omgFR_check
    use nonlin, only: Nr_maxloop, dtval_r, dtval_p, dtval_rkr, dtval_rkp
    use output, only: init_output, calculate_spectra, final_output, writeke_spectral, &
-                     & store_checkpoint, store_snapshot_imexrk
+                     & store_checkpoint_imexrk, store_snapshot_imexrk
    use fourierloop_imexrk, only: Get_stage_var, RHS_construct_stage, Assembly_stage, Assembly_stage_SA
    use timeschemes, only: rhs_update_wts_imp, wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, &
                           & n_order_tscheme_exp, n_order_tscheme_max, dt_array, rhs_imp_temp, rhs_exp_temp, &
@@ -160,7 +160,7 @@ contains
          if (mod(n_step,n_checkpoint)==0) then
             print *, tot_time, "checkpoint save"
             count_chkpnt = count_chkpnt + 1
-            call store_checkpoint(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
+            call store_checkpoint_imexrk(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                   & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                   & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, &
                                   & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max,time_scheme_type)

@@ -1,7 +1,7 @@
 module timeschemes
 
    use double
-   use constants, only: onesixth, onethird, onefourth, threefourth, threehalf, &
+   use constants, only: one, onesixth, onethird, onefourth, threefourth, threehalf, &
                         & half, eleveneighteenth, oneeighteenth, sevenfourth, fivesixth, &
                         & fiveeighteenth, oneninth, twoninth, fourninth, twothird
    use namelists, only: dt
@@ -24,8 +24,9 @@ module timeschemes
    logical, public :: ars_eqn_check_A, ars_eqn_check_D, diag_diff
    integer, public :: diag_index
    real(kind=dp) :: gammaa, delta, alphaa, betaa, etaa, lambda
-   real(kind=dp) :: a31, a32, a41, a42, a43, bb1, bb2, bb3, bb4, c3, c4 
-   real(kind=dp) :: aa31, aa32, aa41, aa42, aa43, aa51, aa52, aa53, aa54 
+   real(kind=dp) :: a31, a32, a41, a42, a43, a44, a53, a54, a55, bb1, bb2, bb3, bb4, bb5, bb6, c3, c4 
+   real(kind=dp) :: aa31, aa32, aa41, aa42, aa43, aa51, aa52, aa53, aa54, aa64, aa65 
+   real(kind=dp) :: a21, a22, a33, c2, aa21, c1 
 
    public :: init_time_schemes, deallocate_time_schemes, rhs_update_wts_imp, &
              & rhs_update_wts_exp
@@ -657,7 +658,7 @@ contains
 
             end select
 
-         case ('CB3e') ! Cavaglieri and Bewley 3rd order, JCP 2015  
+         case ('CB3e') ! Cavaglieri and Bewley (IMEXRKCB3e) 3rd order, JCP 2015  
             n_order_tscheme_imp=4 
             allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
             allocate( butcher_bD(n_order_tscheme_imp) )
@@ -679,6 +680,137 @@ contains
 
             end select      
 
+         case ('CB3f') ! Cavaglieri and Bewley (IMEXRKCB3f) 3rd order, JCP 2015  
+            n_order_tscheme_imp=4 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+            c2=49.0_dp/50.0_dp
+            a21=c2/2.0_dp
+            a22=c2/2.0_dp
+            a31=-785157464198.0_dp/1093480182337.0_dp
+            a32=-30736234873.0_dp/978681420651.0_dp
+            a33=983779726483.0_dp/1246172347126.0_dp
+            bb1=-2179897048956.0_dp/603118880443.0_dp
+            bb2=99189146040.0_dp/891495457793.0_dp
+            bb3=6064140186914.0_dp/1415701440113.0_dp
+            bb4=146791865627.0_dp/668377518349.0_dp
+            aa21=c2
+            aa31=13244205847.0_dp/647648310246.0_dp
+            aa32=13419997131.0_dp/686433909488.0_dp
+            aa42=231677526244.0_dp/1085522130027.0_dp
+            aa43=3007879347537.0_dp/683461566472.0_dp
+
+            select case (time_scheme_exp)
+
+              case ('expCB3f')
+                  n_order_tscheme_exp=4
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select      
+
+         case ('CB4') ! Cavaglieri and Bewley (IMEXRKCB4) 3rd order, JCP 2015
+            n_order_tscheme_imp=6 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+            c2=0.25_dp
+            a21=c2/2.0_dp
+            a22=c2/2.0_dp
+            a31=216145252607.0_dp/961230882893.0_dp
+            a32=257479850128.0_dp/1143310606989.0_dp
+            a33=30481561667.0_dp/101628412017.0_dp
+            a42=-381180097479.0_dp/1276440792700.0_dp
+            a43=-54660926949.0_dp/461115766612.0_dp
+            a44=344309628413.0_dp/552073727558.0_dp
+            a53=-100836174740.0_dp/861952129159.0_dp
+            a54=-250423827953.0_dp/1283875864443.0_dp
+            a55=0.5_dp
+            aa21=c2 
+            aa31=153985248130.0_dp/1004999853329.0_dp
+            aa32=902825336800.0_dp/1512825644809.0_dp
+            aa42=99316866929.0_dp/820744730663.0_dp
+            aa43=82888780751.0_dp/969573940619.0_dp
+            aa53=57501241309.0_dp/765040883867.0_dp
+            aa54=76345938311.0_dp/676824576433.0_dp
+            aa64=-4099309936455.0_dp/6310162971841.0_dp
+            aa65=1395992540491.0_dp/933264948679.0_dp
+            bb1=232049084587.0_dp/1377130630063.0_dp
+            bb2=322009889509.0_dp/2243393849156.0_dp
+            bb3=-195109672787.0_dp/1233165545817.0_dp 
+            bb4=-340582416761.0_dp/705418832319.0_dp
+            bb5=463396075661.0_dp/409972144477.0_dp
+            bb6=323177943294.0_dp/1626646580633.0_dp
+
+            select case (time_scheme_exp)
+
+              case ('expCB4')  
+                  n_order_tscheme_exp=6
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select 
+
+         case ('LZ3L1') ! Liu, Zou  (LZ3L1) 3rd order, Journal of Computational and Applied Math 2005 paper 
+            n_order_tscheme_imp=5 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expLZ3L1')
+                  n_order_tscheme_exp=5
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select
+
+         case ('LZ3A4a') ! Liu, Zou  (LZ3A4a) 3rd order, Journal of Computational and Applied Math 2005 paper 
+            n_order_tscheme_imp=5 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expLZ3A4a')
+                  n_order_tscheme_exp=5
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select
+
+
          case ('CFN564') ! Calvo, Frutos, Novo  (CFN564) 4th order, Applied Numerical Analysis 2001 paper 
             n_order_tscheme_imp=6 
             allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
@@ -692,6 +824,28 @@ contains
 
               case ('expCFN564')  
                   n_order_tscheme_exp=6
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select 
+
+         case ('LZ4A1')  ! Liu, Zou  (LZ4A1) 3rd order, Journal of Computational and Applied Math 2005 paper 
+            n_order_tscheme_imp=7 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expLZ4A1')  
+                  n_order_tscheme_exp=7
                   allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
                   allocate( butcher_bA(n_order_tscheme_exp) )
                   allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
@@ -738,7 +892,7 @@ contains
       character(len=100), intent(in) :: time_scheme_imp
       real(kind=dp), intent(out) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(out) :: wt_lhs_tscheme_imp
-      real(kind=dp) :: a0,a1,a2,a3,a4,r_dt1,r_dt2
+      real(kind=dp) :: a0,a1,a2,a3,a4,r_dt1,r_dt2,r_dt3
       integer :: i,j
 
       select case (time_scheme_imp)
@@ -769,17 +923,31 @@ contains
             wt_rhs_tscheme_imp(3) = a3/a0
 
          case ('BDF4')
-            a0=25.0_dp/12.0_dp
-            a1=4.0_dp
-            a2=-3.0_dp
-            a3=4.0_dp/3.0_dp
-            a4=-1.0_dp/4.0_dp
-            wt_lhs_tscheme_imp=1.0_dp/a0
-            wt_rhs_tscheme_imp(1) = a1/a0
-            wt_rhs_tscheme_imp(2) = a2/a0
-            wt_rhs_tscheme_imp(3) = a3/a0
-            wt_rhs_tscheme_imp(4) = a4/a0
+            r_dt1=dt_array(1)/dt_array(2)
+            r_dt2=dt_array(2)/dt_array(3)
+            r_dt3=dt_array(3)/dt_array(4)
 
+            c1 = one+r_dt3*(one+r_dt2) 
+            c2 = one+r_dt2*(one+r_dt1) 
+            c3 = one+r_dt3*c2 
+
+            a0= one + r_dt1/(one+r_dt1)+r_dt2*r_dt1/c2+r_dt3* &
+            & r_dt2*r_dt1/c3
+            a1 = -one-r_dt1*(one+r_dt2*(one+r_dt1)*(one+r_dt3*c2/c1)/ &
+            &    (one+r_dt2))
+            a2 = r_dt1*(r_dt1/(one+r_dt1)+r_dt2*r_dt1 * (c3+r_dt3)/&
+            &    (one+r_dt3))
+            a3 = -r_dt2**3*r_dt1**2*(one+r_dt1)/(one+r_dt2) * c3/c2
+            a4 = (one+r_dt1)/(one+r_dt3) * c2/c1/c3 *(r_dt3**4* &
+            &    r_dt2**3*r_dt1**2)
+
+            wt_lhs_tscheme_imp = 1.0_dp/a0
+            wt_rhs_tscheme_imp(1) = -a1/a0
+            wt_rhs_tscheme_imp(2) = -a2/a0
+            wt_rhs_tscheme_imp(3) = -a3/a0
+            wt_rhs_tscheme_imp(4) = -a4/a0
+            !print *,  wt_lhs_tscheme_imp, wt_rhs_tscheme_imp(1), wt_rhs_tscheme_imp(2), wt_rhs_tscheme_imp(3), &
+            !& wt_rhs_tscheme_imp(4)
          case ('EUL111')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, &
@@ -1154,6 +1322,70 @@ contains
             diag_diff = .TRUE.
             diag_index = 3
 
+         case ('CB3f')
+
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  a21, a22, 0.0_dp, 0.0_dp, &
+                                  a31, a32, a33, 0.0_dp, &
+                                  bb1, bb2, bb3, bb4], &
+                                  [4,4],order=[2,1])  
+
+            butcher_bD = reshape([bb1, bb2, bb3, bb4],[4]) 
+
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .TRUE.
+            diag_index = 2
+
+         case ('CB4')
+  
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  a21, a22, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  a31, a32, a33, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  bb1, a42, a43, a44, 0.0_dp, 0.0_dp, &
+                                  bb1, bb2, a53, a54, a55, 0.0_dp, &
+                                  bb1, bb2, bb3, bb4, bb5, bb6], &
+                                  [6,6],order=[2,1]) 
+
+            butcher_bD = reshape([bb1, bb2, bb3, bb4, bb5, bb6],[6]) 
+          
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .TRUE.
+            diag_index = 2
+
+         case ('LZ3L1')
+            
+            butcher_aD = reshape([ 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                   3.0_dp/20.0_dp, 1.0_dp/10.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                   9.0_dp/10.0_dp, -13.0_dp/10.0_dp, 9.0_dp/10.0_dp, 0.0_dp, 0.0_dp, &
+                                   17.0_dp/10.0_dp, -11.0_dp/4.0_dp, 3.0_dp/2.0_dp, 3.0_dp/10.0_dp, 0.0_dp, &
+                                   1.0_dp, -10.0_dp/3.0_dp, 17.0_dp/3.0_dp, -10.0_dp/3.0_dp, 1.0_dp], &
+                                   [5,5],order=[2,1]) 
+
+            butcher_bD = reshape([1.0_dp, -10.0_dp/3.0_dp, 17.0_dp/3.0_dp, -10.0_dp/3.0_dp, 1.0_dp],[5]) 
+
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .TRUE.
+            diag_index = 2
+
+         case ('LZ3A4a')
+            
+            butcher_aD = reshape([ 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                   0.5_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                   0.25_dp, -0.75_dp, 1.0_dp, 0.0_dp, 0.0_dp, &
+                                   0.0_dp, -3.0_dp, 4.0_dp, 0.0_dp, 0.0_dp, &
+                                   1.0_dp/6.0_dp, 0.0_dp, 2.0_dp/3.0_dp, -0.5_dp, 2.0_dp/3.0_dp], &
+                                   [5,5],order=[2,1]) 
+
+            butcher_bD = reshape([1.0_dp/6.0_dp, 0.0_dp, 2.0_dp/3.0_dp, -0.5_dp, 2.0_dp/3.0_dp],[5]) 
+
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .TRUE.
+            diag_index = 3
+
          case ('CFN564')
   
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -1171,6 +1403,24 @@ contains
             diag_diff = .FALSE.
             diag_index = 2
 
+         case ('LZ4A1')
+  
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  -1.0_dp/6.0_dp, 0.5_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  1.0_dp/6.0_dp, -1.0_dp/3.0_dp, 0.5_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  3.0_dp/8.0_dp, -3.0_dp/8.0_dp, 0.0_dp, 0.5_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  1.0_dp/8.0_dp, 0.0_dp, 3.0_dp/8.0_dp, -0.5_dp, 0.5_dp, 0.0_dp, 0.0_dp, &
+                                  -0.5_dp, 0.0_dp, 3.0_dp, -2.0_dp, 0.0_dp, 0.5_dp, 0.0_dp, &
+                                  1.0_dp/6.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 2.0_dp/3.0_dp, -0.5_dp, 2.0_dp/3.0_dp], &
+                                  [7,7],order=[2,1]) 
+
+            butcher_bD = reshape([1.0_dp/6.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 2.0_dp/3.0_dp, -0.5_dp, 2.0_dp/3.0_dp],[7]) 
+          
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .TRUE.
+            diag_index = 2
+
       end select            
       
    end subroutine rhs_update_wts_imp
@@ -1181,7 +1431,7 @@ contains
       character(len=100), intent(in) :: time_scheme_imp
       character(len=100), intent(in) :: time_scheme_exp
       real(kind=dp), intent(out) :: wt_rhs_tscheme_exp(n_order_tscheme_exp)
-      real(kind=dp) :: a0,b0,b1,b2,b3,r_dt1,r_dt2
+      real(kind=dp) :: a0,b0,b1,b2,b3,r_dt1,r_dt2,r_dt3
       integer :: i
       
       select case (time_scheme_imp)
@@ -1235,11 +1485,24 @@ contains
 
             select case (time_scheme_exp)
                case ('AB4')
-                  a0=25.0_dp/12.0_dp
-                  b0=4.0_dp
-                  b1=-6.0_dp
-                  b2=4.0_dp
-                  b3=-1.0_dp
+                  r_dt1=dt_array(1)/dt_array(2)
+                  r_dt2=dt_array(2)/dt_array(3)
+                  r_dt3=dt_array(3)/dt_array(4)
+
+                  c1 = one+r_dt3*(one+r_dt2) 
+                  c2 = one+r_dt2*(one+r_dt1) 
+                  c3 = one+r_dt3*c2 
+
+                  a0= one + r_dt1/(one+r_dt1)+r_dt2*r_dt1/c2+r_dt3* &
+                  & r_dt2*r_dt1/c3
+
+                  b3 = -r_dt3**3*r_dt2**2*r_dt1*(one+r_dt1)/(one+r_dt3)* & 
+                      & c2/c1 
+                  b2 = r_dt2**2*r_dt1*(one+r_dt1)/(one+r_dt2)*c3 
+                  b1 = -c2*c3 * r_dt1/(one+r_dt3) 
+                  b0 = r_dt2*(one+r_dt1)/(one+r_dt2) * ((one+r_dt1) * & 
+                      & (c3+r_dt3)+(one+r_dt3)/r_dt2)/c1 
+                  
                   wt_rhs_tscheme_exp(1) = b0/a0 
                   wt_rhs_tscheme_exp(2) = b1/a0
                   wt_rhs_tscheme_exp(3) = b2/a0
@@ -1721,6 +1984,83 @@ contains
 
             end select              
 
+         case ('CB3f')
+ 
+            select case (time_scheme_exp)
+
+               case ('expCB3f')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        aa21, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        aa31, aa32, 0.0_dp, 0.0_dp, &
+                                        bb1, aa42, aa43, 0.0_dp], &
+                                        [4,4],order=[2,1])  
+
+                  butcher_bA = reshape([bb1, bb2, bb3, bb4],[4]) 
+
+                  ars_eqn_check_A=.FALSE.
+
+            end select              
+
+         case ('CB4')
+ 
+            select case (time_scheme_exp)
+
+               case ('expCB4')
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                       aa21, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                       aa31, aa32, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                       bb1, aa42, aa43, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                       bb1, bb2, aa53, aa54, 0.0_dp, 0.0_dp, &
+                                       bb1, bb2, bb3, aa64, aa65, 0.0_dp], &
+                                       [6,6],order=[2,1]) 
+
+                  butcher_bA = reshape([bb1, bb2, bb3, bb4, bb5, bb6],[6]) 
+ 
+                  ars_eqn_check_A=.FALSE.
+
+            end select              
+
+         case ('LZ3L1')
+ 
+            select case (time_scheme_exp)
+
+               case ('expLZ3L1')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.25_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.0_dp, 0.5_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        -0.5_dp, 5.0_dp/4.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.0_dp, 2.0_dp/3.0_dp, -1.0_dp/3.0_dp, 2.0_dp/3.0_dp, 0.0_dp], &
+                                        [5,5],order=[2,1])
+
+                  butcher_bA = reshape([0.0_dp, 2.0_dp/3.0_dp, -1.0_dp/3.0_dp, 2.0_dp/3.0_dp, 0.0_dp],[5]) 
+
+                  ars_eqn_check_A=.TRUE.
+
+            end select 
+
+         case ('LZ3A4a')
+ 
+            select case (time_scheme_exp)
+
+               case ('expLZ3A4a')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.5_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.25_dp, 0.25_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.0_dp, 1.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        1.0_dp/6.0_dp, 0.0_dp, 2.0_dp/3.0_dp, 1.0_dp/6.0_dp, 0.0_dp], &
+                                        [5,5],order=[2,1])
+
+                  butcher_bA = reshape([1.0_dp/6.0_dp, 0.0_dp, 2.0_dp/3.0_dp, 1.0_dp/6.0_dp, 0.0_dp],[5]) 
+
+                  ars_eqn_check_A=.TRUE.
+
+            end select 
+
+
+
          case ('CFN564')
  
             select case (time_scheme_exp)
@@ -1738,6 +2078,27 @@ contains
                   butcher_bA = reshape([0.0_dp, 25.0_dp/24.0_dp, -49.0_dp/48.0_dp, 125.0_dp/16.0_dp, -85.0_dp/12.0_dp, 0.25_dp],[6]) 
 
                   ars_eqn_check_A=.FALSE.
+
+            end select  
+
+         case ('LZ4A1')
+ 
+            select case (time_scheme_exp)
+
+               case ('expLZ4A1')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        1.0_dp/3.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        1.0_dp/6.0_dp, 1.0_dp/6.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        1.0_dp/8.0_dp, 0.0_dp, 3.0_dp/8.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        1.0_dp/8.0_dp, 0.0_dp, 3.0_dp/8.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.5_dp, 0.0_dp, -1.5_dp, 1.0_dp, 1.0_dp, 0.0_dp, 0.0_dp, &
+                                        1.0_dp/6.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 2.0_dp/3.0_dp, 1.0_dp/6.0_dp, 0.0_dp], &
+                                        [7,7],order=[2,1]) 
+
+                  butcher_bA = reshape([1.0_dp/6.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 2.0_dp/3.0_dp, 1.0_dp/6.0_dp, 0.0_dp],[7]) 
+
+                  ars_eqn_check_A=.TRUE.
 
             end select  
 
