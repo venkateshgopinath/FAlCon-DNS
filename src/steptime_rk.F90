@@ -99,9 +99,9 @@ contains
          !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
          !--------------------------------------------------------------
 
-         if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
-            tot_time=tot_time+dt_new 
-         end if
+         !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
+         !   tot_time=tot_time+dt_new 
+         !end if
 
          do rk_stage=1,n_order_tscheme_exp ! LOOP for RK stages (rk_stage) 
 
@@ -131,6 +131,7 @@ contains
          call Assembly_stage(Nm_max,Nr_max,dt_new,lm,tFR,omgFR,psii,upFR,urFR,mBC)
          !------------------------------------------------------------------------------------------
 
+            tot_time=tot_time+dt_new 
          ! Calculate temperature in FC space at 0-mode --       
          call chebtransform(Nr_max,tFR(1,:),TFC)
          !-----------------------------------------------

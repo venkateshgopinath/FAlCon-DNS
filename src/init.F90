@@ -3,7 +3,8 @@ module init
    use constants, only: one, two, three, half, pi, ii, onefourth
 #if FFTW
    use fourier, only: init_fftwplan, destroy_fftwplan, forfft, invfft
-   use chebyshev, only: init_chebfftwplan, destroy_chebfftwplan, lagrange, dlagrange, d2lagrange, chebtransform, chebinvtran 
+   use chebyshev, only: init_chebfftwplan, destroy_chebfftwplan, lagrange, dlagrange, d2lagrange, chebtransform, chebinvtran,&
+                        & chebtransform_redft, chebinvtran_redft, init_chebfftwplan_redft, destroy_chebfftwplan_redft
 #elif GG
    use fourier, only: forfft, invfft
    use chebyshev, only: lagrange, dlagrange, d2lagrange, chebtransform, chebinvtran 
@@ -36,7 +37,6 @@ module init
    real(kind=dp), public :: dt_old, dt_new, tot_time 
 
    complex(kind=dp), allocatable :: tFRc(:,:), omgFRc(:,:), urFRc(:,:), upFRc(:,:) ! Previously saved data (small 'c' denotes latest timestep from checkpoint)
-   complex(kind=dp), allocatable :: tFCc(:,:), omgFCc(:,:), urFCc(:,:), upFCc(:,:) ! Previously saved data (small 'c' denotes latest timestep from checkpoint)
    complex(kind=dp), allocatable :: tFCn(:,:), omgFCn(:,:), urFCn(:,:), upFCn(:,:) ! Previously saved data (small 'n' denotes latest timestep from checkpoint adapted if Nm or Nr different to current )
    complex(kind=dp), allocatable :: rhs_imp_temp_old(:,:,:), rhs_exp_temp_old(:,:,:)
    complex(kind=dp), allocatable :: rhs_imp_vort_old(:,:,:), rhs_exp_vort_old(:,:,:) 
@@ -409,10 +409,6 @@ contains
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
 
-      allocate( tFRc(Nm_max+1,Nr_max), omgFRc(Nm_max+1,Nr_max), urFRc(Nm_max+1,Nr_max), &
-                & upFRc(Nm_max+1,Nr_max) )
-      allocate( tFCc(Nm_max+1,Nr_max), omgFCc(Nm_max+1,Nr_max), urFCc(Nm_max+1,Nr_max), &
-                & upFCc(Nm_max+1,Nr_max) )
       allocate( tFCn(Nm_max+1,Nr_max), omgFCn(Nm_max+1,Nr_max), urFCn(Nm_max+1,Nr_max), &
                 & upFCn(Nm_max+1,Nr_max) )
       allocate( rhs_imp_temp_old(n_order_tscheme_imp,Nm_max+1,Nr_max),rhs_exp_temp_old( &
@@ -430,8 +426,6 @@ contains
       deallocate( rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old )    
       deallocate( rhs_imp_uphi_bar_old,rhs_exp_uphi_bar_old )
       deallocate( tFCn, omgFCn, urFCn, upFCn )
-      deallocate( tFCc, omgFCc, urFCc, upFCc )
-      deallocate( tFRc, omgFRc, urFRc, upFRc )
 
    end subroutine deallocate_restart
 
@@ -447,7 +441,7 @@ contains
       integer :: Nm_max_old, Nr_max_old
       integer :: n_order_tscheme_imp_old, n_order_tscheme_exp_old, n_order_tscheme_max_old 
       integer :: i,j,Nm,Nr
-      
+      real(kind=dp) :: fac
       real(kind=dp), intent(out) :: dt_array(n_order_tscheme_max)
       character(len=100), intent(in) :: time_scheme_type
       character(len=100), intent(in) :: time_scheme_imp
@@ -697,73 +691,6 @@ contains
                end do 
             end do
          end if
-!-----   -------------------------------------------------------------------------------
-
-         do Nm=0,Nm_max_old 
-            call chebtransform(Nr_max,tFRc(Nm+1,:),tFCc(Nm+1,:))
-            call chebtransform(Nr_max,omgFRc(Nm+1,:),omgFCc(Nm+1,:))
-            call chebtransform(Nr_max,urFRc(Nm+1,:),urFCc(Nm+1,:))
-            call chebtransform(Nr_max,upFRc(Nm+1,:),upFCc(Nm+1,:))
-         end do
-            
-         if (Nm_max_old==Nm_max .and. Nr_max_old==Nr_max) then
-            tFR=tFRc
-            omgFR=omgFRc
-            urFR=urFRc
-            upFR=upFRc
-         else if (Nm_max>Nm_max_old .and. Nr_max==Nr_max_old) then
-            do Nm=0,Nm_max_old
-               do Nr=1,Nr_max_old
-                  tFCn(Nm+1,Nr)=tFCc(Nm+1,Nr) 
-                  omgFCn(Nm+1,Nr)=omgFCc(Nm+1,Nr) 
-                  urFCn(Nm+1,Nr)=urFCc(Nm+1,Nr) 
-                  upFCn(Nm+1,Nr)=upFCc(Nm+1,Nr) 
-               end do
-            end do
-            do Nm=Nm_max_old+1,Nm_max
-               do Nr=1,Nr_max_old
-                  tFCn(Nm+1,Nr)=0.0_dp
-                  omgFCn(Nm+1,Nr)=0.0_dp
-                  urFCn(Nm+1,Nr)=0.0_dp
-                  upFCn(Nm+1,Nr)=0.0_dp
-               end do
-            end do
-            do Nm=0,Nm_max
-               call chebinvtran(Nr_max,tFCn(Nm+1,:),tFR(Nm+1,:))
-               call chebinvtran(Nr_max,omgFCn(Nm+1,:),omgFR(Nm+1,:))
-               call chebinvtran(Nr_max,urFCn(Nm+1,:),urFR(Nm+1,:))
-               call chebinvtran(Nr_max,upFCn(Nm+1,:),upFR(Nm+1,:))
-            end do
-         else if (Nm_max==Nm_max_old .and. Nr_max>Nr_max_old) then
-            do Nm=0,Nm_max_old
-               do Nr=1,Nr_max_old
-                  tFCn(Nm+1,Nr)=tFCc(Nm+1,Nr) 
-                  omgFCn(Nm+1,Nr)=omgFCc(Nm+1,Nr) 
-                  urFCn(Nm+1,Nr)=urFCc(Nm+1,Nr) 
-                  upFCn(Nm+1,Nr)=upFCc(Nm+1,Nr) 
-               end do
-            end do
-            do Nm=0,Nm_max_old
-               do Nr=Nr_max_old+1,Nr_max
-                  tFCn(Nm+1,Nr)=0.0_dp
-                  omgFCn(Nm+1,Nr)=0.0_dp
-                  urFCn(Nm+1,Nr)=0.0_dp
-                  upFCn(Nm+1,Nr)=0.0_dp
-               end do
-            end do
-            do Nm=0,Nm_max
-               call chebinvtran(Nr_max,tFCn(Nm+1,:),tFR(Nm+1,:))
-               call chebinvtran(Nr_max,omgFCn(Nm+1,:),omgFR(Nm+1,:))
-               call chebinvtran(Nr_max,urFCn(Nm+1,:),urFR(Nm+1,:))
-               call chebinvtran(Nr_max,upFCn(Nm+1,:),upFR(Nm+1,:))
-            end do
-         end if
-
-         !tFR=tFR*(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
-         !omgFR=omgFR*(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
-         !urFR=urFR*(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
-         !upFR=upFR*(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
-          
          !  ----- Create temporary rhs from previously stored rhs -----------  
          tmp_rhs_imp_temp=rhs_imp_temp 
          tmp_rhs_exp_temp=rhs_exp_temp
@@ -774,9 +701,136 @@ contains
 
          !  -----------------------------------------------------------------
       end if
+
+         ! IF GRID POINTS ARE CHANGED AT RESTART (increased resolution)
+
+         ! Chebyshev transform of restarted variables
+         call init_chebfftwplan_redft(Nr_max_old)
+         do Nm=0,Nm_max_old 
+            call chebtransform_redft(Nr_max_old,tFRc(Nm+1,:),tFRc(Nm+1,:))
+            call chebtransform_redft(Nr_max_old,omgFRc(Nm+1,:),omgFRc(Nm+1,:))
+            call chebtransform_redft(Nr_max_old,urFRc(Nm+1,:),urFRc(Nm+1,:))
+            call chebtransform_redft(Nr_max_old,upFRc(Nm+1,:),upFRc(Nm+1,:))
+         end do
+         call destroy_chebfftwplan_redft()
+          
+         ! Check for grid size match for current and restart checkpoint and proceed accordingly
+         if (Nm_max_old==Nm_max .and. Nr_max_old==Nr_max) then
+            tFR=tFRc
+            omgFR=omgFRc
+            urFR=urFRc
+            upFR=upFRc
+         else if (Nm_max>Nm_max_old .and. Nr_max==Nr_max_old) then
+            do Nm=0,Nm_max_old
+               do Nr=1,Nr_max_old
+                  tFCn(Nm+1,Nr)=tFRc(Nm+1,Nr) 
+                  omgFCn(Nm+1,Nr)=omgFRc(Nm+1,Nr) 
+                  urFCn(Nm+1,Nr)=urFRc(Nm+1,Nr) 
+                  upFCn(Nm+1,Nr)=upFRc(Nm+1,Nr) 
+               end do
+            end do
+            ! Padding with zeros
+            do Nm=Nm_max_old+1,Nm_max
+               do Nr=1,Nr_max_old
+                  tFCn(Nm+1,Nr)=0.0_dp
+                  omgFCn(Nm+1,Nr)=0.0_dp
+                  urFCn(Nm+1,Nr)=0.0_dp
+                  upFCn(Nm+1,Nr)=0.0_dp
+               end do
+            end do
+            ! Inverse Chebyshev transform
+            call init_chebfftwplan_redft(Nr_max)
+            do Nm=0,Nm_max
+               call chebinvtran_redft(Nr_max,tFCn(Nm+1,:),tFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,omgFCn(Nm+1,:),omgFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,urFCn(Nm+1,:),urFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,upFCn(Nm+1,:),upFR(Nm+1,:))
+            end do
+            call destroy_chebfftwplan_redft()
+
+            fac = (2.0_dp*real(Nr_max-1,kind=dp))/(2.0_dp*real(Nr_max_old-1,kind=dp)) !factor used
+
+            tFR=tFR*fac
+            omgFR=omgFR*fac
+            urFR=urFR*fac
+            upFR=upFR*fac
+
+         else if (Nm_max==Nm_max_old .and. Nr_max>Nr_max_old) then
+            do Nm=0,Nm_max_old
+               do Nr=1,Nr_max_old
+                  tFCn(Nm+1,Nr)=tFRc(Nm+1,Nr) 
+                  omgFCn(Nm+1,Nr)=omgFRc(Nm+1,Nr) 
+                  urFCn(Nm+1,Nr)=urFRc(Nm+1,Nr) 
+                  upFCn(Nm+1,Nr)=upFRc(Nm+1,Nr) 
+               end do
+            end do
+            ! Padding with zeros
+            do Nm=0,Nm_max_old
+               do Nr=Nr_max_old+1,Nr_max
+                  tFCn(Nm+1,Nr)=0.0_dp
+                  omgFCn(Nm+1,Nr)=0.0_dp
+                  urFCn(Nm+1,Nr)=0.0_dp
+                  upFCn(Nm+1,Nr)=0.0_dp
+               end do
+            end do
+
+            ! Inverse Chebyshev transform
+            call init_chebfftwplan_redft(Nr_max)
+            do Nm=0,Nm_max
+               call chebinvtran_redft(Nr_max,tFCn(Nm+1,:),tFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,omgFCn(Nm+1,:),omgFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,urFCn(Nm+1,:),urFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,upFCn(Nm+1,:),upFR(Nm+1,:))
+            end do
+            call destroy_chebfftwplan_redft()
+
+            fac = (2.0_dp*real(Nr_max-1,kind=dp))/(2.0_dp*real(Nr_max_old-1,kind=dp)) !factor used
+
+            tFR=tFR*fac
+            omgFR=omgFR*fac
+            urFR=urFR*fac
+            upFR=upFR*fac
+
+         else if (Nm_max>Nm_max_old .and. Nr_max>Nr_max_old) then
+            do Nm=0,Nm_max_old
+               do Nr=1,Nr_max_old
+                  tFCn(Nm+1,Nr)=tFRc(Nm+1,Nr) 
+                  omgFCn(Nm+1,Nr)=omgFRc(Nm+1,Nr) 
+                  urFCn(Nm+1,Nr)=urFRc(Nm+1,Nr) 
+                  upFCn(Nm+1,Nr)=upFRc(Nm+1,Nr) 
+               end do
+            end do
+            ! Padding with zeros
+            do Nm=Nm_max_old+1,Nm_max
+               do Nr=Nr_max_old+1,Nr_max
+                  tFCn(Nm+1,Nr)=0.0_dp
+                  omgFCn(Nm+1,Nr)=0.0_dp
+                  urFCn(Nm+1,Nr)=0.0_dp
+                  upFCn(Nm+1,Nr)=0.0_dp
+               end do
+            end do
+           ! Inverse Chebyshev transform
+            call init_chebfftwplan_redft(Nr_max)
+            do Nm=0,Nm_max
+               call chebinvtran_redft(Nr_max,tFCn(Nm+1,:),tFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,omgFCn(Nm+1,:),omgFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,urFCn(Nm+1,:),urFR(Nm+1,:))
+               call chebinvtran_redft(Nr_max,upFCn(Nm+1,:),upFR(Nm+1,:))
+            end do
+            call destroy_chebfftwplan_redft()
+
+            fac = (2.0_dp*real(Nr_max-1,kind=dp))/(2.0_dp*real(Nr_max_old-1,kind=dp)) !factor used
+
+            tFR=tFR*fac
+            omgFR=omgFR*fac
+            urFR=urFR*fac
+            upFR=upFR*fac
+
+         end if
+
    end subroutine get_checkpoint_data
 
-   subroutine read_checkpoint(dt_new,tot_time,Nm_max,Nr_max,n_order_tscheme_imp_old, &
+   subroutine read_checkpoint(dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &
                                  & n_order_tscheme_exp_old,Nrestart_point,tFRn,omgFRn,urFRn,upFRn, &
                                  & rhs_imp_temp_old,rhs_exp_temp_old,rhs_imp_vort_old,rhs_exp_vort_old,rhs_imp_uphi_bar_old, &
                                  & rhs_exp_uphi_bar_old, dt_array_old, &
@@ -784,8 +838,8 @@ contains
 
       real(kind=dp), intent(out) :: dt_new
       real(kind=dp), intent(out) :: tot_time
-      integer, intent(out) :: Nm_max   
-      integer, intent(out) :: Nr_max 
+      integer, intent(out) :: Nm_max_old   
+      integer, intent(out) :: Nr_max_old 
       integer, intent(out) :: n_order_tscheme_imp_old, n_order_tscheme_exp_old 
       integer, intent(out) :: n_order_tscheme_max_old 
       integer, intent(in) :: Nrestart_point
@@ -808,28 +862,28 @@ contains
       print *, Nrestart_point
       write(datafile1,'("checkpoint_",I5.5)') Nrestart_point
       open(newunit=inunit, status='old',file=datafile1,form='unformatted')
-      read(inunit) dt_new,tot_time,Nm_max,Nr_max,n_order_tscheme_imp_old, &
+      read(inunit) dt_new,tot_time,Nm_max_old,Nr_max_old,n_order_tscheme_imp_old, &
                    & n_order_tscheme_exp_old, n_order_tscheme_max_old
       allocate(dt_array_old(n_order_tscheme_max_old))
-      allocate(tFRn(Nm_max+1,Nr_max))
-      allocate(omgFRn(Nm_max+1,Nr_max))
-      allocate(urFRn(Nm_max+1,Nr_max))
-      allocate(upFRn(Nm_max+1,Nr_max))
+      allocate(tFRn(Nm_max_old+1,Nr_max_old))
+      allocate(omgFRn(Nm_max_old+1,Nr_max_old))
+      allocate(urFRn(Nm_max_old+1,Nr_max_old))
+      allocate(upFRn(Nm_max_old+1,Nr_max_old))
       
       if (l_imexrk_started) then
-         allocate(rhs_imp_temp_old(1,Nm_max+1,Nr_max)) 
-         allocate(rhs_exp_temp_old(1,Nm_max+1,Nr_max)) 
-         allocate(rhs_imp_vort_old(1,Nm_max+1,Nr_max)) 
-         allocate(rhs_exp_vort_old(1,Nm_max+1,Nr_max)) 
-         allocate(rhs_imp_uphi_bar_old(1,Nr_max)) 
-         allocate(rhs_exp_uphi_bar_old(1,Nr_max)) 
+         allocate(rhs_imp_temp_old(1,Nm_max_old+1,Nr_max_old)) 
+         allocate(rhs_exp_temp_old(1,Nm_max_old+1,Nr_max_old)) 
+         allocate(rhs_imp_vort_old(1,Nm_max_old+1,Nr_max_old)) 
+         allocate(rhs_exp_vort_old(1,Nm_max_old+1,Nr_max_old)) 
+         allocate(rhs_imp_uphi_bar_old(1,Nr_max_old)) 
+         allocate(rhs_exp_uphi_bar_old(1,Nr_max_old)) 
       else
-         allocate(rhs_imp_temp_old(n_order_tscheme_imp_old,Nm_max+1,Nr_max)) 
-         allocate(rhs_exp_temp_old(n_order_tscheme_exp_old,Nm_max+1,Nr_max)) 
-         allocate(rhs_imp_vort_old(n_order_tscheme_imp_old,Nm_max+1,Nr_max)) 
-         allocate(rhs_exp_vort_old(n_order_tscheme_exp_old,Nm_max+1,Nr_max)) 
-         allocate(rhs_imp_uphi_bar_old(n_order_tscheme_imp_old,Nr_max)) 
-         allocate(rhs_exp_uphi_bar_old(n_order_tscheme_exp_old,Nr_max)) 
+         allocate(rhs_imp_temp_old(n_order_tscheme_imp_old,Nm_max_old+1,Nr_max_old)) 
+         allocate(rhs_exp_temp_old(n_order_tscheme_exp_old,Nm_max_old+1,Nr_max_old)) 
+         allocate(rhs_imp_vort_old(n_order_tscheme_imp_old,Nm_max_old+1,Nr_max_old)) 
+         allocate(rhs_exp_vort_old(n_order_tscheme_exp_old,Nm_max_old+1,Nr_max_old)) 
+         allocate(rhs_imp_uphi_bar_old(n_order_tscheme_imp_old,Nr_max_old)) 
+         allocate(rhs_exp_uphi_bar_old(n_order_tscheme_exp_old,Nr_max_old)) 
       end if
 
       read(inunit) dt_array_old

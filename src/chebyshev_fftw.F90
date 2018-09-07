@@ -11,15 +11,15 @@ module chebyshev
 
    real(kind=dp), allocatable, public :: xp(:)
 
-   type(C_PTR), public :: plan_cheb_fft, plan_cheb_ifft, plan_redft 
+   type(C_PTR), public :: plan_cheb_fft, plan_cheb_ifft, plan_redft, plan_redft_old 
 
 
    public :: init_chebfftwplan, destroy_chebfftwplan, cheballoc, chebdealloc, dcheb, chebtransform, chebinvtran, &
-        chebinvtranD1, chebinvtranD2, chebinvtranD1D2, lagrange, dlagrange, d2lagrange
-
+        chebtransform_redft, chebinvtran_redft, chebinvtranD1, chebinvtranD2, chebinvtranD1D2, lagrange, dlagrange, & 
+        d2lagrange, init_chebfftwplan_redft, destroy_chebfftwplan_redft
 contains
 
-   subroutine init_chebfftwplan(Nr_max) ! Create plan for Discrete Fourier Transform
+   subroutine init_chebfftwplan(Nr_max) ! Create plan for Discrete Fourier Transform (new)
       include "fftw3.f03"
       integer, intent(in) :: Nr_max
       
@@ -27,7 +27,6 @@ contains
       complex(kind=dp), allocatable :: tf2(:)
       real(kind=dp), allocatable :: fr(:)
       real(kind=dp), allocatable :: ffr(:)
-
 
       allocate( tf1(2*Nr_max-2), tf2(2*Nr_max-2), fr(Nr_max), ffr(Nr_max) )
          
@@ -47,6 +46,29 @@ contains
 
    end subroutine destroy_chebfftwplan
    !-----------------------------------------------------------------------------------------
+
+   subroutine init_chebfftwplan_redft(Nr_max) ! Create plan for Discrete Fourier Transform (old: while Nr does not match while restart)
+      include "fftw3.f03"
+      integer, intent(in) :: Nr_max
+      
+      real(kind=dp), allocatable :: fr(:)
+      real(kind=dp), allocatable :: ffr(:)
+
+      print *, Nr_max, "here"
+
+      allocate( fr(Nr_max), ffr(Nr_max) )
+         
+      plan_redft_old = fftw_plan_r2r_1d(Nr_max,fr,ffr,FFTW_REDFT00,FFTW_ESTIMATE)
+
+   end subroutine init_chebfftwplan_redft 
+   !-----------------------------------------------------------------------------------------
+
+   subroutine destroy_chebfftwplan_redft() ! Destroy plan
+      include "fftw3.f03"
+     
+      call fftw_destroy_plan(plan_redft_old)
+
+   end subroutine destroy_chebfftwplan_redft
 
    subroutine cheballoc(Nr_max) ! Allocate Chebyshev differentiation matrix 
      
@@ -135,7 +157,6 @@ contains
 
    end subroutine chebtransform
 
-
    subroutine chebinvtran(Nr_max,ft,ff)
       include "fftw3.f03"
       integer :: i
@@ -159,13 +180,11 @@ contains
       
       call fftw_execute_r2r(plan_redft, fr, ffr) !Execute the plan
       
-      !ff_r=cmplx(ffr(1:Nr_max), kind=dp)
       ff_r=ffr(1:Nr_max)
       ff_r = ff_r * 0.5_dp * fact 
       
       call fftw_execute_r2r(plan_redft, fi, ffi) !Execute the plan
       
-      !ff_i=cmplx(ffi(1:Nr_max), kind=dp)
       ff_i=ffi(1:Nr_max)
       ff_i = ff_i * 0.5_dp * fact
 
@@ -176,6 +195,57 @@ contains
       ff(:)=ff(Nr_max:1:-1) 
 
    end subroutine chebinvtran
+
+   subroutine chebtransform_redft(Nr_max,f,ft)
+      include "fftw3.f03"
+      integer, intent(in) :: Nr_max 
+      complex(kind=dp), intent(in) :: f(Nr_max)
+      complex(kind=dp), intent(out) :: ft(Nr_max)
+      integer :: i
+      real(kind=dp) :: fac
+      real(kind=dp) :: fr(Nr_max), fi(Nr_max)
+      real(kind=dp) :: ftr(Nr_max), fti(Nr_max)
+
+      fac=(2.0_dp/real(Nr_max-1,kind=dp))**0.5_dp
+      fr=real(f) 
+      fi=aimag(f)
+      call fftw_execute_r2r(plan_redft_old, fr, ftr)
+      call fftw_execute_r2r(plan_redft_old, fi, fti)
+
+      do i=1,Nr_max
+         ft(i)=cmplx(ftr(i), fti(i),kind=dp) 
+      end do
+
+   end subroutine chebtransform_redft
+
+   subroutine chebinvtran_redft(Nr_max,ft,ff)
+      include "fftw3.f03"
+      integer :: i
+      integer, intent(in) :: Nr_max
+      complex(kind=dp), intent(in) :: ft(Nr_max)
+      complex(kind=dp), intent(out) :: ff(Nr_max)
+      real(kind=dp) :: fr(Nr_max), fi(Nr_max)
+      real(kind=dp) :: ffr(Nr_max), ffi(Nr_max)
+      real(kind=dp) :: ffr_copy(Nr_max), ffi_copy(Nr_max)
+
+      fr=real(ft) 
+      fi=aimag(ft)
+
+      call fftw_execute_r2r(plan_redft_old, fr, ffr) !Execute the plan
+       
+      ffr_copy=ffr(1:Nr_max)
+      
+      call fftw_execute_r2r(plan_redft_old, fi, ffi) !Execute the plan
+      
+      ffi_copy=ffi(1:Nr_max)
+
+      do i=1,Nr_max
+         ff(i)=cmplx(ffr_copy(i), ffi_copy(i),kind=dp) 
+      end do
+
+      ff(:)=ff(:)/(2.0_dp*real(Nr_max-1,kind=dp)) 
+
+   end subroutine chebinvtran_redft
 
    subroutine chebinvtranD1(Nr_max,ft,df)
       include "fftw3.f03"

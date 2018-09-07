@@ -219,11 +219,9 @@ contains
          call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
          !--------------------------------------------------------------
 
-         print *, dt_array(1), dt_array(2), dt_array(3), dt_array(4), "heh"  
-
-         if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
-            tot_time=tot_time+dt_new 
-         end if
+         !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
+         !   tot_time=tot_time+dt_new 
+         !end if
 
          if (n_step-n_restart>1) then
              tmp_rhs_imp_temp=rhs_imp_temp

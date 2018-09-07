@@ -234,7 +234,7 @@ contains
          t_final= OMP_GET_WTIME ()
       !$omp end parallel
       !print *, maxval(aimag(omgFR_check))
-        print *, t_final - t_ref
+        !print *, t_final - t_ref
 !-------------- End loop over the Fourier modes -------------------------------------------------------------------------
 
    end subroutine Nm_maxLOOP
