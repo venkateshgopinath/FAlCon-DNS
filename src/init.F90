@@ -698,29 +698,28 @@ contains
          tmp_rhs_exp_vort=rhs_exp_vort
          tmp_rhs_imp_uphi_bar=rhs_imp_uphi_bar
          tmp_rhs_exp_uphi_bar=rhs_exp_uphi_bar
-
-         !  -----------------------------------------------------------------
-      end if
-
-         ! IF GRID POINTS ARE CHANGED AT RESTART (increased resolution)
-
-         ! Chebyshev transform of restarted variables
-         call init_chebfftwplan_redft(Nr_max_old)
-         do Nm=0,Nm_max_old 
-            call chebtransform_redft(Nr_max_old,tFRc(Nm+1,:),tFRc(Nm+1,:))
-            call chebtransform_redft(Nr_max_old,omgFRc(Nm+1,:),omgFRc(Nm+1,:))
-            call chebtransform_redft(Nr_max_old,urFRc(Nm+1,:),urFRc(Nm+1,:))
-            call chebtransform_redft(Nr_max_old,upFRc(Nm+1,:),upFRc(Nm+1,:))
-         end do
-         call destroy_chebfftwplan_redft()
-          
          ! Check for grid size match for current and restart checkpoint and proceed accordingly
          if (Nm_max_old==Nm_max .and. Nr_max_old==Nr_max) then
             tFR=tFRc
             omgFR=omgFRc
             urFR=urFRc
             upFR=upFRc
-         else if (Nm_max>Nm_max_old .and. Nr_max==Nr_max_old) then
+         end if
+         !  -----------------------------------------------------------------
+      end if
+
+         ! IF GRID POINTS ARE CHANGED AT RESTART (increased resolution)
+
+         if (Nm_max>Nm_max_old .and. Nr_max==Nr_max_old) then
+            ! Chebyshev transform of restarted variables
+            call init_chebfftwplan_redft(Nr_max_old)
+            do Nm=0,Nm_max_old 
+               call chebtransform_redft(Nr_max_old,tFRc(Nm+1,:),tFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,omgFRc(Nm+1,:),omgFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,urFRc(Nm+1,:),urFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,upFRc(Nm+1,:),upFRc(Nm+1,:))
+            end do
+            call destroy_chebfftwplan_redft()
             do Nm=0,Nm_max_old
                do Nr=1,Nr_max_old
                   tFCn(Nm+1,Nr)=tFRc(Nm+1,Nr) 
@@ -756,6 +755,15 @@ contains
             upFR=upFR*fac
 
          else if (Nm_max==Nm_max_old .and. Nr_max>Nr_max_old) then
+            ! Chebyshev transform of restarted variables
+            call init_chebfftwplan_redft(Nr_max_old)
+            do Nm=0,Nm_max_old 
+               call chebtransform_redft(Nr_max_old,tFRc(Nm+1,:),tFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,omgFRc(Nm+1,:),omgFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,urFRc(Nm+1,:),urFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,upFRc(Nm+1,:),upFRc(Nm+1,:))
+            end do
+            call destroy_chebfftwplan_redft()
             do Nm=0,Nm_max_old
                do Nr=1,Nr_max_old
                   tFCn(Nm+1,Nr)=tFRc(Nm+1,Nr) 
@@ -792,6 +800,15 @@ contains
             upFR=upFR*fac
 
          else if (Nm_max>Nm_max_old .and. Nr_max>Nr_max_old) then
+            ! Chebyshev transform of restarted variables
+            call init_chebfftwplan_redft(Nr_max_old)
+            do Nm=0,Nm_max_old 
+               call chebtransform_redft(Nr_max_old,tFRc(Nm+1,:),tFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,omgFRc(Nm+1,:),omgFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,urFRc(Nm+1,:),urFRc(Nm+1,:))
+               call chebtransform_redft(Nr_max_old,upFRc(Nm+1,:),upFRc(Nm+1,:))
+            end do
+            call destroy_chebfftwplan_redft()
             do Nm=0,Nm_max_old
                do Nr=1,Nr_max_old
                   tFCn(Nm+1,Nr)=tFRc(Nm+1,Nr) 

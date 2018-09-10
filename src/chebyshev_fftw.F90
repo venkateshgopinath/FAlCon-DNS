@@ -54,8 +54,6 @@ contains
       real(kind=dp), allocatable :: fr(:)
       real(kind=dp), allocatable :: ffr(:)
 
-      print *, Nr_max, "here"
-
       allocate( fr(Nr_max), ffr(Nr_max) )
          
       plan_redft_old = fftw_plan_r2r_1d(Nr_max,fr,ffr,FFTW_REDFT00,FFTW_ESTIMATE)
