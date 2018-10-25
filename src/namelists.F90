@@ -18,6 +18,7 @@ module namelists
    character(len=100), public :: time_scheme_exp
    logical, public :: l_imexrk_started 
    real(kind=dp), public :: CFL
+   real(kind=dp), public :: totaltime
    integer, public :: n_time_steps
    real(kind=dp), public :: dt 
    real(kind=dp), public :: dt_max 
@@ -51,7 +52,7 @@ contains
 
       namelist/physics/eta,Ra,Pr,mBC,ampT,l_add_pert,lagpts,n_init,buo_tscheme
 
-      namelist/timecontrol/n_time_steps,dt,time_scheme_type,time_scheme_imp,time_scheme_exp,l_imexrk_started, &
+      namelist/timecontrol/n_time_steps,dt,totaltime,time_scheme_type,time_scheme_imp,time_scheme_exp,l_imexrk_started, &
                & dt_coef,dt_max,CFL,l_restart,n_restart,n_restart_point,n_snapshot_point
 
       namelist/output/tag,n_checkpoint,n_snapshot,n_KE,n_KEspec
@@ -123,6 +124,7 @@ contains
       n_init = 0               ! Specify type of Gaussian perturbation 
       n_time_steps = 100       ! No. of time steps
       dt = 0.01_dp             ! Time step size 
+      totaltime = 1.0_dp
       time_scheme_type = "IMEXRK" ! Specify type of time integration scheme
       time_scheme_imp = "ARS222" ! State the implicit time scheme
       time_scheme_exp = "expARS222"  ! State the explicit time scheme

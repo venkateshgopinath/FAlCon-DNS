@@ -968,11 +968,7 @@ contains
 
             butcher_bD = reshape([0.0_dp, 1.0_dp-gammaa, gammaa],[3]) 
 
-            do i=1,n_order_tscheme_imp
-               if (butcher_aD(n_order_tscheme_imp,i)==butcher_bD(i)) then
-                  ars_eqn_check_D=.TRUE.
-               end if
-            end do 
+            ars_eqn_check_D=.TRUE.
 
             diag_diff = .FALSE.
             diag_index = 2
@@ -1561,11 +1557,7 @@ contains
 
                   butcher_bA = reshape([delta, 1.0_dp-delta, 0.0_dp],[3]) 
 
-                  do i=1,n_order_tscheme_exp
-                     if (butcher_aA(n_order_tscheme_exp,i)==butcher_bA(i)) then
-                        ars_eqn_check_A=.TRUE.
-                     end if
-                  end do
+                  ars_eqn_check_A=.TRUE.
 
             end select
 

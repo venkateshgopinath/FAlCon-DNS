@@ -29,7 +29,7 @@ module init
    complex(kind=dp), allocatable, public :: t2FR(:,:)
    complex(kind=dp), allocatable, public :: upFR_prev(:,:), urFR_prev(:,:)
    real(kind=dp), public :: startmain, finishmain, startNr_maxloop, finishNr_maxloop, startNm_maxloop
-   real(kind=dp), public :: finishNm_maxloop, startsteptime, finishsteptime
+   real(kind=dp), public :: finishNm_maxloop, startsteptime,finishsteptime,looptime
    real(kind=dp), public :: timeNr_maxloop, timeNm_maxloop, startmatbuild, finishmatbuild, time_matbuild
    real(kind=dp), public :: start_matsolveT, finish_matsolveT, time_matsolveT
    real(kind=dp), public :: start_matsolveW, finish_matsolveW, time_matsolveW
@@ -140,7 +140,7 @@ contains
       end do
 
       do i=2,Np_max
-         phi(i)=phi(i-1)+2.0_dp*pi/real(Np_max,kind=dp) ! 
+         phi(i)=phi(i-1)+2.0_dp*pi/real(Np_max-1,kind=dp) ! 
       end do
       
 

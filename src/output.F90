@@ -113,7 +113,7 @@ contains
 !     write(ke_unit,'(i8, 4es20.12)') n_step, tot_time, KE_tot, vis_term_tot, buo_term_tot
       write(ke_unit,'(6es20.12)') tot_time, KE_tot, KE_radial_tot, KE_azimuthal_tot, KE_0 ! Write KE data to a text file
 !     print *, n_step, tot_time, KE_tot, vis_term_tot, buo_term_tot ! Print KE for checking purposes only
-      write(6,'(6es20.12)')  tot_time, KE_tot,  KE_radial_tot, KE_azimuthal_tot, KE_0! Print for checking purposes only
+      write(6,'(6es20.12)')  tot_time, KE_tot,  KE_radial_tot, KE_azimuthal_tot, KE_0 ! Print for checking purposes only
 
    end subroutine writeKE_physical 
    !-------------------------------------------------------------------------------------------------------
@@ -264,7 +264,7 @@ contains
       !------------------------ Write KE and Nusselt number data in a text file -------------------
 !     write(ke_unit,'(6es20.12)') dt_new, tot_time, KE_tot, maxval(real(upFR(1,:)))  ! Write KE data to a text file
 !     write(ke_unit,'(6es20.12)') dt_new, tot_time, KE_tot, maxval(real(tFR(1,2:62)))  ! Write KE data to a text file (test for adv-diff)
-      write(ke_unit,'(6es20.12)')  tot_time, KE_tot, 2.0_dp * pi * urk, 2.0_dp * pi * upk, 2.0_dp * pi * upbark  ! Write KE data to a text file
+      write(ke_unit,'(6es20.12)')  dt_new, tot_time, KE_tot, 2.0_dp * pi * urk, 2.0_dp * pi * upk, 2.0_dp * pi * upbark  ! Write KE data to a text file
       !-----------------------------------
 
       !------ Calculate Nusselt ---------

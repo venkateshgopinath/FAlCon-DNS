@@ -108,46 +108,44 @@ contains
       Nr_max2=2*Nr_max
       
       if ( diag_diff .eqv. .FALSE. ) then ! If implicit Butcher's table has all diagonal elements equal to each other
-         do Nm=0,Nm_max  
-            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+         if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+            do Nm=0,Nm_max  
                call cpu_time(startmatbuild) 
                call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
                call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
                call cpu_time(finishmatbuild) 
                time_matbuild=time_matbuild + finishmatbuild - startmatbuild
-            end if
-         end do
-         AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
-         AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
-         A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
-         IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
-         IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
-         IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
+            end do
+            AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
+            AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
+            A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
+            IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
+            IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
+            IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
+         end if
       elseif ( diag_diff .eqv. .TRUE. ) then ! If implicit Butcher's table has all diagonal elements unequal to each other
-         do Nm=0,Nm_max  
-            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
-               call cpu_time(startmatbuild) 
-               call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
-               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
-               call cpu_time(finishmatbuild) 
-               time_matbuild=time_matbuild + finishmatbuild - startmatbuild
-            end if
-         end do
-         if ( rk_stage/=diag_index ) then
-            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
-               if ( butcher_aD(rk_stage,rk_stage)==butcher_aD(diag_index,diag_index) ) then
-                  AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
-                  AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
-                  A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
-                  IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
-                  IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
-                  IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
-               else
-                  do Nm=0,Nm_max  
-                        call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operator matrices for (T, omega) and factorize them 
-                  end do
-                        call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operatir matrix for uphibar and factorize them
-               end if
+         if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+            do Nm=0,Nm_max  
+                  call cpu_time(startmatbuild) 
+                  call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+                  call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+                  call cpu_time(finishmatbuild) 
+                  time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+            end do
+            if ( rk_stage/=diag_index ) then
+                  if ( butcher_aD(rk_stage,rk_stage)==butcher_aD(diag_index,diag_index) ) then
+                     AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
+                     AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
+                     A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
+                     IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
+                     IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
+                     IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
+                  else
+                     do Nm=0,Nm_max  
+                           call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+                     end do
+                           call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operatir matrix for uphibar and factorize them
+                  end if
             end if
          end if
       end if
@@ -277,6 +275,7 @@ contains
             end do
             !-------------------------------------------------------------------- 
 
+             
             !-- Apply weights to RHS using implicit Butcher's table: summation of (a_i F_i) 
             do i=1,rk_stage-1 
                F_domg_d(:)=F_domg_d(:)+butcher_aD(rk_stage,i)*domgdt1_d(i,Nm+1,:) 
@@ -331,9 +330,16 @@ contains
 
             call chebinvtran(Nr_max,rhs_omg,real_rhs_omg)
             omgFR(Nm+1,:)=real_rhs_omg(:)
+
+            !if (Nm==1 .and. rk_stage==2) then
+            !   do i=1,Nr_max
+            !      print *, real_rhs_omg(i), "in stage area" 
+            !   end do
+            !end if 
             call chebinvtran(Nr_max,rhs_psi,real_rhs_psi)
             call chebinvtranD1(Nr_max,rhs_psi,real_d_rhs_psi)
             call chebinvtranD2(Nr_max,rhs_psi,real_d2_rhs_psi)
+
             ! OMEGA FIX and CHECK start  
             !-------------------------- Johnston strategy for BC ----------------------------------------------
             !do i=1,lm ! Evaluate at rmin

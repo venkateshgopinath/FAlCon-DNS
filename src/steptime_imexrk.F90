@@ -8,7 +8,7 @@ module steptime_imexrk
 #endif
    use init, only: TFC, upFR, urFR, tFR, omgFR, startNm_maxloop, finishNm_maxloop, & 
                    & startNr_maxloop, finishNr_maxloop, timeNm_maxloop, timeNr_maxloop, startsteptime, &
-                   dt_old, dt_new, tot_time, psii, ur, up, omg, tt, omgFR_check
+                   dt_old, dt_new, tot_time, psii, ur, up, omg, tt, omgFR_check, finishsteptime, looptime 
    use nonlin, only: Nr_maxloop, dtval_r, dtval_p, dtval_rkr, dtval_rkp
    use output, only: init_output, calculate_spectra, final_output, writeke_spectral, &
                      & store_checkpoint_imexrk, store_snapshot_imexrk
@@ -27,7 +27,7 @@ module steptime_imexrk
    complex(kind=dp), allocatable, public :: uphi_temp_FR(:,:), ur_temp_FR(:,:)
    complex(kind=dp), allocatable, public :: uphi_omg_FR(:,:), ur_omg_FR(:,:)
    
-   public :: allocate_steptime_imexrk, deallocate_steptime_imexrk, timeloop_imexrk
+   public :: allocate_steptime_imexrk, deallocate_steptime_imexrk, timeloop_imexrk, solver_log
 
 contains
 
@@ -49,7 +49,7 @@ contains
 
    subroutine timeloop_imexrk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt,Ra,Pr, &
                        & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
-                       & time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,mBC,lm,buo_tscheme)
+                       & time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,mBC,lm,buo_tscheme,totaltime)
        
       integer :: n_step
       integer, intent(in) :: lm 
@@ -73,6 +73,7 @@ contains
       real(kind=dp), intent(in) :: dt
       real(kind=dp), intent(in) :: Ra
       real(kind=dp), intent(in) :: Pr
+      real(kind=dp), intent(in) :: totaltime
       integer :: count_snap
       integer :: count_chkpnt
       integer :: rk_stage, Nm
@@ -90,22 +91,27 @@ contains
       do Nm=0,Nm_max
             call mat_build_rk(Nr_max,Nm) ! Build the operator matrix solving for psi and factorize them 
       end do
+      finishsteptime=0.0_dp
+      startsteptime=0.0_dp 
+      looptime=0.0_dp
 !------------------------- Time loop begins ----------------------------------------------------------   
       do n_step=1+n_restart,n_time_steps+n_restart 
           
          if (n_step-n_restart==1) then
             dt_old=dt
             dt_new=dt
-            call cpu_time(startsteptime)
          end if
-            dt_old=dt
-            dt_new=dt
-            dt_array(:)=dt 
+         !   dt_old=dt
+         !   dt_new=dt
+         !   dt_array(:)=dt 
 
          !------------ Compute New dt by enforcing CFL ----------------- 
-         !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
+         call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
          !--------------------------------------------------------------
 
+         if (n_step-n_restart==2) then
+            call cpu_time(startsteptime)
+         end if
          do rk_stage=1,n_order_tscheme_exp ! LOOP for RK stages (rk_stage) 
                if (rk_stage>1) then
                   
@@ -143,50 +149,69 @@ contains
          !----------------------------------------------------------------------     
 
          tot_time=tot_time+dt_new 
+         call cpu_time(looptime)
+         finishsteptime=finishsteptime+looptime
+         if (tot_time<totaltime) then
 
-         ! Calculate temperature in FC space at 0-mode --       
-         call chebtransform(Nr_max,tFR(1,:),TFC)
-         !-----------------------------------------------
+            ! Calculate temperature in FC space at 0-mode --       
+            call chebtransform(Nr_max,tFR(1,:),TFC)
+            !-----------------------------------------------
 
-         !--------------------- Store Snapshots -----------------------------
-         if (mod(n_step,n_snapshot)==0) then
-            count_snap = count_snap + 1 
-            call store_snapshot_imexrk(Nm_max,Nr_max,Ra,Pr,eta,tot_time,dt_new,count_snap,tFR,omgFR,urFR,upFR,omgFR_check)
+            !--------------------- Store Snapshots -----------------------------
+            if (mod(n_step,n_snapshot)==0) then
+               count_snap = count_snap + 1 
+               call store_snapshot_imexrk(Nm_max,Nr_max,Ra,Pr,eta,tot_time,dt_new,count_snap,tFR,omgFR,urFR,upFR,omgFR_check)
 
-         end if
-         !------------------------------------------------------------------- 
-         
-         !-------------------- Store checkpoints ----------------------------
-         if (mod(n_step,n_checkpoint)==0) then
-            print *, tot_time, "checkpoint save"
-            count_chkpnt = count_chkpnt + 1
-            call store_checkpoint_imexrk(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
-                                  & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
-                                  & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, &
-                                  & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max,time_scheme_type)
- 
-         end if
-         !------------------------------------------------------------------- 
+            end if
+            !------------------------------------------------------------------- 
+            
+            !-------------------- Store checkpoints ----------------------------
+            if (mod(n_step,n_checkpoint)==0) then
+               print *, tot_time, "checkpoint save"
+               count_chkpnt = count_chkpnt + 1
+               call store_checkpoint_imexrk(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
+                                     & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
+                                     & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, &
+                                     & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max,time_scheme_type)
+    
+            end if
+            !------------------------------------------------------------------- 
 
-         !-------------------- Store Kinetic Energy (KE) --------------------
-         if (mod(n_step,n_KE)==0) then
-            call init_output(tag)  ! Open output files 
-            call writeKE_spectral(Nm_max,Nr_max,Np_max, TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR)
-            !call writeKE_physical(Np_max,Nr_max,Nm_max,tot_time,Ra,Pr) ! Uncomment for KE calc in physical space 
-            call final_output() ! Close output files
+            !-------------------- Store Kinetic Energy (KE) --------------------
+            if (mod(n_step,n_KE)==0) then
+               call init_output(tag)  ! Open output files 
+               call writeKE_spectral(Nm_max,Nr_max,Np_max, TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR)
+               !call writeKE_physical(Np_max,Nr_max,Nm_max,tot_time,Ra,Pr) ! Uncomment for KE calc in physical space 
+               call final_output() ! Close output files
+            end if
+            !-------------------- Store Kinetic Energy (KE) spectra ------------
+            if (mod(n_step,n_KEspec)==0) then
+               call init_output(tag)  ! Open output files 
+               call calculate_spectra(Nm_max,Nr_max,urFR,upFR,n_step)
+               call final_output() ! Close output files
+            end if
+            !-------------------------------------------------------------------   
+         else 
+            call solver_log(n_step)
+            call exit()
          end if
-         !-------------------- Store Kinetic Energy (KE) spectra ------------
-         if (mod(n_step,n_KEspec)==0) then
-            call init_output(tag)  ! Open output files 
-            call calculate_spectra(Nm_max,Nr_max,urFR,upFR,n_step)
-            call final_output() ! Close output files
-         end if
-         !-------------------------------------------------------------------   
       
       end do 
 !------------------------- Time loop ends ----------------------------------------------------------   
-        
    end subroutine timeloop_imexrk
+
+   subroutine solver_log(n_step)
+    integer, intent(in) :: n_step
+    integer :: logunit
+      !open(newunit=logunit,file="solver_log.txt",status="unknown",form="formatted", action="write")
+
+      call cpu_time(finishsteptime)
+      write (logunit,*) "Total time taken =",finishsteptime-startsteptime,"seconds."
+      write (logunit,*) "Average time taken for time loop =",(finishsteptime-startsteptime)/real(n_step-1,kind=dp),"seconds."
+     
+      !close(logunit)
+
+   end subroutine solver_log
 
    subroutine compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr)
    
