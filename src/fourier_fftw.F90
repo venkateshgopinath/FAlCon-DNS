@@ -10,7 +10,7 @@ module fourier
    private
    type(C_PTR) :: plan_forward, plan_backward
   
-   public :: init_fftwplan, destroy_fftwplan, forfft, invfft
+   public :: init_fftwplan, destroy_fftwplan, forfft, invfft, forfftO
 
 contains
 
@@ -19,6 +19,7 @@ contains
       integer, intent(in) :: Np_max
       real(kind=dp) :: tf1(Np_max) 
       complex(kind=dp) :: tf2(Np_max/2+1)
+      !complex(kind=dp) :: tf2(Np_max)
       complex(kind=dp) :: tf3(Np_max/2+1)
       real(kind=dp) :: tf4(Np_max)   
         

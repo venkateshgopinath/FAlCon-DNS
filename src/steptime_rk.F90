@@ -159,7 +159,7 @@ contains
          !-------------------- Store Kinetic Energy (KE) --------------------
          if (mod(n_step,n_KE)==0) then
             call init_output(tag)  ! Open output files 
-            call writeKE_spectral(Nm_max,Nr_max,Np_max, TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR)
+            call writeKE_spectral(Nm_max,Nr_max,Np_max, TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR,mBC)
             !call writeKE_physical(Np_max,Nr_max,Nm_max,tot_time,Ra,Pr) ! Uncomment for KE calc in physical space 
             call final_output() ! Close output files
          end if

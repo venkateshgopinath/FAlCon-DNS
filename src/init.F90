@@ -140,10 +140,9 @@ contains
       end do
 
       do i=2,Np_max
-         phi(i)=phi(i-1)+2.0_dp*pi/real(Np_max-1,kind=dp) ! 
+         phi(i)=phi(i-1)+2.0_dp*pi/real(Np_max,kind=dp) ! 
       end do
       
-
    end subroutine init_grid
 
    subroutine init_fields(Nm_max,Np_max,Nr_max,rmin,rmax,l_restart,Nrestart_point,l_add_pert, &

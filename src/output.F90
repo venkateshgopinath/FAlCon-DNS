@@ -119,7 +119,7 @@ contains
    !-------------------------------------------------------------------------------------------------------
 
    !-------------------------------------------------------------------------------------------------------
-   subroutine writeKE_spectral(Nm_max,Nr_max,Np_max,TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR) ! 
+   subroutine writeKE_spectral(Nm_max,Nr_max,Np_max,TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR,mBC) ! 
 
       integer, intent(in) :: Nm_max, Nr_max, Np_max
       real(kind=dp), intent(in) :: eta, tot_time
@@ -128,6 +128,7 @@ contains
       integer, intent(in) :: n_step
       real(kind=dp), intent(in) :: Ra, Pr
       real(kind=dp), intent(in) :: dt_new
+      character(len=100), intent(in) :: mBC
       real(kind=dp) :: KE_tot
       real(kind=dp) :: Nus_b, Nus_t
       real(kind=dp) :: urk, upk, vis_term, buo_term
@@ -290,7 +291,11 @@ contains
          end do
       end do   
       call radInt(Nr_max,w2,vis_term)
-      vis_term=2.0_dp*pi*vis_term
+      if (mBC=='NS') then
+         vis_term=2.0_dp*pi*vis_term
+      elseif (mBC=='SF') then
+         vis_term=2.0_dp*pi*vis_term
+      end if     
       ! Buoyancy -----------------------------
       do j=1,Nr_max
          URT(j)=zero

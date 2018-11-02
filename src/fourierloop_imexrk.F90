@@ -108,7 +108,7 @@ contains
       Nr_max2=2*Nr_max
       
       if ( diag_diff .eqv. .FALSE. ) then ! If implicit Butcher's table has all diagonal elements equal to each other
-         if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+         if ( n_step-n_restart==1 ) then 
             do Nm=0,Nm_max  
                call cpu_time(startmatbuild) 
                call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
@@ -116,13 +116,22 @@ contains
                call cpu_time(finishmatbuild) 
                time_matbuild=time_matbuild + finishmatbuild - startmatbuild
             end do
+         end if
+         if ( (n_step-n_restart>1) .and. (dt_array(1)/=dt_array(2)) .and. (rk_stage==2) ) then ! This condition is to build matrix when dt changes and build it only for 1 stage and use for others  
+            do Nm=0,Nm_max  
+               call cpu_time(startmatbuild) 
+               call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+               call cpu_time(finishmatbuild) 
+               time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+            end do
+         end if
             AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
             AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
             A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
             IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
             IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
             IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
-         end if
       elseif ( diag_diff .eqv. .TRUE. ) then ! If implicit Butcher's table has all diagonal elements unequal to each other
          if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
             do Nm=0,Nm_max  
@@ -299,7 +308,7 @@ contains
             end if
 
             !-- RHS omg = Y_0 + dt * summation of (a_i * F_i) + summation of (\hat{a}_i F_i) + summation of (a_i * Fbuo_i)
-            rhs_stage_omg(:) = omg_spec(Nm+1,:) + dt_array(1)*(F_domg_d + F_domg_a + F_buo) ! bug found here  was put "F_dtemp_d + F_dtemp_a + F_buo" Dec 1 2017
+            rhs_stage_omg(:) = omg_spec(Nm+1,:) + dt_array(1)*(F_domg_d + F_domg_a + F_buo) ! 
 
             rhs_stage_omg(1)=0.0_dp ! Apply BC for stream function in the vorticity equation
             rhs_stage_omg(Nr_max)=0.0_dp ! Apply BC for stream function in the vorticity equation       
@@ -501,7 +510,7 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
       complex(kind=dp), intent(inout) :: upFR(Nm_max+1,Nr_max), urFR(Nm_max+1,Nr_max)
 
       integer :: i,j,k,Nm,INFO1 ! Nm -> azimuthal 'n' loop over Fourier modes
-      complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp(Nr_max), F_duphibar(Nr_max), F_domg(Nr_max)
+      complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp(Nr_max), F_duphibar(Nr_max), F_domg(Nr_max), testomg(Nr_max)
       complex(kind=dp) :: D1upFR(Nr_max) 
       real(kind=dp) :: t_ref, t_final
       complex(kind=dp) :: dpsi_rmin
@@ -510,13 +519,13 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
       complex(kind=dp) :: d2psi_rmax
 
          !!-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
-         !$omp parallel & 
-         !$omp private(Nm,i,j,k,F_dtemp,F_duphibar,F_domg, &
-         !$omp & rhs_r,rhs_i,rhsf_r,rhsf_i, &
-         !$omp & D1upFR,rhs_psi, &
-         !$omp & real_rhs_psi,real_d_rhs_psi,dpsi_rmin,d2psi_rmin,dpsi_rmax,d2psi_rmax) default(shared)  
-         t_ref= OMP_GET_WTIME ()
-         !$omp do     
+         !!$omp parallel & 
+         !!$omp private(Nm,i,j,k,F_dtemp,F_duphibar,F_domg, &
+         !!$omp & rhs_r,rhs_i,rhsf_r,rhsf_i, &
+         !!$omp & D1upFR,rhs_psi, &
+         !!$omp & real_rhs_psi,real_d_rhs_psi,dpsi_rmin,d2psi_rmin,dpsi_rmax,d2psi_rmax) default(shared)  
+         !t_ref= OMP_GET_WTIME ()
+         !!$omp do     
          do Nm=0,Nm_max  
             F_dtemp(:)=0.0_dp 
             F_duphibar(:)=0.0_dp 
@@ -590,6 +599,11 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                rhs_i(1)=0.0_dp  
                rhs_i(Nr_max)=0.0_dp  
 
+               rhs_r(2)=0.0_dp  
+               rhs_r(Nr_max-1)=0.0_dp  
+               rhs_i(2)=0.0_dp  
+               rhs_i(Nr_max-1)=0.0_dp  
+
                !************************** CALL DGETRS A*vt=rhs ****************************
                call matsolve(TRANS, Nr_max, LAPpsi_all(:,:,Nm+1), IPIV1_lap(:,Nm+1), rhs_r, rhs_i,INFO1)
                !****************************************************************************  
@@ -601,43 +615,70 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                call chebinvtranD1(Nr_max,rhs_psi,real_d_rhs_psi)
                call chebinvtranD2(Nr_max,rhs_psi,real_d2_rhs_psi)
 
-               !-------------------------- Johnston strategy for BC ----------------------------------------------
-               do i=1,lm ! Evaluate at rmin
-                     d2psi_rmin=d2psi_rmin + d2w_rmin(i)*real_rhs_psi(i+1) ! Summation 2nd derivative
-                     dpsi_rmin=dpsi_rmin + dw_rmin(i)*real_rhs_psi(i+1)    ! Summation 1st derivative
-                  end do
-                  
-                  do i=1,lm ! Evaluate at rmax
-                     d2psi_rmax=d2psi_rmax + d2w_rmax(i)*real_rhs_psi(Nr_max-i)  ! Summation 2nd derivative
-                     dpsi_rmax=dpsi_rmax + dw_rmax(i)*real_rhs_psi(Nr_max-i)     ! Summation 1st derivative
-               end do 
+               !if (Nm+1==2) then 
+               !   do i=1,Nr_max
+               !      testomg(i) = -1.0_dp*(r_radius(i)*real_d_rhs_psi(i)+real_d2_rhs_psi(i)- &
+               !                       & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*real_rhs_psi(i))
+               !   end do
+               !testomg(1) = -1.0_dp*(real_d2_rhs_psi(1))
+               !testomg(Nr_max) = -1.0_dp*(real_d2_rhs_psi(Nr_max))
+               !print *, testomg(2)-omg_spec(Nm+1,2)  
+               !print *, real_d_rhs_psi(1), real_d_rhs_psi(Nr_max) 
+               !end if
 
                do i=1,Nr_max
-                  !psii(Nm+1,i)=real_rhs_psi(i)
-                  upFR(Nm+1,i)=-1.0_dp*real_d_rhs_psi(i)
-                  urFR(Nm+1,i)=1.0_dp*ii*real(Nm,kind=dp)*r_radius(i)*real_rhs_psi(i)
+                  omg_spec(Nm+1,i) = -1.0_dp*(r_radius(i)*real_d_rhs_psi(i)+real_d2_rhs_psi(i)- &
+                                   & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*real_rhs_psi(i))
                end do
+               omg_spec(Nm+1,1) = -1.0_dp*(real_d2_rhs_psi(1))
+               omg_spec(Nm+1,Nr_max) = -1.0_dp*(real_d2_rhs_psi(Nr_max))
+          
+               !-------------------------- Johnston strategy for BC ----------------------------------------------
+!               do i=1,lm ! Evaluate at rmin
+!                     d2psi_rmin=d2psi_rmin + d2w_rmin(i)*real_rhs_psi(i+1) ! Summation 2nd derivative
+!                     dpsi_rmin=dpsi_rmin + dw_rmin(i)*real_rhs_psi(i+1)    ! Summation 1st derivative
+!                  end do
+                 
+!               do i=1,lm ! Evaluate at rmax
+!                     d2psi_rmax=d2psi_rmax + d2w_rmax(i)*real_rhs_psi(Nr_max-i)  ! Summation 2nd derivative
+!                     dpsi_rmax=dpsi_rmax + dw_rmax(i)*real_rhs_psi(Nr_max-i)     ! Summation 1st derivative
+!               end do 
 
-               if (mBC=='NS') then ! Johnston's strategy
-                  ! ------------ Use Lagrange polynomials for approximation of No-slip boundary conditions ------------------- 
-                  omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin)            ! Apply omega rmin BC 
-                  omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax)       ! Apply omega rmax BC 
-                  ! --------------------------------------------------------------------------------------------------
-               elseif (mBC=='SF') then
+!               do i=1,Nr_max
+!                  !psii(Nm+1,i)=real_rhs_psi(i)
+!                  upFR(Nm+1,i)=-1.0_dp*real_d_rhs_psi(i)
+!                  urFR(Nm+1,i)=1.0_dp*ii*real(Nm,kind=dp)*r_radius(i)*real_rhs_psi(i)
+!               end do
+
+!               if (mBC=='NS') then ! Johnston's strategy
+!                  ! ------------ Use Lagrange polynomials for approximation of No-slip boundary conditions ------------------- 
+!                  omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin)            ! Apply omega rmin BC 
+!                  omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax)       ! Apply omega rmax BC 
+!                  ! --------------------------------------------------------------------------------------------------
+!               elseif (mBC=='SF') then
+                  !print *, upFR(Nm+1,1), upFR(Nm+1,Nr_max), "heh"
                   ! ------------ Use Lagrange polynomials for approximation of Stress-free boundary conditions ------------------- 
-                  omg_spec(Nm+1,1)=-2.0_dp/radius(1)*dpsi_rmin               ! Apply omega rmin BC 
-                  omg_spec(Nm+1,Nr_max)=-2.0_dp/radius(Nr_max)*dpsi_rmax     ! Apply omega rmax BC 
+!                  omg_spec(Nm+1,1)=-1.0_dp*(real_d2_rhs_psi(1))
+!                  omg_spec(Nm+1,Nr_max)=-1.0_dp*(real_d2_rhs_psi(Nr_max))
+                  !omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin + 2.0_dp*upFR(Nm+1,1)*dpsi_rmin)       ! Apply omega rmin BC 
+                  !omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax + 2.0_dp*upFR(Nm+1,Nr_max)*dpsi_rmax)  ! Apply omega rmax BC 
+                  !omg_spec(Nm+1,1)=-2.0_dp/radius(1)*dpsi_rmin               ! Apply omega rmin BC 
+                  !omg_spec(Nm+1,Nr_max)=-2.0_dp/radius(Nr_max)*dpsi_rmax     ! Apply omega rmax BC 
+                  !omg_spec(Nm+1,1)=-2.0_dp/radius(1)*dw_rmin(1)*dpsi_rmin               ! Apply omega rmin BC 
+                  !omg_spec(Nm+1,Nr_max)=-2.0_dp/radius(Nr_max)*dw_rmax(1)*dpsi_rmax     ! Apply omega rmax BC 
+                  !omg_spec(Nm+1,1)=-2.0_dp/radius(1)*upFR(Nm+1,1)
+                  !omg_spec(Nm+1,Nr_max)=-2.0_dp/radius(Nr_max)*upFR(Nm+1,Nr_max)
                   ! --------------------------------------------------------------------------------------------------
-               end if 
+!               end if 
 
                call chebtransform(Nr_max,upFR(Nm+1,:),upFC(Nm+1,:))
 
             end if
          end do
-         !$omp end do
-         t_final= OMP_GET_WTIME ()
-         !$omp end parallel
-         !print *, t_final - t_ref
+         !!$omp end do
+         !t_final= OMP_GET_WTIME ()
+         !!$omp end parallel
+         !!print *, t_final - t_ref
           
          tFR=temp_spec ! update tFR here
          omgFR=omg_spec ! update omgFR here

@@ -111,8 +111,6 @@ contains
       end if
       !------------------------------------------------------------------------
 
-      !do n=0,Nm_max ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-                     ! for mat build outside the main Nm_max loop (when dt=constant)
       do j=1,Nr_max
          do i=1,Nr_max
             AT(i,j)=t(i,j)-wt_lhs_tscheme_imp*dt*(1.0_dp/Pr)*(r_radius(i)*D(i,j)+D2(i,j)-real(n,kind=dp)* & 
@@ -142,20 +140,14 @@ contains
                           & r_radius2(i)*t(i,j))
 
          end do
-         AF(1,j)=bcpsi2(1,j)
-         AF(Nr_max,j)=bcpsi2(2,j)
+         AF(1,j)=bcpsi1(1,j)
+         AF(Nr_max,j)=bcpsi1(2,j)
 
          AF(1,Nr_max+j)=0.0_dp
          AF(Nr_max,Nr_max+j)=0.0_dp
 
-         !AF(Nr_max+1,j)=D2(1,j)
-         !AF(Nr_max+Nr_max,j)=D2(Nr_max,j)
-
-         !AF(Nr_max+1,Nr_max+j)=bcpsi1(1,j)
-         !AF(Nr_max+Nr_max,Nr_max+j)=bcpsi1(2,j)
-
-         AF(Nr_max+1,j)=bcpsi1(1,j)
-         AF(Nr_max+Nr_max,j)=bcpsi1(2,j)
+         AF(Nr_max+1,j)=bcpsi2(1,j)
+         AF(Nr_max+Nr_max,j)=bcpsi2(2,j)
 
          AF(Nr_max+1,Nr_max+j)=0.0_dp
          AF(Nr_max+Nr_max,Nr_max+j)=0.0_dp
@@ -191,9 +183,6 @@ contains
       AF_all_IRK(:,:,n+1,rk_stage)=AF
       IPIV2_IRK(:,n+1,rk_stage)=PIV2
                                     
-      !end do ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-              ! for mat build outside the main Nm_max loop (when dt=constant)
-
    end subroutine mat_build_IRK
 
    subroutine mat_build_uphibar_IRK(Nr_max,dt,mBC,wt_lhs_tscheme_imp,rk_stage,Pr)
@@ -223,13 +212,11 @@ contains
                bcuphibar(1,:)=t(1,:)        ! BC for uphibar (bottom BC)
                bcuphibar(2,:)=t(Nr_max,:)   ! BC for uphibar (top BC)
       elseif (mBC=='SF') then ! Enforce stress-free boundary condition
-               bcuphibar(1,:)=r_radius(1)*D(1,:)-r_radius2(1)*t(1,:)        ! BC for uphibar (bottom BC)
-               bcuphibar(2,:)=r_radius(Nr_max)*D(Nr_max,:)-r_radius2(Nr_max)*t(Nr_max,:)   ! BC for uphibar (top BC)
+               bcuphibar(1,:)=D(1,:)-r_radius(1)*t(1,:)     ! BC for uphibar (bottom BC)
+               bcuphibar(2,:)=D(Nr_max,:)-r_radius(Nr_max)*t(Nr_max,:)   ! BC for uphibar (top BC)
       end if
       !------------------------------------------------------------------------
 
-      !do n=0,Nm_max ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-                     ! for mat build outside the main Nm_max loop (when dt=constant)
       do j=1,Nr_max
          do i=1,Nr_max
             A_uphi(i,j)=t(i,j)-wt_lhs_tscheme_imp*dt*(r_radius(i)*D(i,j)+D2(i,j) - r_radius2(i)*t(i,j))
@@ -251,9 +238,6 @@ contains
       A_uphi_all_IRK(:,:,1,rk_stage)=A_uphi
       IPIV_uphi_IRK(:,1,rk_stage)=PIV_uphi
                                     
-      !end do ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-              ! for mat build outside the main Nm_max loop (when dt=constant)
-
    end subroutine mat_build_uphibar_IRK
 
    subroutine mat_build(Nr_max,dt,n,mBC,wt_lhs_tscheme_imp,Pr)
@@ -301,8 +285,6 @@ contains
       end if
       !------------------------------------------------------------------------
 
-      !do n=0,Nm_max ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-                     ! for mat build outside the main Nm_max loop (when dt=constant)
       do j=1,Nr_max
          do i=1,Nr_max
             AT(i,j)=t(i,j)-wt_lhs_tscheme_imp*dt*(1.0_dp/Pr)*(r_radius(i)*D(i,j)+D2(i,j)-real(n,kind=dp)* & 
@@ -337,12 +319,6 @@ contains
 
          AF(1,Nr_max+j)=0.0_dp
          AF(Nr_max,Nr_max+j)=0.0_dp
-
-         !AF(Nr_max+1,j)=D2(1,j)
-         !AF(Nr_max+Nr_max,j)=D2(Nr_max,j)
-
-         !AF(Nr_max+1,Nr_max+j)=bcpsi1(1,j)
-         !AF(Nr_max+Nr_max,Nr_max+j)=bcpsi1(2,j)
 
          AF(Nr_max+1,j)=bcpsi1(1,j)
          AF(Nr_max+Nr_max,j)=bcpsi1(2,j)
@@ -381,9 +357,6 @@ contains
       AF_all(:,:,n+1)=AF
       IPIV2(:,n+1)=PIV2
                                     
-      !end do ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-              ! for mat build outside the main Nm_max loop (when dt=constant)
-
    end subroutine mat_build
 
    subroutine mat_build_uphibar(Nr_max,dt,mBC,wt_lhs_tscheme_imp,Pr)
@@ -414,13 +387,11 @@ contains
                bcuphibar(1,:)=t(1,:)        ! BC for uphibar (bottom BC)
                bcuphibar(2,:)=t(Nr_max,:)   ! BC for uphibar (top BC)
       elseif (mBC=='SF') then ! Enforce stress-free boundary condition
-               bcuphibar(1,:)=r_radius(1)*D(1,:)-r_radius2(1)*t(1,:)        ! BC for uphibar (bottom BC)
-               bcuphibar(2,:)=r_radius(Nr_max)*D(Nr_max,:)-r_radius2(Nr_max)*t(Nr_max,:)   ! BC for uphibar (top BC)
+               bcuphibar(1,:)=D(1,:)-r_radius(1)*t(1,:)        ! BC for uphibar (bottom BC)
+               bcuphibar(2,:)=D(Nr_max,:)-r_radius(Nr_max)*t(Nr_max,:)   ! BC for uphibar (top BC)
       end if
       !------------------------------------------------------------------------
 
-      !do n=0,Nm_max ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-                     ! for mat build outside the main Nm_max loop (when dt=constant)
       do j=1,Nr_max
          do i=1,Nr_max
             A_uphi(i,j)=t(i,j)-wt_lhs_tscheme_imp*dt*(r_radius(i)*D(i,j)+D2(i,j) - r_radius2(i)*t(i,j))
@@ -442,9 +413,6 @@ contains
       A_uphi_all(:,:,1)=A_uphi
       IPIV_uphi(:,1)=PIV_uphi
                                     
-      !end do ! Uncomment if you want to place the loop over Fourier modes (Nm_max loop) 
-              ! for mat build outside the main Nm_max loop (when dt=constant)
-
    end subroutine mat_build_uphibar
 
    subroutine mat_build_rk(Nr_max,n)
@@ -466,6 +434,10 @@ contains
          end do
             LAPpsi(1,j)=1.0_dp*t(1,j)
             LAPpsi(Nr_max,j)=1.0_dp*t(Nr_max,j)
+            ! Attempt at solving with 4 BCs instead of Johnstion's fix for assembly type IMEXRK cases
+            !LAPpsi(2,j)=1.0_dp*D(1,j)
+            !LAPpsi(Nr_max-1,j)=1.0_dp*D(Nr_max,j)
+            ! ----------------------------------
       end do
 
       do i=1,Nr_max

@@ -49,7 +49,8 @@ contains
 
    subroutine timeloop_imexrk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt,Ra,Pr, &
                        & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
-                       & time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,mBC,lm,buo_tscheme,totaltime)
+                       & time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,mBC, &
+                       & lm,buo_tscheme,totaltime,l_vartimestep)
        
       integer :: n_step
       integer, intent(in) :: lm 
@@ -74,6 +75,7 @@ contains
       real(kind=dp), intent(in) :: Ra
       real(kind=dp), intent(in) :: Pr
       real(kind=dp), intent(in) :: totaltime
+      logical, intent(in) :: l_vartimestep
       integer :: count_snap
       integer :: count_chkpnt
       integer :: rk_stage, Nm
@@ -100,18 +102,35 @@ contains
          if (n_step-n_restart==1) then
             dt_old=dt
             dt_new=dt
+            dt_array(:)=dt 
+            print *, dt, dt_new  
          end if
-         !   dt_old=dt
-         !   dt_new=dt
-         !   dt_array(:)=dt 
 
-         !------------ Compute New dt by enforcing CFL ----------------- 
-         call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
-         !--------------------------------------------------------------
+         if (l_vartimestep) then ! If variable timestep using CFL is on
+            if (n_step-n_restart==1 .and. l_restart) then
+               !-------------------- Call Nr_max loop ---------------------------------------------------------
+               call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR,omgFR,upFR,urFR,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
+                                     & ur_omg_FR)
+               !-----------------------------------------------------------------------------------------------
+               !------------ Compute New dt by enforcing CFL ----------------- 
+               call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
+               !--------------------------------------------------------------
+            end if
+            if (n_step-n_restart>1) then
+               !------------ Compute New dt by enforcing CFL ----------------- 
+               call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
+               !--------------------------------------------------------------
+            end if
+         else ! If constant timestep is on 
+            dt_old=dt
+            dt_new=dt
+            dt_array(:)=dt 
+         end if
 
          if (n_step-n_restart==2) then
             call cpu_time(startsteptime)
          end if
+
          do rk_stage=1,n_order_tscheme_exp ! LOOP for RK stages (rk_stage) 
                if (rk_stage>1) then
                   
@@ -176,11 +195,10 @@ contains
     
             end if
             !------------------------------------------------------------------- 
-
             !-------------------- Store Kinetic Energy (KE) --------------------
             if (mod(n_step,n_KE)==0) then
                call init_output(tag)  ! Open output files 
-               call writeKE_spectral(Nm_max,Nr_max,Np_max, TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR)
+               call writeKE_spectral(Nm_max,Nr_max,Np_max, TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR,mBC)
                !call writeKE_physical(Np_max,Nr_max,Nm_max,tot_time,Ra,Pr) ! Uncomment for KE calc in physical space 
                call final_output() ! Close output files
             end if
@@ -224,7 +242,7 @@ contains
       integer :: i_order
       real(kind=dp) :: dt_cal, dt2, dt_n
 
-      if (n_step>1+n_restart) then 
+      if (n_step>1+n_restart .or. l_restart) then 
          !--------------------- Enforce CFL constraint here ----------------------------------------
          dt_cal = min(minval(dtval_r),minval(dtval_p))
          if (Pr==1 .or. Pr>1) then 
@@ -237,17 +255,17 @@ contains
       end if
 
       !------------------- Optimize dt here -------------------------------------------------------
-      if (dt_array(2) > dt_max .and. n_step>1+n_restart) then
-         dt_new = dt_max
-      elseif (dt_array(2) >= dt_cal .and. n_step>1+n_restart) then
+      !if (dt_array(2) > dt_max .and. n_step>1+n_restart) then
+      !   dt_new = dt_max
+      !elseif (dt_array(2) >= dt_cal .and. n_step>1+n_restart) then
          dt_new = dt2
-      elseif (dt_coef*dt_array(2) < dt_cal .and. dt_array(2) < dt_max .and. n_step>1+n_restart) then
-         if (dt_array(1)<dt2) then
-            dt_new = dt2
-         else
-            dt_new = dt_array(1)
-         end if
-      end if
+      !elseif (dt_coef*dt_array(2) < dt_cal .and. dt_array(2) < dt_max .and. n_step>1+n_restart) then
+      !   if (dt_array(1)<dt2) then
+      !      dt_new = dt2
+      !   else
+      !      dt_new = dt_array(1)
+      !   end if
+      !end if
       !------------------------------------------------------------------------------------------   
 
       !--------------------- Construct dt array here---- ----------------------------
