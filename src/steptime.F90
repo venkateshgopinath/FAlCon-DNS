@@ -220,7 +220,7 @@ contains
 
          if (l_vartimestep .and. (n_step-n_restart>1 .or. l_restart)) then
             !------------ Compute New dt by enforcing CFL ----------------- 
-            call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max) 
+            call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
             !--------------------------------------------------------------
          else
             dt_new=dt
@@ -307,11 +307,11 @@ contains
 
    end subroutine solver_log
 
-   subroutine compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max)
+   subroutine compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr)
    
       integer, intent(in) :: n_step, n_restart
       logical, intent(in) :: l_restart
-      real(kind=dp), intent(in) :: CFL
+      real(kind=dp), intent(in) :: CFL, Pr
       real(kind=dp), intent(out) :: dt_new
       real(kind=dp), intent(in) :: dt_coef, dt_max
       integer :: i_order
@@ -321,6 +321,13 @@ contains
       dt_cal = min(minval(dtval_r),minval(dtval_p))
       dt_n = CFL*dt_cal
       dt2 = min(0.5_dp*(1.0_dp/dt_coef+1.0_dp)*dt_n,dt_max)
+      if (Pr==1 .or. Pr>1) then 
+         dt_n = max(1.0_dp/Pr,1.0_dp)*CFL*dt_cal
+      else
+         dt_n = min(1.0_dp/Pr,1.0_dp)*CFL*dt_cal
+      end if
+      dt2 = min(0.5_dp*(1.0_dp/dt_coef+1.0_dp)*dt_n,dt_max)
+
       !------------------------------------------------------------------------------
       
       !------------------- Optimize dt here -----------------------------------------

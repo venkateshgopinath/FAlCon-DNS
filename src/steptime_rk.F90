@@ -82,7 +82,7 @@ contains
       count_chkpnt = n_restart_point
 
       do Nm=0,Nm_max
-            call mat_build_rk(Nr_max,Nm) ! Build the operator matrix solving for psi and factorize them 
+            call mat_build_rk(Nr_max,Nm,mBC) ! Build the operator matrix solving for psi and factorize them 
       end do
 
 !------------------------- Time loop begins ----------------------------------------------------------   

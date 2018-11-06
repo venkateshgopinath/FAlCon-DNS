@@ -50,7 +50,7 @@ contains
    subroutine timeloop_imexrk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt,Ra,Pr, &
                        & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
                        & time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,mBC, &
-                       & lm,buo_tscheme,totaltime,l_vartimestep)
+                       & lm,buo_tscheme,totaltime,l_vartimestep,rmin,rmax)
        
       integer :: n_step
       integer, intent(in) :: lm 
@@ -76,6 +76,7 @@ contains
       real(kind=dp), intent(in) :: Pr
       real(kind=dp), intent(in) :: totaltime
       logical, intent(in) :: l_vartimestep
+      real(kind=dp), intent(in) :: rmin, rmax
       integer :: count_snap
       integer :: count_chkpnt
       integer :: rk_stage, Nm
@@ -91,7 +92,7 @@ contains
       call rhs_update_wts_exp(time_scheme_imp,time_scheme_exp,wt_rhs_tscheme_exp,n_order_tscheme_exp)
 
       do Nm=0,Nm_max
-            call mat_build_rk(Nr_max,Nm) ! Build the operator matrix solving for psi and factorize them 
+            call mat_build_rk(Nr_max,Nm,mBC) ! Build the operator matrix solving for psi and factorize them 
       end do
       finishsteptime=0.0_dp
       startsteptime=0.0_dp 
@@ -103,7 +104,7 @@ contains
             dt_old=dt
             dt_new=dt
             dt_array(:)=dt 
-            print *, dt, dt_new  
+            !print *, dt, dt_new  
          end if
 
          if (l_vartimestep) then ! If variable timestep using CFL is on
@@ -117,10 +118,20 @@ contains
                !--------------------------------------------------------------
             end if
             if (n_step-n_restart>1) then
-               !------------ Compute New dt by enforcing CFL ----------------- 
-               call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
-               !--------------------------------------------------------------
-            end if
+               if ( ( .not. ars_eqn_check_A ) .or. ( .not. ars_eqn_check_D ) ) then
+                  !-------------------- Call Nr_max loop ---------------------------------------------------------
+                  call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR,omgFR,upFR,urFR,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
+                                        & ur_omg_FR)
+                  !-----------------------------------------------------------------------------------------------
+                  !------------ Compute New dt by enforcing CFL ----------------- 
+                  call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
+                  !--------------------------------------------------------------
+               else
+                  !------------ Compute New dt by enforcing CFL ----------------- 
+                  call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
+                  !--------------------------------------------------------------
+               end if
+            end if  
          else ! If constant timestep is on 
             dt_old=dt
             dt_new=dt
@@ -160,6 +171,7 @@ contains
          ! ASSEMBLY STAGE ------------------------------------------------------
          if ( ( .not. ars_eqn_check_A ) .or. ( .not. ars_eqn_check_D ) ) then ! If not satisfying equation (2.3) in ARS_97 paper
             !--- Assembly for non-stiffly accurate schemes ---------------------
+            !call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR,lm,mBC,rmin,rmax)
             call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR,lm,mBC)
          else
             !--- Assembly for stiffly accurate schemes -------------------------
@@ -245,6 +257,7 @@ contains
       if (n_step>1+n_restart .or. l_restart) then 
          !--------------------- Enforce CFL constraint here ----------------------------------------
          dt_cal = min(minval(dtval_r),minval(dtval_p))
+         !print *, minval(dtval_r), (2.0_dp/3.0_dp)*minval(dtval_p), minval(dtval_p),"here" 
          if (Pr==1 .or. Pr>1) then 
             dt_n = max(1.0_dp/Pr,1.0_dp)*CFL*dt_cal
          else

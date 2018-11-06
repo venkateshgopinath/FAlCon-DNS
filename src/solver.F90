@@ -71,7 +71,7 @@ contains
          call timeloop_imexrk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,&
                     & dt,Ra,Pr,l_restart,n_restart,n_restart_point,n_snapshot_point,&
                     & n_KE,n_KEspec,time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef, &
-                    & dt_max,mBC,lm,buo_tscheme,totaltime,l_vartimestep)
+                    & dt_max,mBC,lm,buo_tscheme,totaltime,l_vartimestep,rmin,rmax)
       elseif (time_scheme_type=='RK') then
          call timeloop_rk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,&
                     & dt,Ra,Pr,l_restart,n_restart,n_restart_point,n_snapshot_point,&

@@ -111,10 +111,10 @@ contains
 !end alex
 
 !     write(ke_unit,'(i8, 4es20.12)') n_step, tot_time, KE_tot, vis_term_tot, buo_term_tot
-      write(ke_unit,'(6es20.12)') tot_time, KE_tot, KE_radial_tot, KE_azimuthal_tot, KE_0 ! Write KE data to a text file
+      write(ke_unit,'(8es20.12)') tot_time, KE_tot, KE_radial_tot, KE_azimuthal_tot, KE_0, vis_term_tot, buo_term_tot ! Write KE data to a text file
 !     print *, n_step, tot_time, KE_tot, vis_term_tot, buo_term_tot ! Print KE for checking purposes only
-      write(6,'(6es20.12)')  tot_time, KE_tot,  KE_radial_tot, KE_azimuthal_tot, KE_0 ! Print for checking purposes only
-
+      write(6,'(6es20.12)')  tot_time, KE_tot,  KE_radial_tot, KE_azimuthal_tot, vis_term_tot, buo_term_tot ! Print for checking purposes only
+ 
    end subroutine writeKE_physical 
    !-------------------------------------------------------------------------------------------------------
 
@@ -131,8 +131,13 @@ contains
       character(len=100), intent(in) :: mBC
       real(kind=dp) :: KE_tot
       real(kind=dp) :: Nus_b, Nus_t
-      real(kind=dp) :: urk, upk, vis_term, buo_term
-      real(kind=dp) :: ur2(Nr_max), up2(Nr_max), w2(Nr_max), URT(Nr_max) 
+      real(kind=dp) :: urk, upk, vis_term, buo_term, vis_term1, vis_term2,surfterm1, surfterm2
+      real(kind=dp) :: surfterm1_ro, surfterm1_ri, surfterm2_ro, surfterm2_ri 
+      real(kind=dp) :: ur2(Nr_max), up2(Nr_max), w2(Nr_max), w2s1(Nr_max),w2s2(Nr_max), st(Nr_max), URT(Nr_max)
+      complex(kind=dp) :: ursq(Np_max,Nr_max), upsq(Np_max,Nr_max),usq(Np_max,Nr_max),usqFC(Np_max,Nr_max) 
+      complex(kind=dp) :: drusq(Np_max,Nr_max)
+      complex(kind=dp) :: urFC(Nm_max+1,Nr_max), drur(Nm_max+1,Nr_max), upomgFR(Nm_max+1,Nr_max)
+      real(kind=dp) :: upomg(Np_max,Nr_max)
 !alex
       real(kind=dp) :: upbar2(Nr_max), upbark
 !end alex
@@ -149,7 +154,7 @@ contains
       real(kind=dp) :: d1up(Np_max,Nr_max)
       real(kind=dp) :: ur_t(Nr_max)
       complex(kind=dp) :: ur_up(Nr_max), upavg(Nr_max)
-      complex(kind=dp) :: ur_omg(Nr_max)
+      real(kind=dp) :: ur_omg(Nr_max), omg2(Nr_max)
       complex(kind=dp) :: ur_up_FR(Nr_max)
       complex(kind=dp) :: ur_d1up_FR(Nr_max)
       integer :: Nr,Nm, Np
@@ -168,7 +173,7 @@ contains
       real(kind=dp), allocatable :: rad(:)
       real(kind=dp) :: dt_new_ref, tot_time_ref
       integer :: Nm_max_ref, Nr_max_ref
-
+      
       ! Check u_phi force balance  
       do Nm=1,Nm_max+1 
          call chebinvtranD1(Nr_max,upFC(Nm,:),d1upFR(Nm,:))
@@ -207,6 +212,7 @@ contains
       ur_up(:)=0.0_dp
       ur_t(:)=0.0_dp
       ur_omg(:)=0.0_dp
+      omg2(:)=0.0_dp
 
       do Nr=1,Nr_max
          do Np=1,Np_max
@@ -214,12 +220,14 @@ contains
             ur_up(Nr)=ur_up(Nr) + ur(Np,Nr)*up(Np,Nr)
             ur_t(Nr)=ur_t(Nr) + ur(Np,Nr)*tt(Np,Nr)
             ur_omg(Nr)=ur_omg(Nr) + ur(Np,Nr)*omg(Np,Nr)
+            omg2(Nr)=omg2(Nr) + omg(Np,Nr)*omg(Np,Nr)
          end do
       end do
          upavg=upavg*(1.0_dp/Np_max)
          ur_up=ur_up*(1.0_dp/Np_max)
          ur_t=ur_t*(1.0_dp/Np_max)
          ur_omg=ur_omg*(1.0_dp/Np_max)
+         omg2=omg2*(1.0_dp/Np_max)
       ! ---------------------------------------------------------------------------
 
       do Nr=1,Nr_max
@@ -232,13 +240,13 @@ contains
 
       !print *, real(u_adv(20)) , real(u_diff(20)), upFR(1,20), "check ur omg"
 
-      if (mod(n_step,1000)==0) then
+      !if (mod(n_step,1000)==0) then
          do Nr=1,Nr_max
             write(up_unit,'(4ES20.12)') radius(Nr), real((upFR(1,Nr)-upFR_prev(1,Nr))/(dt_new)), &
                   & real(uFa_eqn(Nr)), real(u_diff(Nr))
             !write(up_unit,'(4ES20.12)') radius(Nr), (real(ur_up_FR(Nr))), real(ur_up(Nr)), real(ur_up_FR(Nr))-real(ur_up(Nr)) ! Check if products are same in Physical and Fourier space
          end do
-      end if
+      !end if
 
       !------ Calculate KE ------------  
       do j=1,Nr_max
@@ -279,23 +287,33 @@ contains
       !-----------------------------------
       
       !------ Calculate Power budget ---------
-      ! Viscous diffusion -------------------- 
+      ! Viscous dissipation -------------------- 
       do j=1,Nr_max
          w2(j)=zero
          do i=0,Nm_max
             if (i==0) then
-               w2(j) = w2(j)+real(omgFR(i+1,j)*omgFR(i+1,j))
-            else 
-               w2(j)=w2(j)+real(omgFR(i+1,j)*conjg(omgFR(i+1,j))+conjg(omgFR(i+1,j))*omgFR(i+1,j))
-            end if
+               w2(j) = w2(j) + real(omgFR(i+1,j)*omgFR(i+1,j))   
+            else
+               w2(j) =w2(j)+real(omgFR(i+1,j)*conjg(omgFR(i+1,j))+conjg(omgFR(i+1,j))*omgFR(i+1,j))
+            end if 
          end do
       end do   
-      call radInt(Nr_max,w2,vis_term)
-      if (mBC=='NS') then
-         vis_term=2.0_dp*pi*vis_term
-      elseif (mBC=='SF') then
-         vis_term=2.0_dp*pi*vis_term
-      end if     
+      call radInt(Nr_max,w2,vis_term1)
+      !call radInt(Nr_max,omg2,vis_term1)
+
+      if (mBC=='SF') then ! If stress-free then calculate surface term
+      
+         surfterm1_ro=4.0_dp*pi*2.0_dp*up2(Nr_max)
+         surfterm1_ri=4.0_dp*pi*2.0_dp*up2(1)
+
+         vis_term = 2.0_dp*pi*vis_term1 -  (surfterm1_ro - surfterm1_ri)  ! Viscous dissipation - stress-free 
+
+      else if (mBC=='NS') then 
+
+         vis_term=2.0_dp*pi*(vis_term1) ! Viscous dissipation - no-slip
+
+      end if 
+ 
       ! Buoyancy -----------------------------
       do j=1,Nr_max
          URT(j)=zero
@@ -303,7 +321,7 @@ contains
             if (i==0) then
                URT(j) = URT(j)+real(urFR(i+1,j)*tFR(i+1,j))
             else 
-               URT(j)=URT(j)+real(urFR(i+1,j)*conjg(tFR(i+1,j))+conjg(urFR(i+1,j)*tFR(i+1,j)))
+               URT(j)=URT(j)+real(urFR(i+1,j)*conjg(tFR(i+1,j)))
             end if
          end do
       end do  
@@ -316,10 +334,13 @@ contains
       write(pw_unit,'(3ES20.12)') tot_time, vis_term, buo_term ! Write power budget data to text file
       !----------------------------------------
 !-----------------------------------------------------------------------------------
-     print *, dt_new, tot_time, KE_tot, maxval(aimag(upFR(:,1))), maxval(real(upFR(:,1))) ! Print for checking purposes only
+     !print *, dt_new, tot_time, KE_tot, maxval(aimag(upFR(:,1))), maxval(real(upFR(:,1))) ! Print for checking purposes only
+     print *, dt_new, tot_time, KE_tot!, vis_term, buo_term , surfterm1_ri, surfterm1_ro, 2.0_dp*pi*vis_term1
 !      write(6,'(6es20.12)')  tot_time, KE_tot, 2.0_dp * pi * urk, 2.0_dp * pi * upk, 2.0_dp * pi * upbark  ! Write KE data to a text file
 !#####################################  
-
+     if (KE_tot > 1e10) then
+       call exit()
+     end if 
    end subroutine writeKE_spectral 
    !--------------------------------------------------------------------------------------------------------
 
@@ -468,10 +489,6 @@ contains
       character(len=72) :: datafile1
       integer :: outunit, i 
        
-      !do i=1,1
-      !   print *, radius(i), maxval(abs(omgFRs(:,1)))
-      !end do
-      
       !-----------------------------------------Write current time step ---------------------------------------
       write(datafile1,fmt='(a,I5.5)') "snapshot_plot_", count_snap
       open(newunit=outunit, file=datafile1, action="write", status="replace", form='unformatted' )
@@ -505,10 +522,6 @@ contains
       character(len=72) :: datafile1
       integer :: outunit, i 
        
-      !do i=1,1
-      !   print *, radius(i), maxval(abs(omgFRs(:,1)))
-      !end do
-      
       !-----------------------------------------Write current time step ---------------------------------------
       write(datafile1,fmt='(a,I5.5)') "snapshot_plot_", count_snap
       open(newunit=outunit, file=datafile1, action="write", status="replace", form='unformatted' )

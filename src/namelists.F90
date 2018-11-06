@@ -53,8 +53,8 @@ contains
 
       namelist/physics/eta,Ra,Pr,mBC,ampT,l_add_pert,lagpts,n_init,buo_tscheme
 
-      namelist/timecontrol/n_time_steps,dt,totaltime,l_vartimestep,time_scheme_type,time_scheme_imp,time_scheme_exp, &
-               & l_imexrk_started,dt_coef,dt_max,CFL,l_restart,n_restart,n_restart_point,n_snapshot_point
+      namelist/timecontrol/n_time_steps,dt,totaltime,l_vartimestep,time_scheme_type,time_scheme_imp,time_scheme_exp,l_imexrk_started, &
+               & dt_coef,dt_max,CFL,l_restart,n_restart,n_restart_point,n_snapshot_point
 
       namelist/output/tag,n_checkpoint,n_snapshot,n_KE,n_KEspec
 
@@ -126,7 +126,7 @@ contains
       n_time_steps = 100       ! No. of time steps
       dt = 0.01_dp             ! Time step size 
       totaltime = 1.0_dp
-      l_vartimestep = .FALSE.
+      l_vartimestep = .TRUE.
       time_scheme_type = "IMEXRK" ! Specify type of time integration scheme
       time_scheme_imp = "ARS222" ! State the implicit time scheme
       time_scheme_exp = "expARS222"  ! State the explicit time scheme
