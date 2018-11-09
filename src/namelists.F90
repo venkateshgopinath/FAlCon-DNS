@@ -10,7 +10,7 @@ module namelists
    integer, public :: Np_max 
    integer, public :: n_checkpoint, n_snapshot, n_restart, &
                       & n_restart_point,n_snapshot_point, n_KE, n_KEspec
-   logical, public :: l_restart
+   logical, public :: l_restart, l_optimizedt
    real(kind=dp), public :: rmin
    real(kind=dp), public :: rmax
    character(len=100), public :: time_scheme_type
@@ -54,7 +54,7 @@ contains
       namelist/physics/eta,Ra,Pr,mBC,ampT,l_add_pert,lagpts,n_init,buo_tscheme
 
       namelist/timecontrol/n_time_steps,dt,totaltime,l_vartimestep,time_scheme_type,time_scheme_imp,time_scheme_exp,l_imexrk_started, &
-               & dt_coef,dt_max,CFL,l_restart,n_restart,n_restart_point,n_snapshot_point
+               & dt_coef,dt_max,CFL,l_restart,l_optimizedt,n_restart,n_restart_point,n_snapshot_point
 
       namelist/output/tag,n_checkpoint,n_snapshot,n_KE,n_KEspec
 
@@ -127,6 +127,7 @@ contains
       dt = 0.01_dp             ! Time step size 
       totaltime = 1.0_dp
       l_vartimestep = .TRUE.
+      l_optimizedt = .FALSE.
       time_scheme_type = "IMEXRK" ! Specify type of time integration scheme
       time_scheme_imp = "ARS222" ! State the implicit time scheme
       time_scheme_exp = "expARS222"  ! State the explicit time scheme

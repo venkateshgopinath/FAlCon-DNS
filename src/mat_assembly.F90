@@ -155,6 +155,7 @@ contains
       end do
 
       do i=1,Nr_max
+
          AF(i,1)=0.5_dp*AF(i,1)
          AF(i,Nr_max)=0.5_dp*AF(i,Nr_max)
 
@@ -231,7 +232,6 @@ contains
       end do 
                             
       A_uphi=C*A_uphi
-
 
       !***** CALL DGETRF factorization for A_uphi matrix
       call factorize(Nr_max,A_uphi,PIV_uphi,INFO3)
@@ -407,7 +407,6 @@ contains
                             
       A_uphi=C*A_uphi
 
-
       !***** CALL DGETRF factorization for A_uphi matrix
       call factorize(Nr_max,A_uphi,PIV_uphi,INFO3)
       A_uphi_all(:,:,1)=A_uphi
@@ -433,20 +432,20 @@ contains
          do i=1,Nr_max
             LAPpsi(i,j)=r_radius(i)*D(i,j)+D2(i,j)-real(n,kind=dp)*real(n,kind=dp)*r_radius2(i)*t(i,j) 
          end do
-            !if (mBC=='NS') then
+            if (mBC=='NS') then
                LAPpsi(1,j)=1.0_dp*t(1,j)
                LAPpsi(Nr_max,j)=1.0_dp*t(Nr_max,j)
-            !   ! Attempt at solving with 4 BCs instead of Johnstion's fix for assembly type IMEXRK cases
-            !   LAPpsi(2,j)=1.0_dp*D(1,j)
-            !   LAPpsi(Nr_max-1,j)=1.0_dp*D(Nr_max,j)
-            !   ! ----------------------------------
-            !else if (mBC=='SF')  then
-            !   LAPpsi(1,j)=1.0_dp*t(1,j)
-            !   LAPpsi(Nr_max,j)=1.0_dp*t(Nr_max,j)
-            !   ! Attempt at solving with 4 BCs instead of Johnstion's fix for assembly type IMEXRK cases
-            !   LAPpsi(2,j)=D2(1,j)-r_radius(1)*D(1,j)
-            !   LAPpsi(Nr_max-1,j)=D2(Nr_max,j)-r_radius(Nr_max)*D(Nr_max,j)
-            !end if
+               ! Attempt at solving with 4 BCs instead of Johnstion's fix for assembly type IMEXRK cases
+               LAPpsi(2,j)=1.0_dp*D(1,j)
+               LAPpsi(Nr_max-1,j)=1.0_dp*D(Nr_max,j)
+               ! ----------------------------------
+            else if (mBC=='SF')  then
+               LAPpsi(1,j)=1.0_dp*t(1,j)
+               LAPpsi(Nr_max,j)=1.0_dp*t(Nr_max,j)
+               ! Attempt at solving with 4 BCs instead of Johnstion's fix for assembly type IMEXRK cases
+               LAPpsi(2,j)=D2(1,j)-r_radius(1)*D(1,j)
+               LAPpsi(Nr_max-1,j)=D2(Nr_max,j)-r_radius(Nr_max)*D(Nr_max,j)
+            end if
       end do
 
       do i=1,Nr_max

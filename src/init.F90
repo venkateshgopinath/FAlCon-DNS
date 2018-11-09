@@ -42,6 +42,7 @@ module init
    complex(kind=dp), allocatable :: rhs_imp_vort_old(:,:,:), rhs_exp_vort_old(:,:,:) 
    complex(kind=dp), allocatable :: rhs_imp_uphi_bar_old(:,:), rhs_exp_uphi_bar_old(:,:) 
    real(kind=dp), allocatable :: dt_array_old(:)
+   real(kind=dp), allocatable, public :: D_phys(:,:) ! Top and bottom lines of physical space Chebyshev 1st derivative matrix
    complex(kind=dp), allocatable, public :: tmp_rhs_imp_temp(:,:,:),tmp_rhs_exp_temp(:,:,:)  
    complex(kind=dp), allocatable, public :: tmp_rhs_imp_vort(:,:,:),tmp_rhs_exp_vort(:,:,:) 
    complex(kind=dp), allocatable, public :: tmp_rhs_imp_uphi_bar(:,:),tmp_rhs_exp_uphi_bar(:,:) 
@@ -81,6 +82,7 @@ contains
       allocate( omgFR_check(Nm_max+1,Nr_max) )
       allocate( psii(Nm_max+1,Nr_max), upFR(Nm_max+1,Nr_max), urFR(Nm_max+1,Nr_max) )
       allocate( TFC(Nr_max) )
+      allocate( D_phys(2,Nr_max) )
       allocate( t2FR(Nm_max+1,Nr_max), upFR_prev(Nm_max+1,Nr_max), urFR_prev(Nm_max+1,Nr_max))
       allocate( tmp_rhs_imp_temp(n_order_tscheme_imp,Nm_max+1,Nr_max), & 
                 & tmp_rhs_exp_temp(n_order_tscheme_exp,Nm_max+1,Nr_max), &
@@ -105,6 +107,7 @@ contains
                   & tmp_rhs_buo_term ) 
       deallocate( t2FR, upFR_prev, urFR_prev )
       deallocate( TFC )
+      deallocate( D_phys )
       deallocate( psii, upFR, urFR )
       deallocate( omg_spec, temp_spec, upFC, tFR, omgFR, uphi_bar_spec )
       deallocate( omgFR_check )
@@ -117,10 +120,11 @@ contains
 
    subroutine init_grid(Np_max,Nr_max,rmin)
 
-      integer :: i
+      integer :: i, j
       integer, intent(in) :: Np_max   
       integer, intent(in) :: Nr_max
       real(kind=dp), intent(in) :: rmin
+      real(kind=dp) :: rr(Nr_max) 
 
       do i=1,Nr_max
          radius(i)=(rmin + (0.5_dp*(1.0_dp+cos(real(Nr_max-i,kind=dp)*pi/real(Nr_max-1,kind=dp)))))
@@ -142,7 +146,20 @@ contains
       do i=2,Np_max
          phi(i)=phi(i-1)+2.0_dp*pi/real(Np_max,kind=dp) ! 
       end do
-      
+      ! -- Top and bottom lines of Physical space 1st derivative matrix used in
+      ! assembly type schemes of IMEXRK for construction of uphi_bar boundary
+      ! condition 
+      rr=radius(Nr_max:1:-1)
+      do j=2,Nr_max-1
+         D_phys(1,j)=2.0_dp*((-1.0_dp)**(j-1))/(rr(1)-rr(j))   
+         D_phys(2,j)=2.0_dp*((-1.0_dp)**(Nr_max+j))/(rr(Nr_max)-rr(j))   
+      end do
+      D_phys(1,1)=2.0_dp*(2.0_dp*(Nr_max-1)*(Nr_max-1)+1)/6.0_dp
+      D_phys(1,Nr_max)=-1.0_dp
+      D_phys(2,1)=1.0_dp
+      D_phys(2,Nr_max)=-2.0_dp*(2.0_dp*(Nr_max-1)*(Nr_max-1)+1)/6.0_dp
+      !------------------------------------------------------------------------
+
    end subroutine init_grid
 
    subroutine init_fields(Nm_max,Np_max,Nr_max,rmin,rmax,l_restart,Nrestart_point,l_add_pert, &

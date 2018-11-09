@@ -1207,12 +1207,7 @@ contains
             butcher_bD = reshape([82889.0_dp/524892.0_dp, 0.0_dp, 15625.0_dp/83664.0_dp, 69875.0_dp/102672.0_dp, & 
                                   & -2260.0_dp/8211.0_dp, 0.25_dp],[6]) 
 
-            !do i=1,n_order_tscheme_imp
-            !   if (butcher_aD(n_order_tscheme_imp,i)==butcher_bD(i)) then
-                  ars_eqn_check_D=.TRUE.
-            !      ars_eqn_check_D=.TRUE.
-            !   end if
-            !end do
+            ars_eqn_check_D=.TRUE.
 
             diag_diff = .FALSE.
             diag_index = 2
@@ -1846,12 +1841,7 @@ contains
                   butcher_bA = reshape([82889.0_dp/524892.0_dp, 0.0_dp, 15625.0_dp/83664.0_dp, 69875.0_dp/102672.0_dp, & 
                                   & -2260.0_dp/8211.0_dp, 0.25_dp],[6]) 
 
-                  !do i=1,n_order_tscheme_exp
-                  !   if (butcher_aA(n_order_tscheme_exp,i)==butcher_bA(i)) then
-                  !      ars_eqn_check_A=.TRUE.
-                        ars_eqn_check_A=.FALSE.
-                  !   end if
-                  !end do
+                  ars_eqn_check_A=.FALSE.
 
             end select   
          

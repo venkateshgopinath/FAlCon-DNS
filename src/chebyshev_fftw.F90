@@ -7,7 +7,7 @@ module chebyshev
    implicit none
 
    private
-   real(kind=dp), allocatable, public :: D(:,:), D2(:,:), t(:,:) 
+   real(kind=dp), allocatable, public :: D(:,:), D2(:,:), t(:,:)
 
    real(kind=dp), allocatable, public :: xp(:)
 

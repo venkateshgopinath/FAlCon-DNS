@@ -6,10 +6,10 @@ module fourierloop_imexrk
    use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD2, chebinvtranD1D2, t, D, D2
    use init, only: TFC, temp_spec,omg_spec,startmatbuild, &
                    & finishmatbuild, finishmatbuild, time_matbuild, radius, r_radius, r_radius2, &
-                   & dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC, ur, omg, omgFR_check
+                   & dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC, ur, omg, omgFR_check, D_phys
    use mat_assembly, only: LAPpsi_all, AT_all_IRK, AF_all_IRK, A_uphi_all_IRK, IPIV_uphi_IRK, IPIV1_IRK, IPIV2_IRK, &
                            & mat_build_IRK, mat_build_uphibar_IRK, IPIV1_lap
-   use algebra, only: matsolve
+   use algebra, only: factorize, matsolve, matsolve_real
    use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, wt_rhs_tscheme_exp, & 
                           & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, &
                           & irk_max, dt_array, butcher_aA, butcher_bA, butcher_aD, butcher_bD, &
@@ -108,46 +108,53 @@ contains
       Nr_max2=2*Nr_max
       
       if ( diag_diff .eqv. .FALSE. ) then ! If implicit Butcher's table has all diagonal elements equal to each other
-         do Nm=0,Nm_max  
-            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+         if ( n_step-n_restart==1 ) then 
+            do Nm=0,Nm_max  
                call cpu_time(startmatbuild) 
                call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
                call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
                call cpu_time(finishmatbuild) 
                time_matbuild=time_matbuild + finishmatbuild - startmatbuild
-            end if
-         end do
-         AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
-         AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
-         A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
-         IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
-         IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
-         IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
+            end do
+         end if
+         if ( (n_step-n_restart>1) .and. (dt_array(1)/=dt_array(2)) .and. (rk_stage==2) ) then ! This condition is to build matrix when dt changes and build it only for 1 stage and use for others  
+            do Nm=0,Nm_max  
+               call cpu_time(startmatbuild) 
+               call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+               call cpu_time(finishmatbuild) 
+               time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+            end do
+         end if
+            AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
+            AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
+            A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
+            IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
+            IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
+            IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
       elseif ( diag_diff .eqv. .TRUE. ) then ! If implicit Butcher's table has all diagonal elements unequal to each other
-         do Nm=0,Nm_max  
-            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
-               call cpu_time(startmatbuild) 
-               call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
-               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
-               call cpu_time(finishmatbuild) 
-               time_matbuild=time_matbuild + finishmatbuild - startmatbuild
-            end if
-         end do
-         if ( rk_stage/=diag_index ) then
-            if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
-               if ( butcher_aD(rk_stage,rk_stage)==butcher_aD(diag_index,diag_index) ) then
-                  AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
-                  AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
-                  A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
-                  IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
-                  IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
-                  IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
-               else
-                  do Nm=0,Nm_max  
-                        call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operator matrices for (T, omega) and factorize them 
-                  end do
-                        call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operatir matrix for uphibar and factorize them
-               end if
+         if ( (n_step-n_restart==1) .or. (dt_array(1)/=dt_array(2)) ) then 
+            do Nm=0,Nm_max  
+                  call cpu_time(startmatbuild) 
+                  call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+                  call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+                  call cpu_time(finishmatbuild) 
+                  time_matbuild=time_matbuild + finishmatbuild - startmatbuild
+            end do
+            if ( rk_stage/=diag_index ) then
+                  if ( butcher_aD(rk_stage,rk_stage)==butcher_aD(diag_index,diag_index) ) then
+                     AT_all_IRK(:,:,:,rk_stage)=AT_all_IRK(:,:,:,diag_index)
+                     AF_all_IRK(:,:,:,rk_stage)=AF_all_IRK(:,:,:,diag_index)
+                     A_uphi_all_IRK(:,:,:,rk_stage)=A_uphi_all_IRK(:,:,:,diag_index)
+                     IPIV1_IRK(:,:,rk_stage)=IPIV1_IRK(:,:,diag_index) 
+                     IPIV2_IRK(:,:,rk_stage)=IPIV2_IRK(:,:,diag_index) 
+                     IPIV_uphi_IRK(:,:,rk_stage)=IPIV_uphi_IRK(:,:,diag_index) 
+                  else
+                     do Nm=0,Nm_max  
+                           call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operator matrices for (T, omega) and factorize them 
+                     end do
+                           call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operatir matrix for uphibar and factorize them
+                  end if
             end if
          end if
       end if
@@ -258,7 +265,6 @@ contains
               !upFC(1,i)=cmplx(rhs_r(i),rhs_i(i),kind=dp)
               upFC(1,i)=cmplx(rhs_r(i),0.0_dp,kind=dp)
             end do
-
             call chebinvtran(Nr_max,upFC(1,:),upFR(1,:)) ! Update stage variable uphi_bar
             call chebinvtranD1(Nr_max,upFC(1,:),D1upFR(:))
             urFR(1,:) = 0.0_dp 
@@ -277,6 +283,7 @@ contains
             end do
             !-------------------------------------------------------------------- 
 
+             
             !-- Apply weights to RHS using implicit Butcher's table: summation of (a_i F_i) 
             do i=1,rk_stage-1 
                F_domg_d(:)=F_domg_d(:)+butcher_aD(rk_stage,i)*domgdt1_d(i,Nm+1,:) 
@@ -300,7 +307,7 @@ contains
             end if
 
             !-- RHS omg = Y_0 + dt * summation of (a_i * F_i) + summation of (\hat{a}_i F_i) + summation of (a_i * Fbuo_i)
-            rhs_stage_omg(:) = omg_spec(Nm+1,:) + dt_array(1)*(F_domg_d + F_domg_a + F_buo) ! bug found here  was put "F_dtemp_d + F_dtemp_a + F_buo" Dec 1 2017
+            rhs_stage_omg(:) = omg_spec(Nm+1,:) + dt_array(1)*(F_domg_d + F_domg_a + F_buo) ! 
 
             rhs_stage_omg(1)=0.0_dp ! Apply BC for stream function in the vorticity equation
             rhs_stage_omg(Nr_max)=0.0_dp ! Apply BC for stream function in the vorticity equation       
@@ -331,9 +338,16 @@ contains
 
             call chebinvtran(Nr_max,rhs_omg,real_rhs_omg)
             omgFR(Nm+1,:)=real_rhs_omg(:)
+
+            !if (Nm==1 .and. rk_stage==2) then
+            !   do i=1,Nr_max
+            !      print *, real_rhs_omg(i), "in stage area" 
+            !   end do
+            !end if 
             call chebinvtran(Nr_max,rhs_psi,real_rhs_psi)
             call chebinvtranD1(Nr_max,rhs_psi,real_d_rhs_psi)
             call chebinvtranD2(Nr_max,rhs_psi,real_d2_rhs_psi)
+
             ! OMEGA FIX and CHECK start  
             !-------------------------- Johnston strategy for BC ----------------------------------------------
             !do i=1,lm ! Evaluate at rmin
@@ -494,8 +508,8 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
       complex(kind=dp), intent(inout) :: tFR(Nm_max+1,Nr_max),omgFR(Nm_max+1,Nr_max) 
       complex(kind=dp), intent(inout) :: upFR(Nm_max+1,Nr_max), urFR(Nm_max+1,Nr_max)
 
-      integer :: i,j,k,Nm,INFO1 ! Nm -> azimuthal 'n' loop over Fourier modes
-      complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp(Nr_max), F_duphibar(Nr_max), F_domg(Nr_max)
+      integer :: i,j,k,Nm,INFO1,INFO2 ! Nm -> azimuthal 'n' loop over Fourier modes
+      complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp(Nr_max), F_duphibar(Nr_max), F_domg(Nr_max), testomg(Nr_max)
       complex(kind=dp) :: D1upFR(Nr_max) 
       real(kind=dp) :: t_ref, t_final
       complex(kind=dp) :: dpsi_rmin
@@ -503,14 +517,20 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
       complex(kind=dp) :: dpsi_rmax
       complex(kind=dp) :: d2psi_rmax
 
+      real(kind=dp) :: aa,bb,gg,dd,a11,a12,a21,a22,A_uphi_b(2,2), rhs_out(2)   
+      complex(kind=dp) :: rhs_sys(2), rhs_sys1, rhs_sys2
+      integer :: PIV_uphi_b(2)
+      
+      real(kind=dp) :: upmean(Nr_max)
+      
          !!-------------- Loop over the Fourier modes ---------------------------------------------------------------------------
-         !$omp parallel & 
-         !$omp private(Nm,i,j,k,F_dtemp,F_duphibar,F_domg, &
-         !$omp & rhs_r,rhs_i,rhsf_r,rhsf_i, &
-         !$omp & D1upFR,rhs_psi, &
-         !$omp & real_rhs_psi,real_d_rhs_psi,dpsi_rmin,d2psi_rmin,dpsi_rmax,d2psi_rmax) default(shared)  
-         t_ref= OMP_GET_WTIME ()
-         !$omp do     
+         !!$omp parallel & 
+         !!$omp private(Nm,i,j,k,F_dtemp,F_duphibar,F_domg, &
+         !!$omp & rhs_r,rhs_i,rhsf_r,rhsf_i, &
+         !!$omp & D1upFR,rhs_psi, &
+         !!$omp & real_rhs_psi,real_d_rhs_psi,dpsi_rmin,d2psi_rmin,dpsi_rmax,d2psi_rmax) default(shared)  
+         !t_ref= OMP_GET_WTIME ()
+         !!$omp do     
          do Nm=0,Nm_max  
             F_dtemp(:)=0.0_dp 
             F_duphibar(:)=0.0_dp 
@@ -547,11 +567,51 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                   !F_duphibar(:)=F_duphibar(:) + duphibar_dt1_d(n_order_tscheme_exp,:)
                !-- y_n = y_(n-1) + dt * summation of (b_i * F_i) -------------------------
                uphi_bar_spec(:) = uphi_bar_spec(:) + dt*F_duphibar
-               uphi_bar_spec(1)=0.0_dp
-               uphi_bar_spec(Nr_max)=0.0_dp
-               upFR(1,:) = uphi_bar_spec(:) ! update upFR here
 
-               call chebtransform(Nr_max,uphi_bar_spec,upFC(1,:))
+               if (mBC=='NS') then
+                  uphi_bar_spec(1)=0.0_dp
+                  uphi_bar_spec(Nr_max)=0.0_dp
+                  upFR(1,:) = uphi_bar_spec(:) ! update upFR here
+               elseif (mBC=='SF') then !Based on Canuto SIAM J. Numer. Anal. 1986, bottom of page 818 ----- (d_(i,j) equation 3.46 from Peyret book)  
+                  upmean=uphi_bar_spec(Nr_max:1:-1)
+
+                  aa=-r_radius(Nr_max)
+                  bb=1.0_dp
+                  gg=-r_radius(1)
+                  dd=1.0_dp
+                  rhs_sys(1)=0.0_dp
+                  rhs_sys(2)=0.0_dp
+                  rhs_sys1=0.0_dp
+                  rhs_sys2=0.0_dp
+
+                  do j=2,Nr_max-1
+                     rhs_sys1=rhs_sys1+D_phys(1,j)*upmean(j)
+                     rhs_sys2=rhs_sys2+D_phys(2,j)*upmean(j)
+                  end do
+                  rhs_sys(1)=-1.0_dp*bb*rhs_sys1
+                  rhs_sys(2)=-1.0_dp*dd*rhs_sys2
+
+                  a11=aa+bb*D_phys(1,1)
+                  a12=bb*D_phys(1,Nr_max)
+                  a21=dd*D_phys(2,1)
+                  a22=gg+dd*D_phys(2,Nr_max)
+
+                  A_uphi_b(1,1)=a11
+                  A_uphi_b(1,2)=a12
+                  A_uphi_b(2,1)=a21
+                  A_uphi_b(2,2)=a22
+
+                  rhs_out=real(rhs_sys) 
+                  call factorize(2,A_uphi_b,PIV_uphi_b,INFO2)
+                  call matsolve_real(TRANS,2,A_uphi_b,PIV_uphi_b,rhs_out,INFO2)
+                  upFR(1,1)=rhs_out(2)
+                  upFR(1,Nr_max)=rhs_out(1)  
+                  
+               end if !------------------------------------------------------------------------------------   
+
+               !print *, upFR(1,1), upFR(1,Nr_max)
+
+               call chebtransform(Nr_max,upFR(1,:),upFC(1,:))
                call chebinvtranD1(Nr_max,upFC(1,:),D1upFR(:))
 
                urFR(1,:) = 0.0_dp 
@@ -584,6 +644,11 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                rhs_i(1)=0.0_dp  
                rhs_i(Nr_max)=0.0_dp  
 
+               rhs_r(2)=0.0_dp  
+               rhs_r(Nr_max-1)=0.0_dp  
+               rhs_i(2)=0.0_dp  
+               rhs_i(Nr_max-1)=0.0_dp  
+
                !************************** CALL DGETRS A*vt=rhs ****************************
                call matsolve(TRANS, Nr_max, LAPpsi_all(:,:,Nm+1), IPIV1_lap(:,Nm+1), rhs_r, rhs_i,INFO1)
                !****************************************************************************  
@@ -595,43 +660,28 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                call chebinvtranD1(Nr_max,rhs_psi,real_d_rhs_psi)
                call chebinvtranD2(Nr_max,rhs_psi,real_d2_rhs_psi)
 
-               !-------------------------- Johnston strategy for BC ----------------------------------------------
-               do i=1,lm ! Evaluate at rmin
-                     d2psi_rmin=d2psi_rmin + d2w_rmin(i)*real_rhs_psi(i+1) ! Summation 2nd derivative
-                     dpsi_rmin=dpsi_rmin + dw_rmin(i)*real_rhs_psi(i+1)    ! Summation 1st derivative
+               if (mBC=='NS') then 
+                  do i=1,Nr_max
+                     omg_spec(Nm+1,i) = -1.0_dp*(r_radius(i)*real_d_rhs_psi(i)+real_d2_rhs_psi(i)- &
+                                      & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*real_rhs_psi(i))
                   end do
-                  
-                  do i=1,lm ! Evaluate at rmax
-                     d2psi_rmax=d2psi_rmax + d2w_rmax(i)*real_rhs_psi(Nr_max-i)  ! Summation 2nd derivative
-                     dpsi_rmax=dpsi_rmax + dw_rmax(i)*real_rhs_psi(Nr_max-i)     ! Summation 1st derivative
-               end do 
-
-               do i=1,Nr_max
-                  !psii(Nm+1,i)=real_rhs_psi(i)
-                  upFR(Nm+1,i)=-1.0_dp*real_d_rhs_psi(i)
-                  urFR(Nm+1,i)=1.0_dp*ii*real(Nm,kind=dp)*r_radius(i)*real_rhs_psi(i)
-               end do
-
-               if (mBC=='NS') then ! Johnston's strategy
-                  ! ------------ Use Lagrange polynomials for approximation of No-slip boundary conditions ------------------- 
-                  omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin)            ! Apply omega rmin BC 
-                  omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax)       ! Apply omega rmax BC 
-                  ! --------------------------------------------------------------------------------------------------
+                  omg_spec(Nm+1,1) = -1.0_dp*(real_d2_rhs_psi(1))
+                  omg_spec(Nm+1,Nr_max) = -1.0_dp*(real_d2_rhs_psi(Nr_max))
                elseif (mBC=='SF') then
-                  ! ------------ Use Lagrange polynomials for approximation of Stress-free boundary conditions ------------------- 
-                  omg_spec(Nm+1,1)=-2.0_dp/radius(1)*dpsi_rmin               ! Apply omega rmin BC 
-                  omg_spec(Nm+1,Nr_max)=-2.0_dp/radius(Nr_max)*dpsi_rmax     ! Apply omega rmax BC 
-                  ! --------------------------------------------------------------------------------------------------
-               end if 
-
+                  do i=1,Nr_max
+                     omg_spec(Nm+1,i) = -1.0_dp*(r_radius(i)*real_d_rhs_psi(i)+real_d2_rhs_psi(i)- &
+                                      & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*real_rhs_psi(i))
+                  end do
+               end if
+               
                call chebtransform(Nr_max,upFR(Nm+1,:),upFC(Nm+1,:))
 
             end if
          end do
-         !$omp end do
-         t_final= OMP_GET_WTIME ()
-         !$omp end parallel
-         !print *, t_final - t_ref
+         !!$omp end do
+         !t_final= OMP_GET_WTIME ()
+         !!$omp end parallel
+         !!print *, t_final - t_ref
           
          tFR=temp_spec ! update tFR here
          omgFR=omg_spec ! update omgFR here
@@ -649,6 +699,7 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
    omg_spec = omgFR
    uphi_bar_spec = upFR(1,:)
 
+   !print *, upFR(1,1), upFR(1,Nr_max), upFR(1,2), upFR(1,Nr_max-1)
    end subroutine Assembly_stage_SA
 
 end module fourierloop_imexrk
