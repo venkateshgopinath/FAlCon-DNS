@@ -5,7 +5,7 @@ module solver
    use chebyshev, only: cheballoc, dcheb, chebdealloc
    use init, only: finishmain, startmain, finishsteptime, startsteptime, &
                    & time_matbuild, time_matsolveT, time_matsolveW, time_tran, &
-                   & timeNm_maxloop, timeNr_maxloop, finishsteptime, dr, fields_alloc, &
+                   & timeNm_maxloop, timeNr_maxloop, dr, fields_alloc, &
                    & init_grid, init_fields, init_perturbation, fields_dealloc, &
 #if FFTW
                    & init_all_fftw_plans, destroy_all_fftw_plans, allocate_restart, &
@@ -83,7 +83,7 @@ contains
                        & time_scheme_type,l_imexrk_started,totaltime,l_vartimestep) 
       end if
 
-      call cpu_time(finishsteptime)
+      !call cpu_time(finishsteptime)
 
    end subroutine solver_run
 
@@ -119,6 +119,7 @@ contains
       write (logunit,*) "Total time taken =",finishmain-startmain,"seconds."
       write (logunit,*) "Total time taken =",finishsteptime-startsteptime,"seconds."
       write (logunit,*) "Average time taken for time loop =",(finishsteptime-startsteptime)/real(n_time_steps-1,kind=dp),"seconds."
+      write (logunit,*) "Average time taken for time loop =",finishsteptime, startsteptime
       write (logunit,*) "Time taken for Nr_max loop =",timeNr_maxloop,"seconds."
       write (logunit,*) "Time taken for Nm_max loop =",timeNm_maxloop,"seconds."
       write (logunit,*) "Time taken for Matrix building inside Nm_max loop =",time_matbuild,"seconds."

@@ -108,7 +108,7 @@ contains
       Nr_max2=2*Nr_max
       
       if ( diag_diff .eqv. .FALSE. ) then ! If implicit Butcher's table has all diagonal elements equal to each other
-         if ( n_step-n_restart==1 ) then 
+         if ( (n_step-n_restart==1) .and. (rk_stage==2) ) then 
             do Nm=0,Nm_max  
                call cpu_time(startmatbuild) 
                call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
@@ -118,6 +118,7 @@ contains
             end do
          end if
          if ( (n_step-n_restart>1) .and. (dt_array(1)/=dt_array(2)) .and. (rk_stage==2) ) then ! This condition is to build matrix when dt changes and build it only for 1 stage and use for others  
+         print *, "check here" 
             do Nm=0,Nm_max  
                call cpu_time(startmatbuild) 
                call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
@@ -571,7 +572,6 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                if (mBC=='NS') then
                   uphi_bar_spec(1)=0.0_dp
                   uphi_bar_spec(Nr_max)=0.0_dp
-                  upFR(1,:) = uphi_bar_spec(:) ! update upFR here
                elseif (mBC=='SF') then !Based on Canuto SIAM J. Numer. Anal. 1986, bottom of page 818 ----- (d_(i,j) equation 3.46 from Peyret book)  
                   upmean=uphi_bar_spec(Nr_max:1:-1)
 
@@ -604,11 +604,14 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                   rhs_out=real(rhs_sys) 
                   call factorize(2,A_uphi_b,PIV_uphi_b,INFO2)
                   call matsolve_real(TRANS,2,A_uphi_b,PIV_uphi_b,rhs_out,INFO2)
-                  upFR(1,1)=rhs_out(2)
-                  upFR(1,Nr_max)=rhs_out(1)  
+                  uphi_bar_spec(1)=rhs_out(2) ! Update boundary values here based on the Canuto paper
+                  uphi_bar_spec(Nr_max)=rhs_out(1) ! Update boundary values here based on the Canuto paper 
+                  !upFR(1,1)=rhs_out(2)
+                  !upFR(1,Nr_max)=rhs_out(1)  
                   
                end if !------------------------------------------------------------------------------------   
 
+               upFR(1,:) = uphi_bar_spec(:) ! update upFR here
                !print *, upFR(1,1), upFR(1,Nr_max)
 
                call chebtransform(Nr_max,upFR(1,:),upFC(1,:))
@@ -659,6 +662,12 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                call chebinvtran(Nr_max,rhs_psi,real_rhs_psi)
                call chebinvtranD1(Nr_max,rhs_psi,real_d_rhs_psi)
                call chebinvtranD2(Nr_max,rhs_psi,real_d2_rhs_psi)
+
+               do i=1,Nr_max
+                  !psii(Nm+1,i)=real_rhs_psi(i)
+                  upFR(Nm+1,i)=-1.0_dp*real_d_rhs_psi(i)
+                  urFR(Nm+1,i)=1.0_dp*ii*real(Nm,kind=dp)*r_radius(i)*real_rhs_psi(i)
+               end do
 
                if (mBC=='NS') then 
                   do i=1,Nr_max

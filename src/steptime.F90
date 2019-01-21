@@ -13,7 +13,7 @@ module steptime
                    & urFR4, upFR4, tFR4, omgFR4, &
                    & urFR3, upFR3, tFR3, omgFR3, urFR2,upFR2, tFR2, omgFR2, urFR1,upFR1, tFR1, omgFR1, &
                    & finishsteptime, looptime  
-   use nonlin, only: Nr_maxloop, dtval_p, dtval_r
+   use nonlin, only: Nr_maxloop, dtval_p, dtval_r, dtval_rkr, dtval_rkp
    use output, only: init_output, calculate_spectra, final_output, writeke_spectral, &
                      & store_checkpoint, store_snapshot, writeke_physical
    use fourierloop, only: Nm_maxloop
@@ -215,7 +215,12 @@ contains
 
             call cpu_time(finishNr_maxloop) 
             timeNr_maxloop = timeNr_maxloop + finishNr_maxloop-startNr_maxloop
-
+            !print *, "diff time is", min(minval(dtval_rkr),minval(dtval_rkp),minval(dtval_rkr)/Pr,minval(dtval_rkp)/Pr) 
+            !print *, "adv time is", min(minval(dtval_r),minval(dtval_p)) 
+            !print *, minval(dtval_rkr)
+            print *, "t_diff_r/nu", minval(dtval_rkr),"t_diff_p/nu",minval(dtval_rkp), &
+                  & "t_diff_r/kappa",minval(dtval_rkr)*Pr,"t_diff_p/kappa", minval(dtval_rkp)*Pr 
+            print *, "adv r", minval(dtval_r), "adv p", minval(dtval_p) 
          end if 
 
          if (l_vartimestep .and. (n_step-n_restart>1 .or. l_restart)) then
@@ -246,8 +251,8 @@ contains
          timeNm_maxloop = timeNm_maxloop + finishNm_maxloop-startNm_maxloop
 
          tot_time=tot_time+dt_new 
-         call cpu_time(looptime)
-         finishsteptime=finishsteptime+looptime
+         call cpu_time(finishsteptime)
+         !finishsteptime=finishsteptime+looptime
 
          if (tot_time<totaltime) then
             !--------------------- Store Snapshots -----------------------------

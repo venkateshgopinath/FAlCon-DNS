@@ -164,7 +164,6 @@ contains
             call chebinvtran(Nr_max,upFC(Nm+1,:),upFR(Nm+1,:))
             call chebinvtranD1(Nr_max,upFC(Nm+1,:),D1upFR(:))
             urFR(Nm+1,:) = 0.0_dp 
-            print *, upFR(1,1), upFR(1,Nr_max)
             do i=1,Nr_max
                omgFR(Nm+1,i)=upFR(Nm+1,i)*r_radius(i) + D1upFR(i)
             end do

@@ -27,7 +27,7 @@ module steptime_imexrk
    complex(kind=dp), allocatable, public :: uphi_temp_FR(:,:), ur_temp_FR(:,:)
    complex(kind=dp), allocatable, public :: uphi_omg_FR(:,:), ur_omg_FR(:,:)
    
-   public :: allocate_steptime_imexrk, deallocate_steptime_imexrk, timeloop_imexrk, solver_log
+   public :: allocate_steptime_imexrk, deallocate_steptime_imexrk, timeloop_imexrk, solver_log2
 
 contains
 
@@ -169,8 +169,9 @@ contains
 
          ! ASSEMBLY STAGE ------------------------------------------------------
          if ( ( .not. ars_eqn_check_A ) .or. ( .not. ars_eqn_check_D ) ) then ! If not satisfying equation (2.3) in ARS_97 paper
-            !--- Assembly for non-stiffly accurate schemes ---------------------
+         !   !--- Assembly for non-stiffly accurate schemes ---------------------
             call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR,lm,mBC)
+            !call Assembly_stage(Nm_max,Nr_max,dt_new,tFR,omgFR,upFR,urFR,lm,mBC,rmin,rmax)
          else
             !--- Assembly for stiffly accurate schemes -------------------------
             call Assembly_stage_SA(Nm_max,Nr_max,tFR,omgFR,upFR)
@@ -178,8 +179,12 @@ contains
          !----------------------------------------------------------------------     
 
          tot_time=tot_time+dt_new 
-         call cpu_time(looptime)
-         finishsteptime=finishsteptime+looptime
+ 
+         !looptime=0.0_dp
+         !call cpu_time(looptime)
+         !finishsteptime=finishsteptime+looptime
+         call cpu_time(finishsteptime)
+
          if (tot_time<totaltime) then
 
             ! Calculate temperature in FC space at 0-mode --       
@@ -220,7 +225,7 @@ contains
             end if
             !-------------------------------------------------------------------   
          else 
-            call solver_log(n_step)
+            call solver_log2(n_step)
             call exit()
          end if
       
@@ -228,18 +233,18 @@ contains
 !------------------------- Time loop ends ----------------------------------------------------------   
    end subroutine timeloop_imexrk
 
-   subroutine solver_log(n_step)
+   subroutine solver_log2(n_step)
     integer, intent(in) :: n_step
     integer :: logunit
-      !open(newunit=logunit,file="solver_log.txt",status="unknown",form="formatted", action="write")
+      !open(newunit=logunit,file="solver_log2.txt",status="unknown",form="formatted", action="write")
 
-      call cpu_time(finishsteptime)
-      write (logunit,*) "Total time taken =",finishsteptime-startsteptime,"seconds."
-      write (logunit,*) "Average time taken for time loop =",(finishsteptime-startsteptime)/real(n_step-1,kind=dp),"seconds."
+      !call cpu_time(finishsteptime)
+      !write (logunit,*) "Total time taken =",finishsteptime-startsteptime,"seconds."
+      !write (logunit,*) "Average time taken for time loop =",(finishsteptime-startsteptime)/real(n_step-1,kind=dp),"seconds."
      
       !close(logunit)
 
-   end subroutine solver_log
+   end subroutine solver_log2
 
    subroutine compute_new_dt(n_step,n_restart,l_restart,l_optimizedt,CFL,dt_new,dt_coef,dt_max,Pr)
    

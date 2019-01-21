@@ -103,7 +103,8 @@ contains
       dtval_r(Nr) = dr(Nr)/(maxval(abs(real(ur(:,Nr),kind=dp)))) ! (delta(length_radius)/max(velocity))_measure for each radial segment 
       dtval_p(Nr) = (2.0_dp/3.0_dp)*(radius(Nr)*pi)/(real(Nm_max,kind=dp)*maxval(abs(real(up(:,Nr),kind=dp)))) !(delta(length_phi)/max(velocity))_measure for each azimuthal segment 
       dtval_rkr(Nr) = dr(Nr)*dr(Nr) ! dr^2  
-      dtval_rkp(Nr) = (radius(Nr)*pi)/(real(Nm_max,kind=dp)) * (radius(Nr)*pi)/(real(Nm_max,kind=dp)) ! dphi^2 
+      dtval_rkp(Nr) = (2.0_dp/3.0_dp)*(radius(Nr)*pi)/(real(Nm_max,kind=dp)) * &
+                      & (2.0_dp/3.0_dp)*(radius(Nr)*pi)/(real(Nm_max,kind=dp)) ! rdphi^2 
 
    end subroutine get_dtvals
 
