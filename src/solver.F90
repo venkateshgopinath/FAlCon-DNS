@@ -117,7 +117,7 @@ contains
       !open(newunit=logunit,file="solver_log.txt",status="unknown",form="formatted", action="write")
 
       write (logunit,*) "Total time taken =",finishmain-startmain,"seconds."
-      write (logunit,*) "Total time taken =",finishsteptime-startsteptime,"seconds."
+      !write (logunit,*) "Total time taken =",finishsteptime-startsteptime,"seconds."
       write (logunit,*) "Average time taken for time loop =",(finishsteptime-startsteptime)/real(n_time_steps-1,kind=dp),"seconds."
       write (logunit,*) "Average time taken for time loop =",finishsteptime, startsteptime
       write (logunit,*) "Time taken for Nr_max loop =",timeNr_maxloop,"seconds."

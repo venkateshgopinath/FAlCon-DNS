@@ -606,8 +606,6 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                   call matsolve_real(TRANS,2,A_uphi_b,PIV_uphi_b,rhs_out,INFO2)
                   uphi_bar_spec(1)=rhs_out(2) ! Update boundary values here based on the Canuto paper
                   uphi_bar_spec(Nr_max)=rhs_out(1) ! Update boundary values here based on the Canuto paper 
-                  !upFR(1,1)=rhs_out(2)
-                  !upFR(1,Nr_max)=rhs_out(1)  
                   
                end if !------------------------------------------------------------------------------------   
 
@@ -663,26 +661,43 @@ subroutine Assembly_stage(Nm_max,Nr_max,dt,tFR,omgFR,upFR,urFR,lm,mBC)
                call chebinvtranD1(Nr_max,rhs_psi,real_d_rhs_psi)
                call chebinvtranD2(Nr_max,rhs_psi,real_d2_rhs_psi)
 
+               do i=1,lm ! Evaluate at rmin
+                  d2psi_rmin=d2psi_rmin + d2w_rmin(i)*real_rhs_psi(i+1) ! Summation 2nd derivative
+                  dpsi_rmin=dpsi_rmin + dw_rmin(i)*real_rhs_psi(i+1)    ! Summation 1st derivative
+               end do
+                 
+               do i=1,lm ! Evaluate at rmax
+                  d2psi_rmax=d2psi_rmax + d2w_rmax(i)*real_rhs_psi(Nr_max-i)  ! Summation 2nd derivative
+                  dpsi_rmax=dpsi_rmax + dw_rmax(i)*real_rhs_psi(Nr_max-i)     ! Summation 1st derivative
+               end do 
+
                do i=1,Nr_max
                   !psii(Nm+1,i)=real_rhs_psi(i)
                   upFR(Nm+1,i)=-1.0_dp*real_d_rhs_psi(i)
                   urFR(Nm+1,i)=1.0_dp*ii*real(Nm,kind=dp)*r_radius(i)*real_rhs_psi(i)
                end do
 
-               if (mBC=='NS') then 
-                  do i=1,Nr_max
-                     omg_spec(Nm+1,i) = -1.0_dp*(r_radius(i)*real_d_rhs_psi(i)+real_d2_rhs_psi(i)- &
-                                      & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*real_rhs_psi(i))
-                  end do
-                  omg_spec(Nm+1,1) = -1.0_dp*(real_d2_rhs_psi(1))
-                  omg_spec(Nm+1,Nr_max) = -1.0_dp*(real_d2_rhs_psi(Nr_max))
+               if (mBC=='NS') then ! Johnston's strategy
+                  ! ------------ Use Lagrange polynomials for approximation of No-slip boundary conditions ------------------- 
+                  omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin)            ! Apply omega rmin BC 
+                  omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax)       ! Apply omega rmax BC 
+                  ! --------------------------------------------------------------------------------------------------
                elseif (mBC=='SF') then
-                  do i=1,Nr_max
-                     omg_spec(Nm+1,i) = -1.0_dp*(r_radius(i)*real_d_rhs_psi(i)+real_d2_rhs_psi(i)- &
-                                      & real(Nm,kind=dp)*real(Nm,kind=dp)*r_radius2(i)*real_rhs_psi(i))
-                  end do
-               end if
-               
+                  !print *, upFR(Nm+1,1), upFR(Nm+1,Nr_max), "heh"
+                  ! ------------ Use Lagrange polynomials for approximation of Stress-free boundary conditions ------------------- 
+                  !omg_spec(Nm+1,1)=-1.0_dp*(real_d2_rhs_psi(1))
+                  !omg_spec(Nm+1,Nr_max)=-1.0_dp*(real_d2_rhs_psi(Nr_max))
+                  !omg_spec(Nm+1,1)=-1.0_dp*(d2psi_rmin - 2.0_dp*dw_rmin(1)*dpsi_rmin + 2.0_dp*upFR(Nm+1,1)*dpsi_rmin)       ! Apply omega rmin BC 
+                  !omg_spec(Nm+1,Nr_max)=-1.0_dp*(d2psi_rmax - 2.0_dp*dw_rmax(1)*dpsi_rmax + 2.0_dp*upFR(Nm+1,Nr_max)*dpsi_rmax)  ! Apply omega rmax BC 
+                  omg_spec(Nm+1,1)=-2.0_dp/radius(1)*dpsi_rmin               ! Apply omega rmin BC 
+                  omg_spec(Nm+1,Nr_max)=-2.0_dp/radius(Nr_max)*dpsi_rmax     ! Apply omega rmax BC 
+                  !omg_spec(Nm+1,1)=-2.0_dp/radius(1)*dw_rmin(1)*dpsi_rmin               ! Apply omega rmin BC 
+                  !omg_spec(Nm+1,Nr_max)=-2.0_dp/radius(Nr_max)*dw_rmax(1)*dpsi_rmax     ! Apply omega rmax BC 
+                  !omg_spec(Nm+1,1)=-2.0_dp/radius(1)*upFR(Nm+1,1) ! not giving correct convergence rate
+                  !omg_spec(Nm+1,Nr_max)=-2.0_dp/radius(Nr_max)*upFR(Nm+1,Nr_max) ! not giving correct convergence rate
+                  ! --------------------------------------------------------------------------------------------------
+               end if 
+
                call chebtransform(Nr_max,upFR(Nm+1,:),upFC(Nm+1,:))
 
             end if

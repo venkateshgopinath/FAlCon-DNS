@@ -140,14 +140,14 @@ contains
                           & r_radius2(i)*t(i,j))
 
          end do
-         AF(1,j)=bcpsi1(1,j)
-         AF(Nr_max,j)=bcpsi1(2,j)
+         AF(1,j)=bcpsi2(1,j)
+         AF(Nr_max,j)=bcpsi2(2,j)
 
          AF(1,Nr_max+j)=0.0_dp
          AF(Nr_max,Nr_max+j)=0.0_dp
 
-         AF(Nr_max+1,j)=bcpsi2(1,j)
-         AF(Nr_max+Nr_max,j)=bcpsi2(2,j)
+         AF(Nr_max+1,j)=bcpsi1(1,j)
+         AF(Nr_max+Nr_max,j)=bcpsi1(2,j)
 
          AF(Nr_max+1,Nr_max+j)=0.0_dp
          AF(Nr_max+Nr_max,Nr_max+j)=0.0_dp
@@ -436,15 +436,15 @@ contains
                LAPpsi(1,j)=1.0_dp*t(1,j)
                LAPpsi(Nr_max,j)=1.0_dp*t(Nr_max,j)
                ! Attempt at solving with 4 BCs instead of Johnstion's fix for assembly type IMEXRK cases
-               LAPpsi(2,j)=1.0_dp*D(1,j)
-               LAPpsi(Nr_max-1,j)=1.0_dp*D(Nr_max,j)
+               !LAPpsi(2,j)=1.0_dp*D(1,j)
+               !LAPpsi(Nr_max-1,j)=1.0_dp*D(Nr_max,j)
                ! ----------------------------------
             else if (mBC=='SF')  then
                LAPpsi(1,j)=1.0_dp*t(1,j)
                LAPpsi(Nr_max,j)=1.0_dp*t(Nr_max,j)
                ! Attempt at solving with 4 BCs instead of Johnstion's fix for assembly type IMEXRK cases
-               LAPpsi(2,j)=D2(1,j)-r_radius(1)*D(1,j)
-               LAPpsi(Nr_max-1,j)=D2(Nr_max,j)-r_radius(Nr_max)*D(Nr_max,j)
+               !LAPpsi(2,j)=D2(1,j)-r_radius(1)*D(1,j)
+               !LAPpsi(Nr_max-1,j)=D2(Nr_max,j)-r_radius(Nr_max)*D(Nr_max,j)
             end if
       end do
 

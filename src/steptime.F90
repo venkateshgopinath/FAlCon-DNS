@@ -218,9 +218,8 @@ contains
             !print *, "diff time is", min(minval(dtval_rkr),minval(dtval_rkp),minval(dtval_rkr)/Pr,minval(dtval_rkp)/Pr) 
             !print *, "adv time is", min(minval(dtval_r),minval(dtval_p)) 
             !print *, minval(dtval_rkr)
-            print *, "t_diff_r/nu", minval(dtval_rkr),"t_diff_p/nu",minval(dtval_rkp), &
-                  & "t_diff_r/kappa",minval(dtval_rkr)*Pr,"t_diff_p/kappa", minval(dtval_rkp)*Pr 
-            print *, "adv r", minval(dtval_r), "adv p", minval(dtval_p) 
+            !print *, "t_diff_r/nu", minval(dtval_rkr),"t_diff_p/nu",minval(dtval_rkp), "t_diff_r/kappa",minval(dtval_rkr)*Pr,"t_diff_p/kappa", minval(dtval_rkp)*Pr 
+            !print *, "adv r", minval(dtval_r), "adv p", minval(dtval_p) 
          end if 
 
          if (l_vartimestep .and. (n_step-n_restart>1 .or. l_restart)) then
