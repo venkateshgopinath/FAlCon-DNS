@@ -492,6 +492,29 @@ contains
                   allocate( wt_rhs_tscheme_exp(1) )  
 
             end select   
+            
+         case ('DBM453') ! Vogl et al. 3rd order, Journal of Advances in Modeling Earth Systems 2019 paper 
+            n_order_tscheme_imp=5
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) )
+
+            select case (time_scheme_exp)
+
+              case ('expDBM453')
+                  n_order_tscheme_exp=5
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )
+
+            end select
+
 
          case ('BPR353') ! Boscarino, Pareschi and Russo (BPR353) 3rd order, SIAM Journal on Numerical Analysis 2013 paper
             n_order_tscheme_imp=5 
@@ -1232,6 +1255,25 @@ contains
 
             diag_diff = .FALSE.
             diag_index = 2
+         
+         case ('DBM453')
+
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+     -0.22284985318525410_dp, 0.32591194130117247_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+     -0.46801347074080545_dp, 0.86349284225716961_dp, 0.32591194130117247_dp, 0.0_dp, 0.0_dp, &
+     -0.46509906651927421_dp, 0.81063103116959553_dp, 0.61036726756832357_dp, 0.32591194130117247_dp,0.0_dp, &
+     0.87795339639076675_dp, -0.72692641526151547_dp, 0.75204137157372720_dp,-0.22898029400415088_dp,0.32591194130117247_dp], &
+                                  [5,5],order=[2,1])
+
+
+
+            butcher_bD = reshape([0.87795339639076672_dp,-0.72692641526151549_dp, 0.7520413715737272_dp, &
+-0.22898029400415090_dp, 0.32591194130117247_dp],[5])
+
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .FALSE.
+            diag_index = 2
 
          case ('BPR353')
 
@@ -1933,6 +1975,27 @@ contains
                   ars_eqn_check_A=.FALSE.
 
             end select  
+            
+         case ('DBM453')
+
+            select case (time_scheme_exp)
+
+               case ('expDBM453')
+
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+      0.10306208811591838_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+      -0.94124866143519894_dp, 1.6626399742527356_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+      -1.3670975201437765_dp, 1.3815852911016873_dp, 1.2673234025619065_dp, 0.0_dp,0.0_dp, &
+      -0.81287582068772448_dp, 0.81223739060505738_dp, 0.90644429603699305_dp,0.094194134045674111_dp,0.0_dp], &
+                                  [5,5],order=[2,1])
+
+                  butcher_bA = reshape([0.87795339639076672_dp, -0.72692641526151549_dp, 0.7520413715737272_dp, &
+-0.22898029400415090_dp,0.32591194130117247_dp],[5])
+
+                  ars_eqn_check_A=.FALSE.
+
+            end select
 
          case ('BPR353')
  
