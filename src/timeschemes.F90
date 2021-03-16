@@ -24,6 +24,7 @@ module timeschemes
    logical, public :: ars_eqn_check_A, ars_eqn_check_D, diag_diff
    integer, public :: diag_index
    real(kind=dp) :: gammaa, delta, alphaa, betaa, etaa, lambda
+   real(kind=dp) :: alpha1, alpha2, alpha3, beta1, beta2, beta3, gamma1, gamma2, gamma3, xeta1, xeta2 
    real(kind=dp) :: a31, a32, a41, a42, a43, a44, a53, a54, a55, bb1, bb2, bb3, bb4, bb5, bb6, c3, c4 
    real(kind=dp) :: aa31, aa32, aa41, aa42, aa43, aa51, aa52, aa53, aa54, aa64, aa65 
    real(kind=dp) :: a21, a22, a33, c2, aa21, c1 
@@ -301,6 +302,39 @@ contains
 
             end select   
 
+         case ('SMR333') ! Spalart, Moser and Rogers (SMR333) 3rd order, JCP 1991 paper
+            n_order_tscheme_imp=4 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+            alpha1 = 29.0_dp/96.0_dp
+            alpha2 = -3.0_dp/40.0_dp
+            alpha3 = 1.0_dp/6.0_dp 
+            beta1 = 37.0_dp/160.0_dp
+            beta2 = 5.0_dp/24.0_dp
+            beta3 = 1.0_dp/6.0_dp
+            gamma1 = 8.0_dp/15.0_dp
+            gamma2 = 5.0_dp/12.0_dp
+            gamma3 = 3.0_dp/4.0_dp
+            xeta1 = -17.0_dp/60.0_dp
+            xeta2 = -5.0_dp/12.0_dp
+
+            select case (time_scheme_exp)
+
+              case ('expSMR333')
+                  n_order_tscheme_exp=4
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select   
+
          case ('MARS343') ! Modified ARS343 Boscarino et. al. (MARS343) 3rd order, Communications to SIMAI Congress. 2007 paper
             n_order_tscheme_imp=4 
             allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
@@ -516,6 +550,50 @@ contains
 
               case ('expKC564')  
                   n_order_tscheme_exp=6
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select 
+
+         case ('KC774') ! Additive Runge Kutta, KC774 2019 Paper 
+            n_order_tscheme_imp=7 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expKC774')  
+                  n_order_tscheme_exp=7
+                  allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
+                  allocate( butcher_bA(n_order_tscheme_exp) )
+                  allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
+                  allocate( rhs_exp_uphi_bar(1,Nr_max) )
+                  allocate( wt_rhs_tscheme_exp(1) )  
+
+            end select 
+
+         case ('KC885') ! Additive Runge Kutta, KC885 2019 Paper 
+            n_order_tscheme_imp=8 
+            allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
+            allocate( butcher_bD(n_order_tscheme_imp) )
+            allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
+            allocate( rhs_imp_uphi_bar(1,Nr_max) )
+            allocate( wt_rhs_tscheme_imp(1) ) 
+
+            select case (time_scheme_exp)
+
+              case ('expKC885')  
+                  n_order_tscheme_exp=8
                   allocate( butcher_aA(n_order_tscheme_exp,n_order_tscheme_exp) )
                   allocate( butcher_bA(n_order_tscheme_exp) )
                   allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
@@ -1019,6 +1097,23 @@ contains
             diag_diff = .FALSE.
             diag_index = 2
 
+         case ('SMR333')
+
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                  alpha1, beta1, 0.0_dp, 0.0_dp, &
+                                  alpha1, alpha2+beta1, beta2, 0.0_dp, &
+                                  alpha1, alpha2+beta1, alpha3+beta2, beta3], &
+                                  [4,4],order=[2,1])  
+
+            butcher_bD = reshape([alpha1, alpha2+beta1, alpha3+beta2, beta3],[4]) 
+
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .TRUE.
+            diag_index = 2
+
+
+
          case ('MARS343')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -1202,7 +1297,75 @@ contains
 
             diag_diff = .FALSE.
             diag_index = 2
+
+         case ('KC774')
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,        &
+            &    0.0_dp, 0.0_dp, 0.0_dp, 0.1235_dp, 0.1235_dp, 0.0_dp, 0.0_dp,      &
+            &    0.0_dp, 0.0_dp, 0.0_dp, 624185399699.0_dp/4186980696204.0_dp,      &
+            &    624185399699.0_dp/4186980696204.0_dp, 0.1235_dp, 0.0_dp, 0.0_dp,   &
+            &    0.0_dp, 0.0_dp, 1258591069120.0_dp/10082082980243.0_dp,            &
+            &    1258591069120.0_dp/10082082980243.0_dp, -322722984531.0_dp/        &
+            &    8455138723562.0_dp, 0.1235_dp, 0.0_dp, 0.0_dp, 0.0_dp,             &
+            &    -436103496990.0_dp/5971407786587.0_dp, -436103496990.0_dp/         &
+            &    5971407786587.0_dp, -2689175662187.0_dp/11046760208243.0_dp,       &
+            &    4431412449334.0_dp/12995360898505.0_dp, 0.1235_dp, 0.0_dp, 0.0_dp, &
+            &    -2207373168298.0_dp/14430576638973.0_dp, -2207373168298.0_dp/      &
+            &    14430576638973.0_dp, 242511121179.0_dp/3358618340039.0_dp,         &
+            &    3145666661981.0_dp/7780404714551.0_dp,  5882073923981.0_dp/        &
+            &    14490790706663.0_dp, 0.1235_dp, 0.0_dp, 0.0_dp, 0.0_dp,            &
+            &    9164257142617.0_dp/17756377923965.0_dp, -10812980402763.0_dp/      &
+            &    74029279521829.0_dp, 1335994250573.0_dp/5691609445217.0_dp,        &
+            &    2273837961795.0_dp/8368240463276.0_dp, 0.1235_dp], [7,7], order=[2,1])
+ 
+            butcher_bD = reshape([0.0_dp, 0.0_dp, 9164257142617.0_dp/        &
+            &                          17756377923965.0_dp, -10812980402763.0_dp/ &
+            &                          74029279521829.0_dp, 1335994250573.0_dp/   &
+            &                          5691609445217.0_dp,  2273837961795.0_dp/   &
+            &                          8368240463276.0_dp, 0.1235_dp],[7])
+
+
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .FALSE.
+            diag_index = 2
             
+         case ('KC885')
+            butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,          &
+            &  0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 2.0_dp/9.0_dp, 2.0_dp/9.0_dp,          &
+            &  0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 2366667076620.0_dp/    &
+            &  8822750406821.0_dp, 2366667076620.0_dp/8822750406821.0_dp,             &
+            &  2.0_dp/9.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,                 &
+            &  -257962897183.0_dp/4451812247028.0_dp, -257962897183.0_dp/             &
+            &  4451812247028.0_dp, 128530224461.0_dp/14379561246022.0_dp,             &
+            &  2.0_dp/9.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, -486229321650.0_dp/     &
+            &  11227943450093.0_dp, -486229321650.0_dp/11227943450093.0_dp,           &
+            &  -225633144460.0_dp/6633558740617.0_dp, 1741320951451.0_dp/             &
+            &  6824444397158.0_dp, 2.0_dp/9.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,             &
+            &  621307788657.0_dp/4714163060173.0_dp, 621307788657.0_dp/               &
+            &  4714163060173.0_dp, -125196015625.0_dp/3866852212004.0_dp,             &
+            &  940440206406.0_dp/7593089888465.0_dp, 961109811699.0_dp/               &
+            &  6734810228204.0_dp, 2.0_dp/9.0_dp, 0.0_dp, 0.0_dp, 2036305566805.0_dp/ &
+            &  6583108094622.0_dp, 2036305566805.0_dp/6583108094622.0_dp,             &
+            &  -3039402635899.0_dp/4450598839912.0_dp, -1829510709469.0_dp/           &
+            &  31102090912115.0_dp, -286320471013.0_dp/6931253422520.0_dp,            &
+            &  8651533662697.0_dp/9642993110008.0_dp, 2.0_dp/9.0_dp, 0.0_dp, 0.0_dp,  &
+            &  0.0_dp, 3517720773327.0_dp/20256071687669.0_dp, 4569610470461.0_dp/    &
+            &  17934693873752.0_dp,  2819471173109.0_dp/11655438449929.0_dp,          &
+            &  3296210113763.0_dp/10722700128969.0_dp, -1142099968913.0_dp/           &
+            &  5710983926999.0_dp, 2.0_dp/9.0_dp], [8,8], order=[2,1])
+
+
+            butcher_bD = reshape([0.0_dp, 0.0_dp, 3517720773327.0_dp/    &
+            &    20256071687669.0_dp, 4569610470461.0_dp/17934693873752.0_dp, &
+            &    2819471173109.0_dp/11655438449929.0_dp, 3296210113763.0_dp/  &
+            &    10722700128969.0_dp, -1142099968913.0_dp/5710983926999.0_dp, &
+            &    2.0_dp/9.0_dp],[8])
+
+            ars_eqn_check_D=.TRUE.
+
+            diag_diff = .FALSE.
+            diag_index = 2
+
          case ('FW53')
             
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
@@ -1603,6 +1766,26 @@ contains
 
             end select  
 
+         case ('SMR333')
+ 
+            select case (time_scheme_exp)
+
+               case ('expSMR333')
+
+                  butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        gamma1, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        xeta1+gamma1, gamma2, 0.0_dp, 0.0_dp, &
+                                        xeta1+gamma1, xeta2+gamma2, gamma3, 0.0_dp], &
+                                        [4,4],order=[2,1])  
+
+                  butcher_bA = reshape([xeta1+gamma1, xeta2+gamma2, gamma3, 0.0_dp],[4]) 
+
+                  ars_eqn_check_A=.TRUE.
+
+            end select  
+
+
+
          case ('MARS343')
  
             select case (time_scheme_exp)
@@ -1828,6 +2011,81 @@ contains
 
             end select   
          
+         case ('KC774')
+ 
+            select case (time_scheme_exp)
+
+               case ('expKC774')
+
+                    butcher_aA = reshape([ 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,      &
+            &    0.0_dp, 0.0_dp, 0.0_dp, 0.247_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
+            &    0.0_dp, 0.0_dp, 0.06175_dp, 2694949928731.0_dp/7487940209513.0_dp,&
+            &    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 464650059369.0_dp/        &
+            &    8764239774964.0_dp, 878889893998.0_dp/2444806327765.0_dp,         &
+            &    -952945855348.0_dp/12294611323341.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,   &
+            &    0.0_dp, 476636172619.0_dp/8159180917465.0_dp, -1271469283451.0_dp/&
+            &    7793814740893.0_dp, -859560642026.0_dp/4356155882851.0_dp,        &
+            &    1723805262919.0_dp/4571918432560.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,    &
+            &    6338158500785.0_dp/11769362343261.0_dp, -4970555480458.0_dp/      &
+            &    10924838743837.0_dp, 3326578051521.0_dp/2647936831840.0_dp,       &
+            &    -880713585975.0_dp/1841400956686.0_dp, -1428733748635.0_dp/       &
+            &    8843423958496.0_dp, 0.0_dp, 0.0_dp, 760814592956.0_dp/            &
+            &    3276306540349.0_dp, 760814592956.0_dp/3276306540349.0_dp,         &
+            &    -47223648122716.0_dp/6934462133451.0_dp, 71187472546993.0_dp/     &
+            &    9669769126921.0_dp, -13330509492149.0_dp/9695768672337.0_dp,      &
+            &    11565764226357.0_dp/8513123442827.0_dp, 0.0_dp], [7,7], order=[2,1])
+
+                   butcher_bA = reshape([0.0_dp, 0.0_dp, 9164257142617.0_dp/        &
+            &                          17756377923965.0_dp, -10812980402763.0_dp/ &
+            &                          74029279521829.0_dp, 1335994250573.0_dp/   &
+            &                          5691609445217.0_dp,  2273837961795.0_dp/   &
+            &                          8368240463276.0_dp, 0.1235_dp],[7])
+
+                  ars_eqn_check_A=.FALSE.
+
+            end select   
+
+         case ('KC885')
+ 
+            select case (time_scheme_exp)
+
+               case ('expKC885')
+                  butcher_aA = reshape([ 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,  &
+            &  0.0_dp, 0.0_dp, 0.0_dp, 4.0_dp/9.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,  & 
+            &  0.0_dp, 0.0_dp, 0.0_dp, 1.0_dp/9.0_dp, 1183333538310.0_dp/              &
+            &  1827251437969.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,     &
+            &  895379019517.0_dp/9750411845327.0_dp, 477606656805.0_dp/                &
+            &  13473228687314.0_dp, -112564739183.0_dp/9373365219272.0_dp, 0.0_dp,     &
+            &  0.0_dp, 0.0_dp, 0.0_dp,0.0_dp, -4458043123994.0_dp/13015289567637.0_dp, &
+            &  -2500665203865.0_dp/9342069639922.0_dp, 983347055801.0_dp/              &
+            &  8893519644487.0_dp, 2185051477207.0_dp/2551468980502.0_dp, 0.0_dp,      &
+            &  0.0_dp, 0.0_dp, 0.0_dp, -167316361917.0_dp/17121522574472.0_dp,         &
+            &  1605541814917.0_dp/7619724128744.0_dp, 991021770328.0_dp/               &
+            &  13052792161721.0_dp,  2342280609577.0_dp/11279663441611.0_dp,           &
+            &  3012424348531.0_dp/12792462456678.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,         &
+            &  6680998715867.0_dp/14310383562358.0_dp, 5029118570809.0_dp/             &
+            &  3897454228471.0_dp, 2415062538259.0_dp/6382199904604.0_dp,              &
+            &  -3924368632305.0_dp/6964820224454.0_dp, -4331110370267.0_dp/            &
+            &  15021686902756.0_dp, -3944303808049.0_dp/11994238218192.0_dp, 0.0_dp,   &
+            &  0.0_dp, 2193717860234.0_dp/3570523412979.0_dp, 2193717860234.0_dp/      &
+            &  3570523412979.0_dp, 5952760925747.0_dp/18750164281544.0_dp,             &
+            &  -4412967128996.0_dp/6196664114337.0_dp, 4151782504231.0_dp/             &
+            &  36106512998704.0_dp,  572599549169.0_dp/6265429158920.0_dp,             &
+            &  -457874356192.0_dp/11306498036315.0_dp, 0.0_dp], [8,8], order=[2,1])
+
+
+            butcher_bA = reshape([0.0_dp, 0.0_dp, 3517720773327.0_dp/    &
+            &    20256071687669.0_dp, 4569610470461.0_dp/17934693873752.0_dp, &
+            &    2819471173109.0_dp/11655438449929.0_dp, 3296210113763.0_dp/  &
+            &    10722700128969.0_dp, -1142099968913.0_dp/5710983926999.0_dp, &
+            &    2.0_dp/9.0_dp],[8])
+
+                  ars_eqn_check_A=.FALSE.
+
+            end select   
+
+
+
          case ('FW53')
  
             select case (time_scheme_exp)

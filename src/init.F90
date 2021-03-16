@@ -903,21 +903,21 @@ contains
       allocate(urFRn(Nm_max_old+1,Nr_max_old))
       allocate(upFRn(Nm_max_old+1,Nr_max_old))
       
-      if (l_imexrk_started) then
-         allocate(rhs_imp_temp_old(1,Nm_max_old+1,Nr_max_old)) 
-         allocate(rhs_exp_temp_old(1,Nm_max_old+1,Nr_max_old)) 
-         allocate(rhs_imp_vort_old(1,Nm_max_old+1,Nr_max_old)) 
-         allocate(rhs_exp_vort_old(1,Nm_max_old+1,Nr_max_old)) 
-         allocate(rhs_imp_uphi_bar_old(1,Nr_max_old)) 
-         allocate(rhs_exp_uphi_bar_old(1,Nr_max_old)) 
-      else
+      !if (l_imexrk_started) then
+      !   allocate(rhs_imp_temp_old(1,Nm_max_old+1,Nr_max_old)) 
+      !   allocate(rhs_exp_temp_old(1,Nm_max_old+1,Nr_max_old)) 
+      !   allocate(rhs_imp_vort_old(1,Nm_max_old+1,Nr_max_old)) 
+      !   allocate(rhs_exp_vort_old(1,Nm_max_old+1,Nr_max_old)) 
+      !   allocate(rhs_imp_uphi_bar_old(1,Nr_max_old)) 
+      !   allocate(rhs_exp_uphi_bar_old(1,Nr_max_old)) 
+      !else
          allocate(rhs_imp_temp_old(n_order_tscheme_imp_old,Nm_max_old+1,Nr_max_old)) 
          allocate(rhs_exp_temp_old(n_order_tscheme_exp_old,Nm_max_old+1,Nr_max_old)) 
          allocate(rhs_imp_vort_old(n_order_tscheme_imp_old,Nm_max_old+1,Nr_max_old)) 
          allocate(rhs_exp_vort_old(n_order_tscheme_exp_old,Nm_max_old+1,Nr_max_old)) 
          allocate(rhs_imp_uphi_bar_old(n_order_tscheme_imp_old,Nr_max_old)) 
          allocate(rhs_exp_uphi_bar_old(n_order_tscheme_exp_old,Nr_max_old)) 
-      end if
+      !end if
 
       read(inunit) dt_array_old
       read(inunit) tFRn
@@ -925,12 +925,12 @@ contains
       read(inunit) urFRn
       read(inunit) upFRn
       
-      read(inunit) rhs_imp_temp_old   
-      read(inunit) rhs_exp_temp_old   
-      read(inunit) rhs_imp_vort_old   
-      read(inunit) rhs_exp_vort_old   
-      read(inunit) rhs_imp_uphi_bar_old   
-      read(inunit) rhs_exp_uphi_bar_old   
+      !read(inunit) rhs_imp_temp_old   
+      !read(inunit) rhs_exp_temp_old   
+      !read(inunit) rhs_imp_vort_old   
+      !read(inunit) rhs_exp_vort_old   
+      !read(inunit) rhs_imp_uphi_bar_old   
+      !read(inunit) rhs_exp_uphi_bar_old   
 
       close(inunit)
 

@@ -52,7 +52,6 @@ contains
       namelist/grid/Nr_max,Nm_max
 
       namelist/physics/eta,Ra,Pr,mBC,ampT,l_add_pert,lagpts,n_init,buo_tscheme
-
       namelist/timecontrol/n_time_steps,dt,totaltime,l_vartimestep,time_scheme_type,time_scheme_imp,time_scheme_exp, &
                & l_imexrk_started, dt_coef,dt_max,CFL,l_restart,l_optimizedt,n_restart,n_restart_point,n_snapshot_point
 

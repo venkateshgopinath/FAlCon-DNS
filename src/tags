@@ -1,0 +1,553 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+AF	mat_assembly.F90	/^   real(kind=dp), allocatable :: AF(/;"	v	module:mat_assembly
+AF_all	mat_assembly.F90	/^   real(kind=dp), allocatable, public :: AT_all(:,:,:), AF_all(/;"	v	module:mat_assembly
+AT	mat_assembly.F90	/^   real(kind=dp), allocatable :: AT(/;"	v	module:mat_assembly
+AT_all	mat_assembly.F90	/^   real(kind=dp), allocatable, public :: AT_all(/;"	v	module:mat_assembly
+A_uphi	mat_assembly.F90	/^   real(kind=dp), allocatable, public :: A_uphi(/;"	v	module:mat_assembly
+Assembly_stage	fourierloop_imexrk.F90	/^   subroutine Assembly_stage(/;"	s	module:fourierloop_imexrk
+Assembly_stage	fourierloop_rk.F90	/^   subroutine Assembly_stage(/;"	s	module:fourierloop_rk
+CFL	namelists.F90	/^   real(kind=dp), public :: CFL$/;"	v	module:namelists
+D	chebyshev_GG.F90	/^   real(kind=dp), allocatable, public :: D(/;"	v	module:chebyshev
+D	chebyshev_fftw.F90	/^   real(kind=dp), allocatable, public :: D(/;"	v	module:chebyshev
+D2	chebyshev_GG.F90	/^   real(kind=dp), allocatable, public :: D(:,:), D2(/;"	v	module:chebyshev
+D2	chebyshev_fftw.F90	/^   real(kind=dp), allocatable, public :: D(:,:), D2(/;"	v	module:chebyshev
+DEPS	Makefile	/^DEPS := $(addsuffix .o, $(basename $(RED_SOURCES)))$/;"	m
+FC	Makefile	/^FC = gfortran$/;"	m
+FCFLAGS	Makefile	/^FCFLAGS = -O3 -D$(USE_FFT)   $/;"	m
+Get_stage_var	fourierloop_imexrk.F90	/^   subroutine Get_stage_var(/;"	s	module:fourierloop_imexrk
+Get_stage_var	fourierloop_rk.F90	/^   subroutine Get_stage_var(/;"	s	module:fourierloop_rk
+IPIV1	mat_assembly.F90	/^   integer, allocatable, public :: IPIV1(/;"	v	module:mat_assembly
+IPIV1_lap	mat_assembly.F90	/^   integer, allocatable, public :: IPIV1_lap(/;"	v	module:mat_assembly
+IPIV2	mat_assembly.F90	/^   integer, allocatable, public :: IPIV1(:,:), IPIV2(/;"	v	module:mat_assembly
+LAPpsi	mat_assembly.F90	/^   real(kind=dp), allocatable, public :: LAPpsi(/;"	v	module:mat_assembly
+LAPpsi_all	mat_assembly.F90	/^   real(kind=dp), allocatable, public :: LAPpsi_all(/;"	v	module:mat_assembly
+LDFLAGS	Makefile	/^LDFLAGS = -llapack -lblas -lfftw3 -lm #-fopenmp $/;"	m
+Nm_max	namelists.F90	/^   integer, public :: Nm_max$/;"	v	module:namelists
+Nm_maxLOOP	fourierloop.F90	/^   subroutine Nm_maxLOOP(/;"	s	module:fourierloop
+Np_max	namelists.F90	/^   integer, public :: Np_max /;"	v	module:namelists
+Nr_max	namelists.F90	/^   integer, public :: Nr_max$/;"	v	module:namelists
+Nr_maxLOOP	nonlin.F90	/^   subroutine  Nr_maxLOOP(/;"	s	module:nonlin
+PIV1	mat_assembly.F90	/^   integer, allocatable :: PIV1(/;"	v	module:mat_assembly
+PIV2	mat_assembly.F90	/^   integer, allocatable :: PIV1(:), PIV2(/;"	v	module:mat_assembly
+PIV_uphi	mat_assembly.F90	/^   integer, allocatable, public :: PIV_uphi(/;"	v	module:mat_assembly
+PROGRAMS	Makefile	/^PROGRAMS = main$/;"	m
+Pr	namelists.F90	/^   real(kind=dp), public :: Pr$/;"	v	module:namelists
+RHS_construct_stage	fourierloop_imexrk.F90	/^   subroutine RHS_construct_stage(/;"	s	module:fourierloop_imexrk
+RHS_construct_stage	fourierloop_rk.F90	/^   subroutine RHS_construct_stage(/;"	s	module:fourierloop_rk
+Ra	namelists.F90	/^   real(kind=dp), public :: Ra$/;"	v	module:namelists
+TFC	init.F90	/^   complex(kind=dp), allocatable, public :: TFC(/;"	v	module:init
+TRANS	fourierloop.F90	/^   character :: TRANS=/;"	v	module:fourierloop
+TRANS	fourierloop_imexrk.F90	/^   character :: TRANS=/;"	v	module:fourierloop_imexrk
+TRANS	fourierloop_rk.F90	/^   character :: TRANS=/;"	v	module:fourierloop_rk
+USE_FFT	Makefile	/^USE_FFT=FFTW$/;"	m
+USE_LAPACKLIB	Makefile	/^USE_LAPACKLIB=LAPACK$/;"	m
+algebra	algebra_lapack.F90	/^module algebra$/;"	m
+algebra	algebra_mkl.F90	/^module algebra$/;"	m
+allocate_fourierloop_imex	fourierloop.F90	/^   subroutine allocate_fourierloop_imex(/;"	s	module:fourierloop
+allocate_fourierloop_imexrk	fourierloop_imexrk.F90	/^   subroutine allocate_fourierloop_imexrk(/;"	s	module:fourierloop_imexrk
+allocate_fourierloop_rk	fourierloop_rk.F90	/^   subroutine allocate_fourierloop_rk(/;"	s	module:fourierloop_rk
+allocate_mat	mat_assembly.F90	/^   subroutine allocate_mat(/;"	s	module:mat_assembly
+allocate_nonlin	nonlin.F90	/^   subroutine allocate_nonlin(/;"	s	module:nonlin
+allocate_restart	init.F90	/^   subroutine allocate_restart(/;"	s	module:init
+allocate_rhs_imex	rhs_create.F90	/^   subroutine allocate_rhs_imex(/;"	s	module:rhs_create
+allocate_rhs_imexrk	rhs_create_imexrk.F90	/^   subroutine allocate_rhs_imexrk(/;"	s	module:rhs_create_imexrk
+allocate_rhs_rk	rhs_create_rk.F90	/^   subroutine allocate_rhs_rk(/;"	s	module:rhs_create_rk
+allocate_steptime_imex	steptime.F90	/^   subroutine allocate_steptime_imex(/;"	s	module:steptime
+allocate_steptime_imexrk	steptime_imexrk.F90	/^   subroutine allocate_steptime_imexrk(/;"	s	module:steptime_imexrk
+allocate_steptime_rk	steptime_rk.F90	/^   subroutine allocate_steptime_rk(/;"	s	module:steptime_rk
+ampT	namelists.F90	/^   real(kind=dp), public :: ampT$/;"	v	module:namelists
+argument_count	namelists.F90	/^   integer :: argument_count$/;"	v	module:namelists
+ars_eqn_check_A	timeschemes.F90	/^   logical, public :: ars_eqn_check_A,/;"	v	module:timeschemes
+ars_eqn_check_D	timeschemes.F90	/^   logical, public :: ars_eqn_check_A, ars_eqn_check_D$/;"	v	module:timeschemes
+bcpsi1	mat_assembly.F90	/^   real(kind=dp), allocatable :: bctemp(:,:), bcpsi1(/;"	v	module:mat_assembly
+bcpsi2	mat_assembly.F90	/^   real(kind=dp), allocatable :: bctemp(:,:), bcpsi1(:,:), bcpsi2(/;"	v	module:mat_assembly
+bctemp	mat_assembly.F90	/^   real(kind=dp), allocatable :: bctemp(/;"	v	module:mat_assembly
+butcher_a	timeschemes.F90	/^   real(kind=dp), allocatable, public :: butcher_a(/;"	v	module:timeschemes
+butcher_aA	timeschemes.F90	/^   real(kind=dp), allocatable, public :: butcher_aD(:,:),butcher_aA(/;"	v	module:timeschemes
+butcher_aD	timeschemes.F90	/^   real(kind=dp), allocatable, public :: butcher_aD(/;"	v	module:timeschemes
+butcher_b	timeschemes.F90	/^   real(kind=dp), allocatable, public :: butcher_b(/;"	v	module:timeschemes
+butcher_bA	timeschemes.F90	/^   real(kind=dp), allocatable, public :: butcher_bD(:),butcher_bA(/;"	v	module:timeschemes
+butcher_bD	timeschemes.F90	/^   real(kind=dp), allocatable, public :: butcher_bD(/;"	v	module:timeschemes
+calculate_spectra	output.F90	/^   subroutine calculate_spectra(/;"	s	module:output
+cheballoc	chebyshev_GG.F90	/^   subroutine cheballoc(/;"	s	module:chebyshev
+cheballoc	chebyshev_fftw.F90	/^   subroutine cheballoc(/;"	s	module:chebyshev
+chebdealloc	chebyshev_GG.F90	/^   subroutine chebdealloc(/;"	s	module:chebyshev
+chebdealloc	chebyshev_fftw.F90	/^   subroutine chebdealloc(/;"	s	module:chebyshev
+chebinvtran	chebyshev_GG.F90	/^   subroutine chebinvtran(/;"	s	module:chebyshev
+chebinvtran	chebyshev_fftw.F90	/^   subroutine chebinvtran(/;"	s	module:chebyshev
+chebinvtranD1	chebyshev_GG.F90	/^   subroutine chebinvtranD1(/;"	s	module:chebyshev
+chebinvtranD1	chebyshev_fftw.F90	/^   subroutine chebinvtranD1(/;"	s	module:chebyshev
+chebinvtranD1D2	chebyshev_GG.F90	/^   subroutine chebinvtranD1D2(/;"	s	module:chebyshev
+chebinvtranD1D2	chebyshev_fftw.F90	/^   subroutine chebinvtranD1D2(/;"	s	module:chebyshev
+chebinvtranD2	chebyshev_GG.F90	/^   subroutine chebinvtranD2(/;"	s	module:chebyshev
+chebinvtranD2	chebyshev_fftw.F90	/^   subroutine chebinvtranD2(/;"	s	module:chebyshev
+chebtransform	chebyshev_GG.F90	/^   subroutine chebtransform(/;"	s	module:chebyshev
+chebtransform	chebyshev_fftw.F90	/^   subroutine chebtransform(/;"	s	module:chebyshev
+chebyshev	chebyshev_GG.F90	/^module chebyshev$/;"	m
+chebyshev	chebyshev_fftw.F90	/^module chebyshev$/;"	m
+compute_new_dt	steptime.F90	/^   subroutine compute_new_dt(/;"	s	module:steptime
+compute_new_dt	steptime_imexrk.F90	/^   subroutine compute_new_dt(/;"	s	module:steptime_imexrk
+compute_new_dt	steptime_rk.F90	/^   subroutine compute_new_dt(/;"	s	module:steptime_rk
+constants	constants.F90	/^module constants$/;"	m
+count_chkpnt	output.F90	/^   integer, public :: count_chkpnt$/;"	v	module:output
+count_snap	output.F90	/^   integer, public :: count_snap$/;"	v	module:output
+d2lagrange	chebyshev_GG.F90	/^   subroutine d2lagrange(/;"	s	module:chebyshev
+d2lagrange	chebyshev_fftw.F90	/^   subroutine d2lagrange(/;"	s	module:chebyshev
+d2psi_rmax	fourierloop_imexrk.F90	/^   complex(kind=dp) :: d2psi_rmax$/;"	v	module:fourierloop_imexrk
+d2psi_rmax	fourierloop_rk.F90	/^   complex(kind=dp) :: d2psi_rmax$/;"	v	module:fourierloop_rk
+d2psi_rmin	fourierloop_imexrk.F90	/^   complex(kind=dp) :: d2psi_rmin$/;"	v	module:fourierloop_imexrk
+d2psi_rmin	fourierloop_rk.F90	/^   complex(kind=dp) :: d2psi_rmin$/;"	v	module:fourierloop_rk
+d2w_rmax	init.F90	/^   real(kind=dp), allocatable, public :: d2w_rmax(/;"	v	module:init
+d2w_rmin	init.F90	/^   real(kind=dp), allocatable, public :: d2w_rmin(/;"	v	module:init
+dcheb	chebyshev_GG.F90	/^   subroutine dcheb(/;"	s	module:chebyshev
+dcheb	chebyshev_fftw.F90	/^   subroutine dcheb(/;"	s	module:chebyshev
+deallocate_fourierloop_imex	fourierloop.F90	/^   subroutine deallocate_fourierloop_imex$/;"	s	module:fourierloop
+deallocate_fourierloop_imexrk	fourierloop_imexrk.F90	/^   subroutine deallocate_fourierloop_imexrk$/;"	s	module:fourierloop_imexrk
+deallocate_fourierloop_rk	fourierloop_rk.F90	/^   subroutine deallocate_fourierloop_rk$/;"	s	module:fourierloop_rk
+deallocate_mat	mat_assembly.F90	/^   subroutine deallocate_mat(/;"	s	module:mat_assembly
+deallocate_nonlin	nonlin.F90	/^   subroutine deallocate_nonlin(/;"	s	module:nonlin
+deallocate_restart	init.F90	/^   subroutine deallocate_restart(/;"	s	module:init
+deallocate_rhs_imex	rhs_create.F90	/^   subroutine deallocate_rhs_imex$/;"	s	module:rhs_create
+deallocate_rhs_imexrk	rhs_create_imexrk.F90	/^   subroutine deallocate_rhs_imexrk$/;"	s	module:rhs_create_imexrk
+deallocate_rhs_rk	rhs_create_rk.F90	/^   subroutine deallocate_rhs_rk$/;"	s	module:rhs_create_rk
+deallocate_steptime_imex	steptime.F90	/^   subroutine deallocate_steptime_imex(/;"	s	module:steptime
+deallocate_steptime_imexrk	steptime_imexrk.F90	/^   subroutine deallocate_steptime_imexrk(/;"	s	module:steptime_imexrk
+deallocate_steptime_rk	steptime_rk.F90	/^   subroutine deallocate_steptime_rk(/;"	s	module:steptime_rk
+deallocate_time_schemes	timeschemes.F90	/^   subroutine deallocate_time_schemes(/;"	s	module:timeschemes
+defaultNamelists	namelists.F90	/^   subroutine defaultNamelists(/;"	s	module:namelists
+delta	timeschemes.F90	/^   real(kind=dp) :: gammaa, delta$/;"	v	module:timeschemes
+destroy_all_fftw_plans	init.F90	/^   subroutine destroy_all_fftw_plans(/;"	s	module:init
+destroy_chebfftwplan	chebyshev_fftw.F90	/^   subroutine destroy_chebfftwplan(/;"	s	module:chebyshev
+destroy_fftwplan	fourier_fftw.F90	/^   subroutine destroy_fftwplan(/;"	s	module:fourier
+dlagrange	chebyshev_GG.F90	/^   subroutine dlagrange(/;"	s	module:chebyshev
+dlagrange	chebyshev_fftw.F90	/^   subroutine dlagrange(/;"	s	module:chebyshev
+domgdt1	fourierloop_rk.F90	/^   complex(kind=dp), allocatable, public :: dtempdt1(:,:,:), dtempdt2(:,:), domgdt1(/;"	v	module:fourierloop_rk
+domgdt1_a	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable, public :: domgdt1_a(/;"	v	module:fourierloop_imexrk
+domgdt1_d	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable, public :: domgdt1_a(:,:,:), domgdt1_d(/;"	v	module:fourierloop_imexrk
+dp	dble.F90	/^    INTEGER, public, PARAMETER :: dp /;"	v
+dpsi_rmax	fourierloop_imexrk.F90	/^   complex(kind=dp) :: dpsi_rmax$/;"	v	module:fourierloop_imexrk
+dpsi_rmax	fourierloop_rk.F90	/^   complex(kind=dp) :: dpsi_rmax$/;"	v	module:fourierloop_rk
+dpsi_rmin	fourierloop_imexrk.F90	/^   complex(kind=dp) :: dpsi_rmin$/;"	v	module:fourierloop_imexrk
+dpsi_rmin	fourierloop_rk.F90	/^   complex(kind=dp) :: dpsi_rmin$/;"	v	module:fourierloop_rk
+dr	init.F90	/^   real(kind=dp), allocatable, public :: radius(:), r_radius(:), r_radius2(:), phi(:), dr(/;"	v	module:init
+dt	namelists.F90	/^   real(kind=dp), public :: dt /;"	v	module:namelists
+dt_array	timeschemes.F90	/^   real(kind=dp), allocatable, public :: dt_array(/;"	v	module:timeschemes
+dt_array_old	init.F90	/^   real(kind=dp), allocatable :: dt_array_old(/;"	v	module:init
+dt_coef	namelists.F90	/^   real(kind=dp), public :: dt_coef /;"	v	module:namelists
+dt_max	namelists.F90	/^   real(kind=dp), public :: dt_max /;"	v	module:namelists
+dt_new	init.F90	/^   real(kind=dp), public :: dt_old, dt_new,/;"	v	module:init
+dt_old	init.F90	/^   real(kind=dp), public :: dt_old,/;"	v	module:init
+dtempdt1	fourierloop_rk.F90	/^   complex(kind=dp), allocatable, public :: dtempdt1(/;"	v	module:fourierloop_rk
+dtempdt1_a	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable, public :: dtempdt1_a(/;"	v	module:fourierloop_imexrk
+dtempdt1_d	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable, public :: dtempdt1_a(:,:,:), dtempdt1_d(/;"	v	module:fourierloop_imexrk
+dtempdt2	fourierloop_rk.F90	/^   complex(kind=dp), allocatable, public :: dtempdt1(:,:,:), dtempdt2(/;"	v	module:fourierloop_rk
+dtval_p	nonlin.F90	/^   real(kind=dp), allocatable, public :: dtval_p(/;"	v	module:nonlin
+dtval_r	nonlin.F90	/^   real(kind=dp), allocatable, public :: dtval_p(:), dtval_r(/;"	v	module:nonlin
+dtval_rkp	nonlin.F90	/^   real(kind=dp), allocatable, public :: dtval_p(:), dtval_r(:), dtval_rkr(:), dtval_rkp(/;"	v	module:nonlin
+dtval_rkr	nonlin.F90	/^   real(kind=dp), allocatable, public :: dtval_p(:), dtval_r(:), dtval_rkr(/;"	v	module:nonlin
+duphibar_dt1	fourierloop_rk.F90	/^   complex(kind=dp), allocatable, public :: dtempdt1(:,:,:), dtempdt2(:,:), domgdt1(:,:,:), duphibar_dt1(/;"	v	module:fourierloop_rk
+duphibar_dt1_a	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable, public :: duphibar_dt1_a(/;"	v	module:fourierloop_imexrk
+duphibar_dt1_d	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable, public :: duphibar_dt1_a(:,:), duphibar_dt1_d(/;"	v	module:fourierloop_imexrk
+dw_rmax	init.F90	/^   real(kind=dp), allocatable, public :: dw_rmax(/;"	v	module:init
+dw_rmin	init.F90	/^   real(kind=dp), allocatable, public :: dw_rmin(/;"	v	module:init
+eleveneighteenth	constants.F90	/^   real(kind=dp), parameter :: eleveneighteenth /;"	v	module:constants
+eta	namelists.F90	/^   real(kind=dp), public :: eta$/;"	v	module:namelists
+factorize	algebra_lapack.F90	/^   subroutine factorize(/;"	s	module:algebra
+factorize	algebra_mkl.F90	/^   subroutine factorize(/;"	s	module:algebra
+fftw_allow_large_generic	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_allow_large_generic /;"	v
+fftw_backward	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_backward /;"	v
+fftw_believe_pcost	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_believe_pcost /;"	v
+fftw_conserve_memory	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_conserve_memory /;"	v
+fftw_destroy_input	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_destroy_input /;"	v
+fftw_dft_r2hc_icky	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_dft_r2hc_icky /;"	v
+fftw_dht	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_dht /;"	v
+fftw_estimate	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_estimate /;"	v
+fftw_estimate_patient	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_estimate_patient /;"	v
+fftw_exhaustive	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_exhaustive /;"	v
+fftw_forward	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_forward /;"	v
+fftw_hc2r	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_hc2r /;"	v
+fftw_measure	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_measure /;"	v
+fftw_no_buffering	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_no_buffering /;"	v
+fftw_no_indirect_op	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_no_indirect_op /;"	v
+fftw_no_rank_splits	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_no_rank_splits /;"	v
+fftw_no_simd	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_no_simd /;"	v
+fftw_no_vrank_splits	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_no_vrank_splits /;"	v
+fftw_no_vrecurse	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_no_vrecurse /;"	v
+fftw_nonthreaded_icky	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_nonthreaded_icky /;"	v
+fftw_patient	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_patient /;"	v
+fftw_preserve_input	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_preserve_input /;"	v
+fftw_r2hc	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_r2hc /;"	v
+fftw_redft00	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_redft00 /;"	v
+fftw_redft01	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_redft01 /;"	v
+fftw_redft10	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_redft10 /;"	v
+fftw_redft11	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_redft11 /;"	v
+fftw_rodft00	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_rodft00 /;"	v
+fftw_rodft01	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_rodft01 /;"	v
+fftw_rodft10	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_rodft10 /;"	v
+fftw_rodft11	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_rodft11 /;"	v
+fftw_unaligned	fftw3.F90	/^  integer ( kind = 4 ), parameter :: fftw_unaligned /;"	v
+fields_alloc	init.F90	/^   subroutine fields_alloc(/;"	s	module:init
+fields_dealloc	init.F90	/^   subroutine fields_dealloc(/;"	s	module:init
+final_output	output.F90	/^   subroutine final_output$/;"	s	module:output
+finishNm_maxloop	init.F90	/^   real(kind=dp), public :: finishNm_maxloop,/;"	v	module:init
+finishNr_maxloop	init.F90	/^   real(kind=dp), public :: startmain, finishmain, startNr_maxloop, finishNr_maxloop,/;"	v	module:init
+finish_matsolveT	init.F90	/^   real(kind=dp), public :: start_matsolveT, finish_matsolveT,/;"	v	module:init
+finish_matsolveW	init.F90	/^   real(kind=dp), public :: start_matsolveW, finish_matsolveW,/;"	v	module:init
+finish_tran	init.F90	/^   real(kind=dp), public :: start_tran, finish_tran,/;"	v	module:init
+finishmain	init.F90	/^   real(kind=dp), public :: startmain, finishmain,/;"	v	module:init
+finishmatbuild	init.F90	/^   real(kind=dp), public :: timeNr_maxloop, timeNm_maxloop, startmatbuild, finishmatbuild,/;"	v	module:init
+finishsteptime	init.F90	/^   real(kind=dp), public :: finishNm_maxloop, startsteptime, finishsteptime$/;"	v	module:init
+fiveeighteenth	constants.F90	/^   real(kind=dp), parameter :: fiveeighteenth /;"	v	module:constants
+fivesixth	constants.F90	/^   real(kind=dp), parameter :: fivesixth /;"	v	module:constants
+forfft	fourier_GG.F90	/^   subroutine forfft(/;"	s	module:fourier
+forfft	fourier_fftw.F90	/^   subroutine forfft(/;"	s	module:fourier
+forfftO	fourier_fftw.F90	/^   subroutine forfftO(/;"	s	module:fourier
+fourier	fourier_GG.F90	/^module fourier$/;"	m
+fourier	fourier_fftw.F90	/^module fourier$/;"	m
+fourierloop	fourierloop.F90	/^module fourierloop$/;"	m
+fourierloop_imexrk	fourierloop_imexrk.F90	/^module fourierloop_imexrk$/;"	m
+fourierloop_rk	fourierloop_rk.F90	/^module fourierloop_rk$/;"	m
+fourninth	constants.F90	/^   real(kind=dp), parameter :: fourninth /;"	v	module:constants
+gammaa	timeschemes.F90	/^   real(kind=dp) :: gammaa,/;"	v	module:timeschemes
+gausslike_compact_center	init.F90	/^   subroutine gausslike_compact_center(/;"	s	module:init
+gausslike_compact_edge	init.F90	/^   subroutine gausslike_compact_edge(/;"	s	module:init
+gausslike_compact_middle	init.F90	/^   subroutine gausslike_compact_middle(/;"	s	module:init
+get_checkpoint_data	init.F90	/^   subroutine get_checkpoint_data(/;"	s	module:init
+get_dtvals	nonlin.F90	/^   subroutine get_dtvals(/;"	s	module:nonlin
+grid	namelists.F90	/^      namelist\/grid\//;"	n	subroutine:readNamelists
+half	constants.F90	/^   real(kind=dp), parameter :: half=/;"	v	module:constants
+ii	constants.F90	/^   complex(kind=dp), parameter :: ii=/;"	v	module:constants
+init	init.F90	/^module init$/;"	m
+init_all_fftw_plans	init.F90	/^   subroutine init_all_fftw_plans(/;"	s	module:init
+init_chebfftwplan	chebyshev_fftw.F90	/^   subroutine init_chebfftwplan(/;"	s	module:chebyshev
+init_fftwplan	fourier_fftw.F90	/^   subroutine init_fftwplan(/;"	s	module:fourier
+init_fields	init.F90	/^   subroutine init_fields(/;"	s	module:init
+init_grid	init.F90	/^   subroutine init_grid(/;"	s	module:init
+init_output	output.F90	/^   subroutine init_output(/;"	s	module:output
+init_perturbation	init.F90	/^   subroutine init_perturbation(/;"	s	module:init
+init_time_schemes	timeschemes.F90	/^   subroutine init_time_schemes(/;"	s	module:timeschemes
+inputHandle	namelists.F90	/^   integer :: inputHandle$/;"	v	module:namelists
+input_filename	namelists.F90	/^   character(len=100) :: input_filename$/;"	v	module:namelists
+integ	integ.F90	/^module integ$/;"	m
+invfft	fourier_GG.F90	/^   subroutine invfft(/;"	s	module:fourier
+invfft	fourier_fftw.F90	/^   subroutine invfft(/;"	s	module:fourier
+irk_max	timeschemes.F90	/^   integer, public :: n_order_tscheme_imp, n_order_tscheme_exp, n_order_tscheme_max, irk_max$/;"	v	module:timeschemes
+ke_sp_unit	output.F90	/^   integer :: ke_unit, ke_sp_unit,/;"	v	module:output
+ke_unit	output.F90	/^   integer :: ke_unit,/;"	v	module:output
+l_add_pert	namelists.F90	/^   logical, public :: l_add_pert$/;"	v	module:namelists
+l_restart	namelists.F90	/^   logical, public :: l_restart$/;"	v	module:namelists
+lagpts	namelists.F90	/^   integer, public :: lagpts$/;"	v	module:namelists
+lagrange	chebyshev_GG.F90	/^   subroutine lagrange(/;"	s	module:chebyshev
+lagrange	chebyshev_fftw.F90	/^   subroutine lagrange(/;"	s	module:chebyshev
+lm	namelists.F90	/^   integer, public :: lm$/;"	v	module:namelists
+mBC	namelists.F90	/^   character(len=100), public :: mBC$/;"	v	module:namelists
+maincode	main.F90	/^ program maincode$/;"	p
+mat_assembly	mat_assembly.F90	/^module mat_assembly$/;"	m
+mat_build	mat_assembly.F90	/^   subroutine mat_build(/;"	s	module:mat_assembly
+mat_build_rk	mat_assembly.F90	/^   subroutine mat_build_rk(/;"	s	module:mat_assembly
+matsolve	algebra_lapack.F90	/^   subroutine matsolve(/;"	s	module:algebra
+matsolve	algebra_mkl.F90	/^   subroutine matsolve(/;"	s	module:algebra
+matsolve_real	algebra_lapack.F90	/^   subroutine matsolve_real(/;"	s	module:algebra
+n_KE	namelists.F90	/^                      & n_restart_point,n_snapshot_point, n_KE,/;"	v	module:namelists
+n_KEspec	namelists.F90	/^                      & n_restart_point,n_snapshot_point, n_KE, n_KEspec$/;"	v	module:namelists
+n_checkpoint	namelists.F90	/^   integer, public :: n_checkpoint,/;"	v	module:namelists
+n_init	namelists.F90	/^   integer, public :: n_init$/;"	v	module:namelists
+n_order_tscheme_exp	timeschemes.F90	/^   integer, public :: n_order_tscheme_imp, n_order_tscheme_exp,/;"	v	module:timeschemes
+n_order_tscheme_imp	timeschemes.F90	/^   integer, public :: n_order_tscheme_imp,/;"	v	module:timeschemes
+n_order_tscheme_max	timeschemes.F90	/^   integer, public :: n_order_tscheme_imp, n_order_tscheme_exp, n_order_tscheme_max,/;"	v	module:timeschemes
+n_restart	namelists.F90	/^   integer, public :: n_checkpoint, n_snapshot, n_restart,/;"	v	module:namelists
+n_restart_point	namelists.F90	/^   integer, public :: n_checkpoint, n_snapshot, n_restart, &$/;"	v	module:namelists
+n_snapshot	namelists.F90	/^   integer, public :: n_checkpoint, n_snapshot,/;"	v	module:namelists
+n_snapshot_point	namelists.F90	/^                      & n_restart_point,n_snapshot_point,/;"	v	module:namelists
+n_time_steps	namelists.F90	/^   integer, public :: n_time_steps$/;"	v	module:namelists
+namelists	namelists.F90	/^module namelists$/;"	m
+nml_exist	namelists.F90	/^   logical :: nml_exist$/;"	v	module:namelists
+nonlin	nonlin.F90	/^module nonlin$/;"	m
+nu_unit	output.F90	/^   integer :: ke_unit, ke_sp_unit, t_sp_unit, nu_unit,/;"	v	module:output
+omg	init.F90	/^   real(kind=dp), allocatable, public :: tt(:,:), up(:,:), ur(:,:), psi(:,:), omg(/;"	v	module:init
+omgFR	init.F90	/^   complex(kind=dp), allocatable, public :: omg_spec(:,:), temp_spec(:,:), upFC(:,:), tFR(:,:), omgFR(/;"	v	module:init
+omgFR1	init.F90	/^   complex(kind=dp), allocatable, public :: upFR1(:,:), urFR1(:,:), tFR1(:,:), omgFR1(/;"	v	module:init
+omgFR2	init.F90	/^   complex(kind=dp), allocatable, public :: upFR2(:,:), urFR2(:,:), tFR2(:,:), omgFR2(/;"	v	module:init
+omgFRc	init.F90	/^   complex(kind=dp), allocatable :: tFRc(:,:), omgFRc(/;"	v	module:init
+omg_real_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: omg_real_rad(/;"	v	module:rhs_create
+omg_real_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: omg_real_rad(/;"	v	module:rhs_create_imexrk
+omg_real_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: omg_real_rad(/;"	v	module:rhs_create_rk
+omg_spec	init.F90	/^   complex(kind=dp), allocatable, public :: omg_spec(/;"	v	module:init
+omg_spec_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: omg_real_rad(:), omg_spec_rad(/;"	v	module:rhs_create_imexrk
+omg_spec_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: omg_real_rad(:), omg_spec_rad(/;"	v	module:rhs_create_rk
+omg_specp_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: omg_real_rad(:), omg_specp_rad(/;"	v	module:rhs_create
+one	constants.F90	/^   real(kind=dp), parameter :: one=/;"	v	module:constants
+oneeighteenth	constants.F90	/^   real(kind=dp), parameter :: oneeighteenth /;"	v	module:constants
+onefourth	constants.F90	/^   real(kind=dp), parameter :: onefourth /;"	v	module:constants
+oneninth	constants.F90	/^   real(kind=dp), parameter :: oneninth /;"	v	module:constants
+onesixth	constants.F90	/^   real(kind=dp), parameter :: onesixth /;"	v	module:constants
+onethird	constants.F90	/^   real(kind=dp), parameter :: onethird /;"	v	module:constants
+output	namelists.F90	/^      namelist\/output\//;"	n	subroutine:readNamelists
+output	output.F90	/^module output$/;"	m
+pInt	integ.F90	/^   subroutine pInt(/;"	s	module:integ
+phi	init.F90	/^   real(kind=dp), allocatable, public :: radius(:), r_radius(:), r_radius2(:), phi(/;"	v	module:init
+physics	namelists.F90	/^      namelist\/physics\//;"	n	subroutine:readNamelists
+pi	constants.F90	/^   real(kind=dp), parameter :: pi=/;"	v	module:constants
+plan_backward	fourier_fftw.F90	/^   type(C_PTR) :: plan_forward, plan_backward$/;"	v	module:fourier
+plan_cheb_fft	chebyshev_fftw.F90	/^   type(C_PTR), public :: plan_cheb_fft,/;"	v	module:chebyshev
+plan_cheb_ifft	chebyshev_fftw.F90	/^   type(C_PTR), public :: plan_cheb_fft, plan_cheb_ifft,/;"	v	module:chebyshev
+plan_forward	fourier_fftw.F90	/^   type(C_PTR) :: plan_forward,/;"	v	module:fourier
+plan_redft	chebyshev_fftw.F90	/^   type(C_PTR), public :: plan_cheb_fft, plan_cheb_ifft, plan_redft /;"	v	module:chebyshev
+psi	init.F90	/^   real(kind=dp), allocatable, public :: tt(:,:), up(:,:), ur(:,:), psi(/;"	v	module:init
+psii	init.F90	/^   complex(kind=dp), allocatable, public :: upFR(:,:), urFR(:,:), psii(/;"	v	module:init
+pw_unit	output.F90	/^   integer :: ke_unit, ke_sp_unit, t_sp_unit, nu_unit, pw_unit,/;"	v	module:output
+r_radius	init.F90	/^   real(kind=dp), allocatable, public :: radius(:), r_radius(/;"	v	module:init
+r_radius2	init.F90	/^   real(kind=dp), allocatable, public :: radius(:), r_radius(:), r_radius2(/;"	v	module:init
+radInt	integ.F90	/^   subroutine radInt(/;"	s	module:integ
+radInt2	integ.F90	/^   subroutine radInt2(/;"	s	module:integ
+radius	init.F90	/^   real(kind=dp), allocatable, public :: radius(/;"	v	module:init
+readNamelists	namelists.F90	/^   subroutine readNamelists(/;"	s	module:namelists
+read_checkpoint	init.F90	/^   subroutine read_checkpoint(/;"	s	module:init
+read_snapshot	output.F90	/^  subroutine read_snapshot(/;"	s	module:output
+read_snapshot2	output.F90	/^      subroutine read_snapshot2(/;"	s	module:output
+real_d2_omg_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_d_omg_rad(:), real_d2_omg_rad(/;"	v	module:rhs_create
+real_d2_omg_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_d_omg_rad(:), real_d2_omg_rad(/;"	v	module:rhs_create_imexrk
+real_d2_omg_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_d_omg_rad(:), real_d2_omg_rad(/;"	v	module:rhs_create_rk
+real_d2_rhs_psi	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(:), real_d2_rhs_psi(/;"	v	module:fourierloop_imexrk
+real_d2_rhs_psi	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(:), real_d2_rhs_psi(/;"	v	module:fourierloop_rk
+real_d2_temp_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(:), real_d_temp_rad(:), real_d2_temp_rad(/;"	v	module:rhs_create
+real_d2_temp_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(:), real_d_temp_rad(:), real_d2_temp_rad(/;"	v	module:rhs_create_imexrk
+real_d2_temp_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(:), real_d_temp_rad(:), real_d2_temp_rad(/;"	v	module:rhs_create_rk
+real_d_omg_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_d_omg_rad(/;"	v	module:rhs_create
+real_d_omg_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_d_omg_rad(/;"	v	module:rhs_create_imexrk
+real_d_omg_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_d_omg_rad(/;"	v	module:rhs_create_rk
+real_d_rhs_psi	fourierloop.F90	/^   complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(/;"	v	module:fourierloop
+real_d_rhs_psi	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(/;"	v	module:fourierloop_imexrk
+real_d_rhs_psi	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: real_rhs_psi(:), real_d_rhs_psi(/;"	v	module:fourierloop_rk
+real_d_temp_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(:), real_d_temp_rad(/;"	v	module:rhs_create
+real_d_temp_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(:), real_d_temp_rad(/;"	v	module:rhs_create_imexrk
+real_d_temp_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(:), real_d_temp_rad(/;"	v	module:rhs_create_rk
+real_d_ur_omg_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_d_ur_temp_rad(:,:), real_d_ur_omg_rad(/;"	v	module:rhs_create
+real_d_ur_omg_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_d_ur_temp_rad(:,:), real_d_ur_omg_rad(/;"	v	module:rhs_create_imexrk
+real_d_ur_omg_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_d_ur_temp_rad(:,:), real_d_ur_omg_rad(/;"	v	module:rhs_create_rk
+real_d_ur_temp_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_d_ur_temp_rad(/;"	v	module:rhs_create
+real_d_ur_temp_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_d_ur_temp_rad(/;"	v	module:rhs_create_imexrk
+real_d_ur_temp_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_d_ur_temp_rad(/;"	v	module:rhs_create_rk
+real_omg_spec	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_omg_spec(/;"	v	module:rhs_create_imexrk
+real_omg_spec	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_omg_spec(/;"	v	module:rhs_create_rk
+real_omg_specp	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_omg_specp(/;"	v	module:rhs_create
+real_rhs_omg	fourierloop.F90	/^   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(:), real_rhs_omg(/;"	v	module:fourierloop
+real_rhs_omg	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(:), real_rhs_omg(/;"	v	module:fourierloop_imexrk
+real_rhs_omg	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(:), real_rhs_omg(/;"	v	module:fourierloop_rk
+real_rhs_psi	fourierloop.F90	/^   complex(kind=dp), allocatable :: real_rhs_psi(/;"	v	module:fourierloop
+real_rhs_psi	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: real_rhs_psi(/;"	v	module:fourierloop_imexrk
+real_rhs_psi	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: real_rhs_psi(/;"	v	module:fourierloop_rk
+real_rhs_temp	fourierloop.F90	/^   complex(kind=dp), allocatable :: real_rhs_temp(/;"	v	module:fourierloop
+real_rhs_temp	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: real_rhs_temp(/;"	v	module:fourierloop_imexrk
+real_rhs_temp	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: real_rhs_temp(/;"	v	module:fourierloop_rk
+real_temp_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(/;"	v	module:rhs_create
+real_temp_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(/;"	v	module:rhs_create_imexrk
+real_temp_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_temp_rad(/;"	v	module:rhs_create_rk
+res	namelists.F90	/^   integer :: res$/;"	v	module:namelists
+rhf_i	fourierloop.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhf_r(:), rhf_i(/;"	v	module:fourierloop
+rhf_i	fourierloop_imexrk.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhf_r(:), rhf_i(/;"	v	module:fourierloop_imexrk
+rhf_i	fourierloop_rk.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhf_r(:), rhf_i(/;"	v	module:fourierloop_rk
+rhf_r	fourierloop.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhf_r(/;"	v	module:fourierloop
+rhf_r	fourierloop_imexrk.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhf_r(/;"	v	module:fourierloop_imexrk
+rhf_r	fourierloop_rk.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(:), rhf_r(/;"	v	module:fourierloop_rk
+rhs	fourierloop.F90	/^   complex(kind=dp), allocatable :: rhs1/;"	v	module:fourierloop
+rhs	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs1/;"	v	module:fourierloop_imexrk
+rhs	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: rhs1/;"	v	module:fourierloop_rk
+rhs1	fourierloop.F90	/^   complex(kind=dp), allocatable :: rhs1(/;"	v	module:fourierloop
+rhs1	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs1(/;"	v	module:fourierloop_imexrk
+rhs1	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: rhs1(/;"	v	module:fourierloop_rk
+rhs2	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs1(:), rhs2(/;"	v	module:fourierloop_imexrk
+rhs2	rhs_create.F90	/^   complex(kind=dp), allocatable, public :: rhs2(/;"	v	module:rhs_create
+rhs2	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable, public :: rhs2(/;"	v	module:rhs_create_imexrk
+rhs2	rhs_create_rk.F90	/^   complex(kind=dp), allocatable, public :: rhs2(/;"	v	module:rhs_create_rk
+rhs_b	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs1(:), rhs2(:), rhs(:), rhsf(:), rhs_vort(:), rhs_b(/;"	v	module:fourierloop_imexrk
+rhs_buo	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable, public :: rhs_buo(/;"	v	module:fourierloop_imexrk
+rhs_buo_term	timeschemes.F90	/^   complex(kind=dp), allocatable, public :: rhs_buo_term(/;"	v	module:timeschemes
+rhs_construct_buo	rhs_create_imexrk.F90	/^   subroutine rhs_construct_buo(/;"	s	module:rhs_create_imexrk
+rhs_construct_temp	rhs_create.F90	/^   subroutine rhs_construct_temp(/;"	s	module:rhs_create
+rhs_construct_temp	rhs_create_rk.F90	/^   subroutine rhs_construct_temp(/;"	s	module:rhs_create_rk
+rhs_construct_temp_a	rhs_create_imexrk.F90	/^   subroutine rhs_construct_temp_a(/;"	s	module:rhs_create_imexrk
+rhs_construct_temp_d	rhs_create_imexrk.F90	/^   subroutine rhs_construct_temp_d(/;"	s	module:rhs_create_imexrk
+rhs_construct_temp_rk	rhs_create.F90	/^   subroutine rhs_construct_temp_rk(/;"	s	module:rhs_create
+rhs_construct_uphi_bar	rhs_create.F90	/^   subroutine rhs_construct_uphi_bar(/;"	s	module:rhs_create
+rhs_construct_uphi_bar	rhs_create_rk.F90	/^   subroutine rhs_construct_uphi_bar(/;"	s	module:rhs_create_rk
+rhs_construct_uphibar_a	rhs_create_imexrk.F90	/^   subroutine rhs_construct_uphibar_a(/;"	s	module:rhs_create_imexrk
+rhs_construct_uphibar_d	rhs_create_imexrk.F90	/^   subroutine rhs_construct_uphibar_d(/;"	s	module:rhs_create_imexrk
+rhs_construct_vort	rhs_create.F90	/^   subroutine rhs_construct_vort(/;"	s	module:rhs_create
+rhs_construct_vort	rhs_create_rk.F90	/^   subroutine rhs_construct_vort(/;"	s	module:rhs_create_rk
+rhs_construct_vort_a	rhs_create_imexrk.F90	/^   subroutine rhs_construct_vort_a(/;"	s	module:rhs_create_imexrk
+rhs_construct_vort_d	rhs_create_imexrk.F90	/^   subroutine rhs_construct_vort_d(/;"	s	module:rhs_create_imexrk
+rhs_construct_vort_rk	rhs_create.F90	/^   subroutine rhs_construct_vort_rk(/;"	s	module:rhs_create
+rhs_create	rhs_create.F90	/^module rhs_create$/;"	m
+rhs_create_imexrk	rhs_create_imexrk.F90	/^module rhs_create_imexrk$/;"	m
+rhs_create_rk	rhs_create_rk.F90	/^module rhs_create_rk$/;"	m
+rhs_exp_temp	timeschemes.F90	/^   complex(kind=dp), allocatable, public :: rhs_imp_temp(:,:,:), rhs_exp_temp(/;"	v	module:timeschemes
+rhs_exp_temp_old	init.F90	/^   complex(kind=dp), allocatable :: rhs_imp_temp_old(:,:,:), rhs_exp_temp_old(/;"	v	module:init
+rhs_exp_uphi_bar	timeschemes.F90	/^   complex(kind=dp), allocatable, public :: rhs_imp_uphi_bar(:,:), rhs_exp_uphi_bar(/;"	v	module:timeschemes
+rhs_exp_uphi_bar_old	init.F90	/^   complex(kind=dp), allocatable :: rhs_imp_uphi_bar_old(:,:), rhs_exp_uphi_bar_old(/;"	v	module:init
+rhs_exp_vort	timeschemes.F90	/^   complex(kind=dp), allocatable, public :: rhs_imp_vort(:,:,:), rhs_exp_vort(/;"	v	module:timeschemes
+rhs_exp_vort_old	init.F90	/^   complex(kind=dp), allocatable :: rhs_imp_vort_old(:,:,:), rhs_exp_vort_old(/;"	v	module:init
+rhs_i	fourierloop.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(/;"	v	module:fourierloop
+rhs_i	fourierloop_imexrk.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(/;"	v	module:fourierloop_imexrk
+rhs_i	fourierloop_rk.F90	/^   real(kind=dp), allocatable :: rhs_r(:), rhs_i(/;"	v	module:fourierloop_rk
+rhs_imp_temp	timeschemes.F90	/^   complex(kind=dp), allocatable, public :: rhs_imp_temp(/;"	v	module:timeschemes
+rhs_imp_temp_old	init.F90	/^   complex(kind=dp), allocatable :: rhs_imp_temp_old(/;"	v	module:init
+rhs_imp_uphi_bar	timeschemes.F90	/^   complex(kind=dp), allocatable, public :: rhs_imp_uphi_bar(/;"	v	module:timeschemes
+rhs_imp_uphi_bar_old	init.F90	/^   complex(kind=dp), allocatable :: rhs_imp_uphi_bar_old(/;"	v	module:init
+rhs_imp_vort	timeschemes.F90	/^   complex(kind=dp), allocatable, public :: rhs_imp_vort(/;"	v	module:timeschemes
+rhs_imp_vort_old	init.F90	/^   complex(kind=dp), allocatable :: rhs_imp_vort_old(/;"	v	module:init
+rhs_omg	fourierloop.F90	/^   complex(kind=dp), allocatable :: rhs_omg(/;"	v	module:fourierloop
+rhs_omg	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs_omg(/;"	v	module:fourierloop_imexrk
+rhs_omg	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: rhs_omg(/;"	v	module:fourierloop_rk
+rhs_psi	fourierloop.F90	/^   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(/;"	v	module:fourierloop
+rhs_psi	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(/;"	v	module:fourierloop_imexrk
+rhs_psi	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: rhs_omg(:), rhs_psi(/;"	v	module:fourierloop_rk
+rhs_r	fourierloop.F90	/^   real(kind=dp), allocatable :: rhs_r(/;"	v	module:fourierloop
+rhs_r	fourierloop_imexrk.F90	/^   real(kind=dp), allocatable :: rhs_r(/;"	v	module:fourierloop_imexrk
+rhs_r	fourierloop_rk.F90	/^   real(kind=dp), allocatable :: rhs_r(/;"	v	module:fourierloop_rk
+rhs_temp_from_restart	rhs_create.F90	/^   subroutine rhs_temp_from_restart(/;"	s	module:rhs_create
+rhs_update_wts_exp	timeschemes.F90	/^   subroutine rhs_update_wts_exp(/;"	s	module:timeschemes
+rhs_update_wts_imp	timeschemes.F90	/^   subroutine rhs_update_wts_imp(/;"	s	module:timeschemes
+rhs_uphi	fourierloop.F90	/^   real(kind=dp), allocatable :: rhs_uphi(/;"	v	module:fourierloop
+rhs_uphi	fourierloop_imexrk.F90	/^   real(kind=dp), allocatable :: rhs_uphi(/;"	v	module:fourierloop_imexrk
+rhs_uphi	fourierloop_rk.F90	/^   real(kind=dp), allocatable :: rhs_uphi(/;"	v	module:fourierloop_rk
+rhs_uphibar_from_restart	rhs_create.F90	/^   subroutine rhs_uphibar_from_restart(/;"	s	module:rhs_create
+rhs_vort	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs1(:), rhs2(:), rhs(:), rhsf(:), rhs_vort(/;"	v	module:fourierloop_imexrk
+rhs_vort	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: rhs1(:), rhs(:), rhsf(:), rhs_vort(/;"	v	module:fourierloop_rk
+rhs_vort_buo_term	rhs_create.F90	/^   complex(kind=dp), allocatable, public :: rhs_vort_buo_term(/;"	v	module:rhs_create
+rhs_vort_buo_term	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable, public :: rhs_vort_buo_term(/;"	v	module:rhs_create_imexrk
+rhs_vort_buo_term	rhs_create_rk.F90	/^   complex(kind=dp), allocatable, public :: rhs_vort_buo_term(/;"	v	module:rhs_create_rk
+rhs_vort_from_restart	rhs_create.F90	/^   subroutine rhs_vort_from_restart(/;"	s	module:rhs_create
+rhsf	fourierloop.F90	/^   complex(kind=dp), allocatable :: rhs1(:), rhs(:), rhsf(/;"	v	module:fourierloop
+rhsf	fourierloop_imexrk.F90	/^   complex(kind=dp), allocatable :: rhs1(:), rhs2(:), rhs(:), rhsf(/;"	v	module:fourierloop_imexrk
+rhsf	fourierloop_rk.F90	/^   complex(kind=dp), allocatable :: rhs1(:), rhs(:), rhsf(/;"	v	module:fourierloop_rk
+rmax	namelists.F90	/^   real(kind=dp), public :: rmax$/;"	v	module:namelists
+rmin	namelists.F90	/^   real(kind=dp), public :: rmin$/;"	v	module:namelists
+rs	integ.F90	/^   real(kind=dp), public :: rs$/;"	v	module:integ
+sevenfourth	constants.F90	/^   real(kind=dp), parameter :: sevenfourth /;"	v	module:constants
+solver	solver.F90	/^module solver$/;"	m
+solver_exit	solver.F90	/^   subroutine solver_exit$/;"	s	module:solver
+solver_init	solver.F90	/^   subroutine solver_init$/;"	s	module:solver
+solver_log	solver.F90	/^   subroutine solver_log$/;"	s	module:solver
+solver_run	solver.F90	/^   subroutine solver_run$/;"	s	module:solver
+startNm_maxloop	init.F90	/^   real(kind=dp), public :: startmain, finishmain, startNr_maxloop, finishNr_maxloop, startNm_maxloop$/;"	v	module:init
+startNr_maxloop	init.F90	/^   real(kind=dp), public :: startmain, finishmain, startNr_maxloop,/;"	v	module:init
+start_matsolveT	init.F90	/^   real(kind=dp), public :: start_matsolveT,/;"	v	module:init
+start_matsolveW	init.F90	/^   real(kind=dp), public :: start_matsolveW,/;"	v	module:init
+start_tran	init.F90	/^   real(kind=dp), public :: start_tran,/;"	v	module:init
+startmain	init.F90	/^   real(kind=dp), public :: startmain,/;"	v	module:init
+startmatbuild	init.F90	/^   real(kind=dp), public :: timeNr_maxloop, timeNm_maxloop, startmatbuild,/;"	v	module:init
+startsteptime	init.F90	/^   real(kind=dp), public :: finishNm_maxloop, startsteptime,/;"	v	module:init
+steptime	steptime.F90	/^module steptime$/;"	m
+steptime_imexrk	steptime_imexrk.F90	/^module steptime_imexrk$/;"	m
+steptime_rk	steptime_rk.F90	/^module steptime_rk$/;"	m
+store_checkpoint	output.F90	/^   subroutine store_checkpoint(/;"	s	module:output
+store_snapshot	output.F90	/^   subroutine store_snapshot(/;"	s	module:output
+t	chebyshev_GG.F90	/^   real(kind=dp), allocata/;"	v	module:chebyshev
+t	chebyshev_fftw.F90	/^   real(kind=dp), allocata/;"	v	module:chebyshev
+t2FR	init.F90	/^   complex(kind=dp), allocatable, public :: t2FR(/;"	v	module:init
+tFR	init.F90	/^   complex(kind=dp), allocatable, public :: omg_spec(:,:), temp_spec(:,:), upFC(:,:), tFR(/;"	v	module:init
+tFR1	init.F90	/^   complex(kind=dp), allocatable, public :: upFR1(:,:), urFR1(:,:), tFR1(/;"	v	module:init
+tFR2	init.F90	/^   complex(kind=dp), allocatable, public :: upFR2(:,:), urFR2(:,:), tFR2(/;"	v	module:init
+tFRc	init.F90	/^   complex(kind=dp), allocatable :: tFRc(/;"	v	module:init
+t_an	init.F90	/^   real(kind=dp), allocatable, public :: tt(:,:), up(:,:), ur(:,:), psi(:,:), omg(:,:), tcon(:,:), t_an(/;"	v	module:init
+t_sp_unit	output.F90	/^   integer :: ke_unit, ke_sp_unit, t_sp_unit,/;"	v	module:output
+tag	namelists.F90	/^   character(len=100), public :: tag$/;"	v	module:namelists
+tcon	init.F90	/^   real(kind=dp), allocatable, public :: tt(:,:), up(:,:), ur(:,:), psi(:,:), omg(:,:), tcon(/;"	v	module:init
+temp_real_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_omg_specp(:), temp_real_rad(/;"	v	module:rhs_create
+temp_real_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_omg_spec(:), temp_real_rad(/;"	v	module:rhs_create_imexrk
+temp_real_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_omg_spec(:), temp_real_rad(/;"	v	module:rhs_create_rk
+temp_spec	init.F90	/^   complex(kind=dp), allocatable, public :: omg_spec(:,:), temp_spec(/;"	v	module:init
+temp_spec_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: real_omg_spec(:), temp_real_rad(:), temp_spec_rad(/;"	v	module:rhs_create_imexrk
+temp_spec_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: real_omg_spec(:), temp_real_rad(:), temp_spec_rad(/;"	v	module:rhs_create_rk
+temp_specp_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: real_omg_specp(:), temp_real_rad(:), temp_specp_rad(/;"	v	module:rhs_create
+three	constants.F90	/^   real(kind=dp), parameter :: three=/;"	v	module:constants
+threefourth	constants.F90	/^   real(kind=dp), parameter :: threefourth /;"	v	module:constants
+threehalf	constants.F90	/^   real(kind=dp), parameter :: threehalf /;"	v	module:constants
+timeNm_maxloop	init.F90	/^   real(kind=dp), public :: timeNr_maxloop, timeNm_maxloop,/;"	v	module:init
+timeNr_maxloop	init.F90	/^   real(kind=dp), public :: timeNr_maxloop,/;"	v	module:init
+time_matbuild	init.F90	/^   real(kind=dp), public :: timeNr_maxloop, timeNm_maxloop, startmatbuild, finishmatbuild, time_matbuild$/;"	v	module:init
+time_matsolveT	init.F90	/^   real(kind=dp), public :: start_matsolveT, finish_matsolveT, time_matsolveT$/;"	v	module:init
+time_matsolveW	init.F90	/^   real(kind=dp), public :: start_matsolveW, finish_matsolveW, time_matsolveW$/;"	v	module:init
+time_scheme_exp	namelists.F90	/^   character(len=100), public :: time_scheme_exp$/;"	v	module:namelists
+time_scheme_imp	namelists.F90	/^   character(len=100), public :: time_scheme_imp$/;"	v	module:namelists
+time_scheme_type	namelists.F90	/^   character(len=100), public :: time_scheme_type$/;"	v	module:namelists
+time_tran	init.F90	/^   real(kind=dp), public :: start_tran, finish_tran, time_tran$/;"	v	module:init
+timecontrol	namelists.F90	/^      namelist\/timecontrol\//;"	n	subroutine:readNamelists
+timeloop_imex	steptime.F90	/^   subroutine timeloop_imex(/;"	s	module:steptime
+timeloop_imexrk	steptime_imexrk.F90	/^   subroutine timeloop_imexrk(/;"	s	module:steptime_imexrk
+timeloop_rk	steptime_rk.F90	/^   subroutine timeloop_rk(/;"	s	module:steptime_rk
+timeschemes	timeschemes.F90	/^module timeschemes$/;"	m
+tmp_rhs_buo_term	init.F90	/^   complex(kind=dp), allocatable, public :: tmp_rhs_buo_term(/;"	v	module:init
+tmp_rhs_exp_temp	init.F90	/^   complex(kind=dp), allocatable, public :: tmp_rhs_imp_temp(:,:,:),tmp_rhs_exp_temp(/;"	v	module:init
+tmp_rhs_exp_uphi_bar	init.F90	/^   complex(kind=dp), allocatable, public :: tmp_rhs_imp_uphi_bar(:,:),tmp_rhs_exp_uphi_bar(/;"	v	module:init
+tmp_rhs_exp_vort	init.F90	/^   complex(kind=dp), allocatable, public :: tmp_rhs_imp_vort(:,:,:),tmp_rhs_exp_vort(/;"	v	module:init
+tmp_rhs_imp_temp	init.F90	/^   complex(kind=dp), allocatable, public :: tmp_rhs_imp_temp(/;"	v	module:init
+tmp_rhs_imp_uphi_bar	init.F90	/^   complex(kind=dp), allocatable, public :: tmp_rhs_imp_uphi_bar(/;"	v	module:init
+tmp_rhs_imp_vort	init.F90	/^   complex(kind=dp), allocatable, public :: tmp_rhs_imp_vort(/;"	v	module:init
+tot_time	init.F90	/^   real(kind=dp), public :: dt_old, dt_new, tot_time /;"	v	module:init
+tt	init.F90	/^   real(kind=dp), allocatable, public :: tt(/;"	v	module:init
+two	constants.F90	/^   real(kind=dp), parameter :: two=/;"	v	module:constants
+twoninth	constants.F90	/^   real(kind=dp), parameter :: twoninth /;"	v	module:constants
+up	init.F90	/^   real(kind=dp), allocatable, public :: tt(:,:), up(/;"	v	module:init
+upFC	init.F90	/^   complex(kind=dp), allocatable, public :: omg_spec(:,:), temp_spec(:,:), upFC(/;"	v	module:init
+upFR	init.F90	/^   complex(kind=dp), allocatable, public :: upFR(/;"	v	module:init
+upFR1	init.F90	/^   complex(kind=dp), allocatable, public :: upFR1(/;"	v	module:init
+upFR2	init.F90	/^   complex(kind=dp), allocatable, public :: upFR2(/;"	v	module:init
+upFR_prev	init.F90	/^   complex(kind=dp), allocatable, public :: upFR_prev(/;"	v	module:init
+upFRc	init.F90	/^   complex(kind=dp), allocatable :: tFRc(:,:), omgFRc(:,:), urFRc(:,:), upFRc(/;"	v	module:init
+up_unit	output.F90	/^   integer :: ke_unit, ke_sp_unit, t_sp_unit, nu_unit, pw_unit, up_unit$/;"	v	module:output
+uphi_bar_spec	init.F90	/^   complex(kind=dp), allocatable, public :: omg_spec(:,:), temp_spec(:,:), upFC(:,:), tFR(:,:), omgFR(:,:), uphi_bar_spec(/;"	v	module:init
+uphi_omg	nonlin.F90	/^   real(kind=dp), allocatable :: uphi_omg(/;"	v	module:nonlin
+uphi_omg_FR	steptime.F90	/^   complex(kind=dp), allocatable, public :: uphi_omg_FR(/;"	v	module:steptime
+uphi_omg_FR	steptime_imexrk.F90	/^   complex(kind=dp), allocatable, public :: uphi_omg_FR(/;"	v	module:steptime_imexrk
+uphi_omg_FR	steptime_rk.F90	/^   complex(kind=dp), allocatable, public :: uphi_omg_FR(/;"	v	module:steptime_rk
+uphi_omg_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(/;"	v	module:rhs_create
+uphi_omg_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(/;"	v	module:rhs_create_imexrk
+uphi_omg_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(/;"	v	module:rhs_create_rk
+uphi_temp	nonlin.F90	/^   real(kind=dp), allocatable :: uphi_temp(/;"	v	module:nonlin
+uphi_temp_FR	steptime.F90	/^   complex(kind=dp), allocatable, public :: uphi_temp_FR(/;"	v	module:steptime
+uphi_temp_FR	steptime_imexrk.F90	/^   complex(kind=dp), allocatable, public :: uphi_temp_FR(/;"	v	module:steptime_imexrk
+uphi_temp_FR	steptime_rk.F90	/^   complex(kind=dp), allocatable, public :: uphi_temp_FR(/;"	v	module:steptime_rk
+uphi_temp_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(/;"	v	module:rhs_create
+uphi_temp_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(/;"	v	module:rhs_create_imexrk
+uphi_temp_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(/;"	v	module:rhs_create_rk
+ur	init.F90	/^   real(kind=dp), allocatable, public :: tt(:,:), up(:,:), ur(/;"	v	module:init
+urFR	init.F90	/^   complex(kind=dp), allocatable, public :: upFR(:,:), urFR(/;"	v	module:init
+urFR1	init.F90	/^   complex(kind=dp), allocatable, public :: upFR1(:,:), urFR1(/;"	v	module:init
+urFR2	init.F90	/^   complex(kind=dp), allocatable, public :: upFR2(:,:), urFR2(/;"	v	module:init
+urFR_prev	init.F90	/^   complex(kind=dp), allocatable, public :: upFR_prev(:,:), urFR_prev(/;"	v	module:init
+urFRc	init.F90	/^   complex(kind=dp), allocatable :: tFRc(:,:), omgFRc(:,:), urFRc(/;"	v	module:init
+ur_omg	nonlin.F90	/^   real(kind=dp), allocatable :: uphi_omg(:), ur_omg(/;"	v	module:nonlin
+ur_omg_FR	steptime.F90	/^   complex(kind=dp), allocatable, public :: uphi_omg_FR(:,:), ur_omg_FR(/;"	v	module:steptime
+ur_omg_FR	steptime_imexrk.F90	/^   complex(kind=dp), allocatable, public :: uphi_omg_FR(:,:), ur_omg_FR(/;"	v	module:steptime_imexrk
+ur_omg_FR	steptime_rk.F90	/^   complex(kind=dp), allocatable, public :: uphi_omg_FR(:,:), ur_omg_FR(/;"	v	module:steptime_rk
+ur_omg_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(:), ur_omg_rad_/;"	v	module:rhs_create
+ur_omg_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(:), ur_omg_rad_/;"	v	module:rhs_create_imexrk
+ur_omg_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(:), ur_omg_rad_/;"	v	module:rhs_create_rk
+ur_omg_rad_spec	rhs_create.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(:), ur_omg_rad_spec(/;"	v	module:rhs_create
+ur_omg_rad_spec	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(:), ur_omg_rad_spec(/;"	v	module:rhs_create_imexrk
+ur_omg_rad_spec	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: uphi_omg_rad(:), ur_omg_rad_spec(/;"	v	module:rhs_create_rk
+ur_temp	nonlin.F90	/^   real(kind=dp), allocatable :: uphi_temp(:), ur_temp(/;"	v	module:nonlin
+ur_temp_FR	steptime.F90	/^   complex(kind=dp), allocatable, public :: uphi_temp_FR(:,:), ur_temp_FR(/;"	v	module:steptime
+ur_temp_FR	steptime_imexrk.F90	/^   complex(kind=dp), allocatable, public :: uphi_temp_FR(:,:), ur_temp_FR(/;"	v	module:steptime_imexrk
+ur_temp_FR	steptime_rk.F90	/^   complex(kind=dp), allocatable, public :: uphi_temp_FR(:,:), ur_temp_FR(/;"	v	module:steptime_rk
+ur_temp_rad	rhs_create.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(:), ur_temp_rad_/;"	v	module:rhs_create
+ur_temp_rad	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(:), ur_temp_rad_/;"	v	module:rhs_create_imexrk
+ur_temp_rad	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(:), ur_temp_rad_/;"	v	module:rhs_create_rk
+ur_temp_rad_spec	rhs_create.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(:), ur_temp_rad_spec(/;"	v	module:rhs_create
+ur_temp_rad_spec	rhs_create_imexrk.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(:), ur_temp_rad_spec(/;"	v	module:rhs_create_imexrk
+ur_temp_rad_spec	rhs_create_rk.F90	/^   complex(kind=dp), allocatable :: uphi_temp_rad(:), ur_temp_rad_spec(/;"	v	module:rhs_create_rk
+writeKE_physical	output.F90	/^   subroutine writeKE_physical(/;"	s	module:output
+writeKE_spectral	output.F90	/^   subroutine writeKE_spectral(/;"	s	module:output
+wt_lhs_tscheme_imp	timeschemes.F90	/^   real(kind=dp), public :: wt_lhs_tscheme_imp$/;"	v	module:timeschemes
+wt_rhs_tscheme_exp	timeschemes.F90	/^   real(kind=dp), allocatable, public :: wt_rhs_tscheme_imp(:), wt_rhs_tscheme_exp(/;"	v	module:timeschemes
+wt_rhs_tscheme_imp	timeschemes.F90	/^   real(kind=dp), allocatable, public :: wt_rhs_tscheme_imp(/;"	v	module:timeschemes
+xp	chebyshev_GG.F90	/^   complex(kind=dp), allocatable, public :: xp(/;"	v	module:chebyshev
+xp	chebyshev_fftw.F90	/^   real(kind=dp), allocatable, public :: xp(/;"	v	module:chebyshev
+zero	constants.F90	/^   real(kind=dp), parameter :: zero=/;"	v	module:constants

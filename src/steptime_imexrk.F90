@@ -106,7 +106,7 @@ contains
             dt_array(:)=dt 
          end if
 
-         if (l_vartimestep) then ! If variable timestep using CFL is on
+         if (l_vartimestep .eqv. .TRUE.) then ! If variable timestep using CFL is on
             if (n_step-n_restart==1 .and. l_restart) then
                !-------------------- Call Nr_max loop ---------------------------------------------------------
                call Nr_maxLOOP(Nm_max,Np_max,Nr_max,tFR,omgFR,upFR,urFR,uphi_temp_FR,ur_temp_FR,uphi_omg_FR, &
