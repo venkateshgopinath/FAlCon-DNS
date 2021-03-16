@@ -281,13 +281,16 @@ contains
             end select  
 
          case ('ARS343') ! Ascher, Ruuth and Spiteri (ARS343) 3rd order, Appl. Numer. Math. 1997 paper
-            n_order_tscheme_imp=4 
+            n_order_tscheme_imp=4
             allocate( butcher_aD(n_order_tscheme_imp,n_order_tscheme_imp) )
             allocate( butcher_bD(n_order_tscheme_imp) )
             allocate( rhs_imp_temp(1,Nm_max+1,Nr_max) )
             allocate( rhs_imp_vort(1,Nm_max+1,Nr_max) )
             allocate( rhs_imp_uphi_bar(1,Nr_max) )
-            allocate( wt_rhs_tscheme_imp(1) ) 
+            allocate( wt_rhs_tscheme_imp(1) )
+            gammaa = 0.435866521508459_dp
+            bb1 = -1.5_dp*gammaa*gammaa+4.0_dp*gammaa-0.25_dp
+            bb2 = 1.5_dp*gammaa*gammaa-5.0_dp*gammaa+1.25_dp
 
             select case (time_scheme_exp)
 
@@ -298,9 +301,9 @@ contains
                   allocate( rhs_exp_temp(1,Nm_max+1,Nr_max) )
                   allocate( rhs_exp_vort(1,Nm_max+1,Nr_max) )
                   allocate( rhs_exp_uphi_bar(1,Nr_max) )
-                  allocate( wt_rhs_tscheme_exp(1) )  
+                  allocate( wt_rhs_tscheme_exp(1) )
 
-            end select   
+            end select
 
          case ('SMR333') ! Spalart, Moser and Rogers (SMR333) 3rd order, JCP 1991 paper
             n_order_tscheme_imp=4 
@@ -1104,18 +1107,14 @@ contains
          case ('ARS343')
 
             butcher_aD = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                                  0.0_dp, 0.4358665215_dp, 0.0_dp, 0.0_dp, &
-                                  0.0_dp, 0.2820667392_dp, 0.4358665215_dp, 0.0_dp, &
-                                  0.0_dp, 1.208496649_dp, -0.644363171_dp, 0.4358665215_dp], &
-                                  [4,4],order=[2,1])  
+                                  0.0_dp, gammaa, 0.0_dp, 0.0_dp, &
+                                  0.0_dp, 0.5_dp*(1.0_dp-gammaa), gammaa,  0.0_dp, &
+                                  0.0_dp, bb1, bb2, gammaa], &
+                                  [4,4],order=[2,1])
 
-            butcher_bD = reshape([0.0_dp, 1.208496649_dp, -0.644363171_dp, 0.4358665215_dp],[4]) 
+            butcher_bD = reshape([0.0_dp, bb1, bb2, gammaa],[4])
 
-            do i=1,n_order_tscheme_imp
-               if (butcher_aD(n_order_tscheme_imp,i)==butcher_bD(i)) then
-                  ars_eqn_check_D=.TRUE.
-               end if
-            end do   
+            ars_eqn_check_D=.TRUE.
 
             diag_diff = .FALSE.
             diag_index = 2
@@ -1787,26 +1786,22 @@ contains
             end select 
 
          case ('ARS343')
- 
+
             select case (time_scheme_exp)
 
                case ('expARS343')
 
                   butcher_aA = reshape([0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                                        0.4358665215_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                                        0.321278886_dp, 0.3966543747_dp, 0.0_dp, 0.0_dp, &
-                                        -0.105858296_dp, 0.5529291479_dp, 0.5529291479_dp, 0.0_dp], &
-                                        [4,4],order=[2,1])  
+                                        gammaa, 0.0_dp, 0.0_dp, 0.0_dp, &
+                                        0.3212788860286278_dp,0.3966543747256017_dp,0.0_dp,0.0_dp, &
+                                        -0.1058582960718797_dp,0.5529291480359398_dp,0.5529291480359398_dp,0.0_dp], &
+                                        [4,4],order=[2,1])
 
-                  butcher_bA = reshape([0.0_dp, 1.208496649_dp, -0.644363171_dp, 0.4358665215_dp],[4]) 
+                  butcher_bA = reshape([0.0_dp, bb1, bb2, gammaa],[4])
+         
+                  ars_eqn_check_A=.FALSE.
 
-                  do i=1,n_order_tscheme_exp
-                     if (butcher_aA(n_order_tscheme_exp,i)==butcher_bA(i)) then
-                        ars_eqn_check_A=.TRUE.
-                     end if
-                  end do
-
-            end select  
+            end select
 
          case ('SMR333')
  
