@@ -1,7 +1,7 @@
-Sept 2017
-IPGP
-Geomagnetism Group
-Code for 2 D convection in an annulus.
+FAlCon (Light weight Framework of time schemes for Annular Convection) 
+This code is written to solve for 2 D convection in an annulus and analyse different time integration schemes.
+It was created as part of the PhD work at
+Geomagnetism Group, Institute de Physique du Globe de Paris (IPGP)
 Contains a suite of IMEX, IMEXRK and RK time integration schemes.
 ---------------------------------------
 For compiling:
