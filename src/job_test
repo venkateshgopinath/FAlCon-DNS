@@ -1,9 +1,0 @@
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH -p cpushortprio 
-##SBATCH -p cpunormal 
-echo "Running on: $SLURM_NODELIST" 
-export OMP_NUM_THREADS=$SLURM_NTASKS_PER_NODE
-./main test_ars.txt 
-

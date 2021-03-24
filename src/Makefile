@@ -1,12 +1,12 @@
 # Compiler
-FC = gfortran
+FC = ifort
 #FC = ifort
 
 # FFT Option : Give option of which FFT to use
 USE_FFT=FFTW
 
 # FFT Option : Give option of which FFT library to use
-USE_LAPACKLIB=LAPACK
+USE_LAPACKLIB=MKL
 
 # Flags for debugging 
 #FCFLAGS = -g -fbounds-check -fcheck=all -ffpe-trap=invalid,zero,overflow -Wall \
@@ -14,15 +14,16 @@ USE_LAPACKLIB=LAPACK
 #FCFLAGS = -O3 -xHost -ipo#-march=native 
 #FCFLAGS = -O3 -axAVX 
 #FCFLAGS = -O0 -D$(USE_FFT) -fopenmp # checked - Ok   
-FCFLAGS = -O3 -D$(USE_FFT) -fopenmp  
+FCFLAGS = -O3 -xHost -D$(USE_FFT) -fopenmp  
 FCFLAGS += -I/usr/local/include
-FCFLAGS += -I//usr/local/Cellar/fftw/3.3.8/include
-LDFLAGS = -llapack -lblas -lfftw3 -lm 
+FCFLAGS += -I/usr/local/Cellar/fftw/3.3.8/include
+LDFLAGS = -lfftw3 -lm 
 
 ifeq ($(USE_LAPACKLIB),LAPACK)
         #FCFLAGS += -I${FFTWINCLUDE}
         #         #FCFLAGS += -I/cm/shared/appsLocal/fftw3_scalar/gcc/3.3.2/include
         #LDFLAGS += -L${FFTWDIR} -lfftw3 -L${LAPACK_DIR} -llapack -L${BLASDIR} -lblas
+		LDFLAGS += -llapack -lblas
 
         RED_SOURCES += algebra_lapack.f90
         ALGEBRA_OBJS += algebra_lapack.o
@@ -31,12 +32,12 @@ endif
 
 ifeq ($(USE_LAPACKLIB),MKL)
         FCFLAGS += -I${FFTWINCLUDE} -I$(MKLROOT)/include -I$(MKLROOT)/include/intel64/lp64
-        LDFLAGS += -L${FFTWDIR} -lfftw3 -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 \
+        LDFLAGS += -L${FFTWDIR} -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 \
                                         -lmkl_lapack95_lp64 \
-                                        -lmkl_sequential -lmkl_core -lpthread -lm \
+                                        -lmkl_sequential -lmkl_core -lpthread \
                                         -Wl,-rpath,$(MKLROOT)/lib/intel64
-        RED_SOURCES += algebra_mkl.f90
-        ALGEBRA_OBJS += algebra_mkl.o
+        RED_SOURCES += algebra_lapack.f90
+        ALGEBRA_OBJS += algebra_lapack.o
 endif
 
 # Selects the FFT way according to given option
@@ -75,6 +76,11 @@ namelists.o: dble.o
 constants.o: dble.o
 
 $(ALGEBRA_OBJS): dble.o 
+ifeq ($(USE_LAPACKLIB),MKL)
+$(ALGEBRA_OBJS)        : lapack95.mod
+lapack95.mod           : $(MKLROOT)/include/lapack.f90
+	$(FC) -c $(FCFLAGS) $(INCPATHS) $<
+endif
 
 $(FFT_OBJS_C): dble.o constants.o 
 
