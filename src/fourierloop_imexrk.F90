@@ -3,21 +3,21 @@ module fourierloop_imexrk
 
    use double
    use constants, only: ii
-   use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD2, chebinvtranD1D2, t, D, D2
-   use init, only: TFC, temp_spec,omg_spec,startmatbuild, &
-                   & finishmatbuild, finishmatbuild, time_matbuild, radius, r_radius, r_radius2, &
-                   & dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC, ur, omg, omgFR_check, D_phys
-   use mat_assembly, only: LAPpsi_all, AT_all_IRK, AF_all_IRK, A_uphi_all_IRK, IPIV_uphi_IRK, IPIV1_IRK, IPIV2_IRK, &
-                           & mat_build_IRK, mat_build_uphibar_IRK, IPIV1_lap
+   use chebyshev, only: chebtransform, chebinvtran, chebinvtranD1, chebinvtranD2, t
+   use init, only: TFC, temp_spec,omg_spec,startmatbuild, finishmatbuild,      &
+       &           finishmatbuild, time_matbuild, radius, r_radius, r_radius2, &
+       &           dw_rmin, d2w_rmin, dw_rmax, d2w_rmax, uphi_bar_spec, upFC,  &
+       &           ur, omg, omgFR_check, D_phys
+   use mat_assembly, only: LAPpsi_all, AT_all_IRK, AF_all_IRK, A_uphi_all_IRK, &
+       &                   IPIV_uphi_IRK, IPIV1_IRK, IPIV2_IRK, mat_build_IRK, &
+       &                   mat_build_uphibar_IRK, IPIV1_lap
    use algebra, only: factorize, matsolve, matsolve_real
-   use timeschemes, only: wt_lhs_tscheme_imp, wt_rhs_tscheme_imp, n_order_tscheme_imp, wt_rhs_tscheme_exp, & 
-                          & n_order_tscheme_exp, rhs_update_wts_imp, rhs_update_wts_exp, &
-                          & irk_max, dt_array, butcher_aA, butcher_bA, butcher_aD, butcher_bD, &
-                          & ars_eqn_check_A, ars_eqn_check_D, rhs_imp_temp, rhs_exp_temp, rhs_imp_vort, &
-                          & rhs_exp_vort, rhs_imp_uphi_bar, rhs_exp_uphi_bar, diag_diff, diag_index
-   use rhs_create_imexrk, only: rhs_construct_temp_a, rhs_construct_vort_a, rhs_construct_temp_d, &
-                                & rhs_construct_uphibar_a, rhs_construct_uphibar_d, &
-                                & rhs_construct_vort_d, rhs_construct_buo   
+   use timeschemes, only:  n_order_tscheme_exp, dt_array, butcher_aA, butcher_bA, &
+       &                   butcher_aD, butcher_bD, diag_diff, diag_index
+   use rhs_create_imexrk, only: rhs_construct_temp_a, rhs_construct_vort_a,    &
+       &                        rhs_construct_temp_d, rhs_construct_uphibar_a, &
+       &                        rhs_construct_uphibar_d, rhs_construct_vort_d, &
+       &                        rhs_construct_buo   
 
    implicit none
 
