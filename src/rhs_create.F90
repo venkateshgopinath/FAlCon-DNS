@@ -270,7 +270,7 @@ contains
 
    end subroutine rhs_construct_vort
 
-   subroutine rhs_construct_uphi_bar(Nm_max,Nr_max,dt,upFR_p,urFR_p,omgFR_p,n_step,upFCp,rhs_uphi,n_restart, &
+   subroutine rhs_construct_uphi_bar(Nm_max,Nr_max,dt,upFR_p,n_step,upFCp,rhs_uphi,n_restart, &
                                  & wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
                                  & n_order_tscheme_exp,time_scheme_imp,l_restart,l_imexrk_started)
 
@@ -286,8 +286,7 @@ contains
       character(len=100), intent(in) :: time_scheme_imp
       real(kind=dp), intent(in) :: dt
       complex(kind=dp), intent(in) :: upFCp(Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: urFR_p(Nm_max+1,Nr_max),upFR_p(Nm_max+1,Nr_max)
-      complex(kind=dp), intent(in) :: omgFR_p(Nm_max+1,Nr_max)
+      complex(kind=dp), intent(in) :: upFR_p(Nm_max+1,Nr_max)
       real(kind=dp), intent(out) :: rhs_uphi(Nr_max)
       ! Local variables --------------------------
       integer :: i, i_order, Nr, Nm, Np, Npmax
@@ -401,9 +400,6 @@ contains
       complex(kind=dp) :: real_d_ur_temp_rad(Nr_max)
       complex(kind=dp) :: ur_temp_rad_spec(Nr_max)
       complex(kind=dp) :: uphi_temp_rad(Nr_max)
-      complex(kind=dp) :: real_temp_rad(Nr_max)
-      complex(kind=dp) :: real_d_temp_rad(Nr_max)
-      complex(kind=dp) :: real_d2_temp_rad(Nr_max)
 
       if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then 
          do Nm=0,Nm_max
@@ -452,9 +448,6 @@ contains
       complex(kind=dp) :: real_d_ur_omg_rad(Nr_max)
       complex(kind=dp) :: ur_omg_rad_spec(Nr_max)
       complex(kind=dp) :: uphi_omg_rad(Nr_max)
-      complex(kind=dp) :: real_omg_rad(Nr_max)
-      complex(kind=dp) :: real_d_omg_rad(Nr_max)
-      complex(kind=dp) :: real_d2_omg_rad(Nr_max)
 
       !----- If Backward-Difference Formula (BDF) is used as the implicit scheme --------------
       if (time_scheme_imp=='CN' .or. time_scheme_imp=='BDF2' .or. time_scheme_imp=='BDF3' .or. time_scheme_imp=='BDF4') then 

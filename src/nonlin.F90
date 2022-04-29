@@ -10,16 +10,13 @@ module nonlin
 
    private
 
-   real(kind=dp), allocatable :: uphi_temp(:), ur_temp(:)
-   real(kind=dp), allocatable :: uphi_omg(:), ur_omg(:)
    real(kind=dp), allocatable, public :: dtval_p(:), dtval_r(:), dtval_rkr(:), dtval_rkp(:)
 
    public ::  allocate_nonlin, deallocate_nonlin, Nr_maxLOOP
 
 contains
 
-   subroutine allocate_nonlin(Np_max,Nr_max) !---------------Allocate-------------------------------------
-      integer, intent(in) :: Np_max   
+   subroutine allocate_nonlin(Nr_max) !---------------Allocate-------------------------------------
       integer, intent(in) :: Nr_max 
 
       allocate( dtval_r(Nr_max), dtval_p(Nr_max) )

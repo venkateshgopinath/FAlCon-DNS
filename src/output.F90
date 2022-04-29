@@ -61,7 +61,7 @@ contains
       integer :: i, j, Nr
 ! alex
       real(kind=dp) :: KE_radial_tot, KE_azimuthal_tot
-      real(kind=dp) :: lupbar, KE_radial(Np_max,Nr_max), KE_azimuthal(Np_max,Nr_max)
+      real(kind=dp) :: KE_radial(Np_max,Nr_max), KE_azimuthal(Np_max,Nr_max)
       real(kind=dp) :: KE_radial_r(Np_max), KE_azimuthal_r(Np_max)
       real(kind=dp) :: l_upbar(Nr_max), e_upbar(Nr_max), KE_0
 !end alex
@@ -119,25 +119,20 @@ contains
    !-------------------------------------------------------------------------------------------------------
 
    !-------------------------------------------------------------------------------------------------------
-   subroutine writeKE_spectral(Nm_max,Nr_max,Np_max,TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR,mBC) ! 
+   subroutine writeKE_spectral(Nm_max,Nr_max,Np_max,TFC,tot_time,eta,omgFR,Ra,Pr,dt_new,tFR,mBC) ! 
 
       integer, intent(in) :: Nm_max, Nr_max, Np_max
       real(kind=dp), intent(in) :: eta, tot_time
       complex(kind=dp), intent(in) :: TFC(Nr_max)
       complex(kind=dp), intent(in) :: omgFR(Nm_max+1,Nr_max), tFR(Nm_max+1,Nr_max)
-      integer, intent(in) :: n_step
       real(kind=dp), intent(in) :: Ra, Pr
       real(kind=dp), intent(in) :: dt_new
       character(len=100), intent(in) :: mBC
       real(kind=dp) :: KE_tot
       real(kind=dp) :: Nus_b, Nus_t
-      real(kind=dp) :: urk, upk, vis_term, buo_term, vis_term1, vis_term2,surfterm1, surfterm2
-      real(kind=dp) :: surfterm1_ro, surfterm1_ri, surfterm2_ro, surfterm2_ri 
-      real(kind=dp) :: ur2(Nr_max), up2(Nr_max), w2(Nr_max), w2s1(Nr_max),w2s2(Nr_max), st(Nr_max), URT(Nr_max)
-      complex(kind=dp) :: ursq(Np_max,Nr_max), upsq(Np_max,Nr_max),usq(Np_max,Nr_max),usqFC(Np_max,Nr_max) 
-      complex(kind=dp) :: drusq(Np_max,Nr_max)
-      complex(kind=dp) :: urFC(Nm_max+1,Nr_max), drur(Nm_max+1,Nr_max), upomgFR(Nm_max+1,Nr_max)
-      real(kind=dp) :: upomg(Np_max,Nr_max)
+      real(kind=dp) :: urk, upk, vis_term, buo_term, vis_term1
+      real(kind=dp) :: surfterm1_ro, surfterm1_ri
+      real(kind=dp) :: ur2(Nr_max), up2(Nr_max), w2(Nr_max), URT(Nr_max)
 !alex
       real(kind=dp) :: upbar2(Nr_max), upbark
 !end alex
@@ -159,21 +154,6 @@ contains
       complex(kind=dp) :: ur_d1up_FR(Nr_max)
       integer :: Nr,Nm, Np
 
-      complex(kind=dp), allocatable :: tFR_ref(:,:), omgFR_ref(:,:), urFR_ref(:,:), upFR_ref(:,:) ! Previously saved data (small 'c' denotes current timestep)
-      real(kind=dp), allocatable :: tt_comp(:,:)
-      complex(kind=dp), allocatable :: tFC_comp(:,:)
-      complex(kind=dp), allocatable :: tFR_comp(:,:)
-      real(kind=dp) :: eta_ref, Ra_ref, Pr_ref 
-      integer :: ref_point,ref_point2, Np_max_ref
-      real(kind=dp), allocatable :: tt_ref(:,:)
-      real(kind=dp), allocatable :: temp_diff_phi(:), ur_diff_phi(:)
-      real(kind=dp), allocatable :: ref_diff_phi(:)
-      real(kind=dp) :: L2error_temp, L2error_ur
-      complex(kind=dp) :: ttFC(Nm_max+1,Nr_max)
-      real(kind=dp), allocatable :: rad(:)
-      real(kind=dp) :: dt_new_ref, tot_time_ref
-      integer :: Nm_max_ref, Nr_max_ref
-      
       ! Check u_phi force balance  
       do Nm=1,Nm_max+1 
          call chebinvtranD1(Nr_max,upFC(Nm,:),d1upFR(Nm,:))
@@ -379,13 +359,12 @@ contains
    subroutine store_checkpoint(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                   & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                   & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, rhs_exp_uphi_bar, &
-                                  & dt_array,n_order_tscheme_max,time_scheme_type)
+                                  & dt_array,n_order_tscheme_max)
 
       integer, intent(in) :: Nm_max   
       integer, intent(in) :: Nr_max 
       integer, intent(in) :: count_chkpnt 
       integer, intent(in) :: n_order_tscheme_imp,n_order_tscheme_exp,n_order_tscheme_max 
-      character(len=100), intent(in) :: time_scheme_type
       real(kind=dp), intent(in) :: tot_time, dt_new
       real(kind=dp), intent(in) :: dt_array(n_order_tscheme_max)
       complex(kind=dp), intent(in) :: tFR(Nm_max+1,Nr_max)
@@ -427,13 +406,12 @@ contains
    subroutine store_checkpoint_imexrk(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                   & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                   & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, rhs_exp_uphi_bar, &
-                                  & dt_array,n_order_tscheme_max,time_scheme_type)
+                                  & dt_array,n_order_tscheme_max)
 
       integer, intent(in) :: Nm_max   
       integer, intent(in) :: Nr_max 
       integer, intent(in) :: count_chkpnt 
       integer, intent(in) :: n_order_tscheme_imp,n_order_tscheme_exp,n_order_tscheme_max 
-      character(len=100), intent(in) :: time_scheme_type
       real(kind=dp), intent(in) :: tot_time, dt_new
       real(kind=dp), intent(in) :: dt_array(n_order_tscheme_max)
       complex(kind=dp), intent(in) :: tFR(Nm_max+1,Nr_max)
@@ -487,7 +465,7 @@ contains
       complex(kind=dp), intent(in) :: omgFR_check_s(Nm_max+1,Nr_max)
 
       character(len=72) :: datafile1
-      integer :: outunit, i 
+      integer :: outunit 
        
       !-----------------------------------------Write current time step ---------------------------------------
       write(datafile1,fmt='(a,I5.5)') "snapshot_plot_", count_snap
@@ -520,7 +498,7 @@ contains
       complex(kind=dp), intent(in) :: upFRs(Nm_max+1,Nr_max)
 
       character(len=72) :: datafile1
-      integer :: outunit, i 
+      integer :: outunit 
        
       !-----------------------------------------Write current time step ---------------------------------------
       write(datafile1,fmt='(a,I5.5)') "snapshot_plot_", count_snap
@@ -575,37 +553,5 @@ contains
       end subroutine read_snapshot
 
 
-      subroutine read_snapshot2(tFRn,omgFRn,urFRn,upFRn,ref_point)  
-
-      integer, intent(in) :: ref_point
-      real(kind=dp):: dt_new
-      real(kind=dp) :: tot_time, eta, Ra, Pr
-      integer :: Nm_max   
-      integer :: Nr_max 
-      complex(kind=dp), allocatable, intent(out) :: tFRn(:,:)
-      complex(kind=dp), allocatable, intent(out) :: omgFRn(:,:)
-      complex(kind=dp), allocatable, intent(out) :: urFRn(:,:)
-      complex(kind=dp), allocatable, intent(out) :: upFRn(:,:)
-
-      character(len=72) :: datafile1
-      integer :: inunit
-      !----------------------------- Read latest files -------------------------------
-      write(datafile1,'("snapshot_plot_",I5.5)') ref_point
-      open(newunit=inunit, status='old',file=datafile1,form='unformatted')
-      read(inunit) Ra, Pr, eta
-      read(inunit) dt_new, tot_time 
-      read(inunit) Nm_max,Nr_max
-      allocate(tFRn(Nm_max+1,Nr_max))
-      allocate(omgFRn(Nm_max+1,Nr_max))
-      allocate(urFRn(Nm_max+1,Nr_max))
-      allocate(upFRn(Nm_max+1,Nr_max))
-
-      read(inunit) tFRn
-      read(inunit) omgFRn
-      read(inunit) urFRn
-      read(inunit) upFRn
-      close(inunit)
-
-      end subroutine read_snapshot2
-end module output
+      end module output
 

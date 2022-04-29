@@ -51,7 +51,7 @@ contains
 
    subroutine timeloop_imex(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt, Ra,Pr,mBC, &
                        & l_restart,l_optimizedt,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
-                       & time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max,time_scheme_type, &
+                       & time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max, &
                        & l_imexrk_started,totaltime,l_vartimestep)
        
       integer :: n_step  
@@ -67,7 +67,6 @@ contains
       real(kind=dp), intent(in) :: dt_coef, dt_max
       character(len=100), intent(in) :: time_scheme_imp
       character(len=100), intent(in) :: time_scheme_exp
-      character(len=100), intent(in) :: time_scheme_type
       integer, intent(in) :: n_time_steps
       integer, intent(in) :: n_checkpoint
       integer, intent(in) :: n_snapshot
@@ -269,7 +268,7 @@ contains
                call store_checkpoint(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                      & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                      & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar,rhs_exp_uphi_bar, &
-                                     & dt_array,n_order_tscheme_max,time_scheme_type)
+                                     & dt_array,n_order_tscheme_max)
     
             end if
             !------------------------------------------------------------------- 
@@ -277,7 +276,7 @@ contains
             !-------------------- Store Kinetic Energy (KE) --------------------
             if (mod(n_step,n_KE)==0) then
                call init_output(tag)  ! Open output files 
-               call writeKE_spectral(Nm_max,Nr_max,Np_max,TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR,mBC)
+               call writeKE_spectral(Nm_max,Nr_max,Np_max,TFC,tot_time,eta,omgFR,Ra,Pr,dt_new,tFR,mBC)
                !call writeKE_physical(Np_max,Nr_max,Nm_max,tot_time,Ra,Pr) ! Uncomment for KE calc in physical space 
                call final_output() ! Close output files
             end if
@@ -300,7 +299,7 @@ contains
 
    subroutine solver_log(n_step)
     integer, intent(in) :: n_step
-    integer :: logunit
+    integer :: logunit=0
       !open(newunit=logunit,file="solver_log.txt",status="unknown",form="formatted", action="write")
 
       call cpu_time(finishsteptime)

@@ -41,8 +41,8 @@ contains
 
       call cheballoc(Nr_max)        ! Allocate Chebyshev matrices and variables
       call dcheb(Nr_max)            ! Make Chebyshev differentiation matrices
-      call init_time_schemes(Nm_max,Nr_max,time_scheme_imp,time_scheme_exp,time_scheme_type) ! Initialize time scheme (Allocate rhs and weights)
-      call fields_alloc(Nm_max,Np_max,Nr_max,lm,time_scheme_type,time_scheme_imp)    ! Allocate main variables
+      call init_time_schemes(Nm_max,Nr_max,time_scheme_imp,time_scheme_exp) ! Initialize time scheme (Allocate rhs and weights)
+      call fields_alloc(Nm_max,Np_max,Nr_max,lm,time_scheme_type)    ! Allocate main variables
       call allocate_restart(Nm_max,Nr_max)       ! Allocate restart variables
 #if FFTW
       call init_all_fftw_plans(Np_max,Nr_max)    ! Initialize all fftw plans
@@ -52,7 +52,7 @@ contains
            & time_scheme_imp,l_imexrk_started) ! Initialize main variables/get from checkpoint
       call init_perturbation(Nm_max,Np_max,Nr_max,ampT,l_restart,rmin,rmax,n_init)     ! Initialize perturbation on temperature
       call allocate_mat(Nm_max,Nr_max)           ! Allocate main operator matrices
-      call allocate_nonlin(Np_max,Nr_max)        ! Allocate variables in nonlinear products used for multiplication in physical space
+      call allocate_nonlin(Nr_max)        ! Allocate variables in nonlinear products used for multiplication in physical space
       if (time_scheme_type=='IMEXRK') then 
          call allocate_fourierloop_imexrk(Nm_max,Nr_max)   ! Allocate variables in 'fourier loop' for all the modes
          call allocate_steptime_imexrk(Nm_max,Nr_max)      ! Allocate timeloop variables  
@@ -71,16 +71,16 @@ contains
          call timeloop_imexrk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,&
                     & dt,Ra,Pr,l_restart,l_optimizedt,n_restart,n_restart_point,n_snapshot_point,&
                     & n_KE,n_KEspec,time_scheme_type,time_scheme_imp,time_scheme_exp,tag,dt_coef, &
-                    & dt_max,mBC,lm,buo_tscheme,totaltime,l_vartimestep,rmin,rmax)
+                    & dt_max,mBC,lm,buo_tscheme,totaltime,l_vartimestep)
       elseif (time_scheme_type=='RK') then
-         call timeloop_rk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,&
-                    & dt,Ra,Pr,l_restart,n_restart,n_restart_point,n_snapshot_point,&
-                    & n_KE,n_KEspec,time_scheme_imp,time_scheme_exp,tag,lm,dt_coef,dt_max,time_scheme_type,mBC) 
+         call timeloop_rk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt,Ra,Pr, &
+                       & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
+                       & time_scheme_imp,time_scheme_exp,tag,lm,dt_coef,dt_max,time_scheme_type,mBC,l_vartimestep)
       elseif (time_scheme_type=='IMEX') then 
          call timeloop_imex(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,&
                        & dt,Ra,Pr,mBC,l_restart,l_optimizedt,n_restart,n_restart_point,n_snapshot_point,&
                        & n_KE,n_KEspec,time_scheme_imp,time_scheme_exp,tag,dt_coef,dt_max, &
-                       & time_scheme_type,l_imexrk_started,totaltime,l_vartimestep) 
+                       & l_imexrk_started,totaltime,l_vartimestep) 
       end if
 
       !call cpu_time(finishsteptime)
@@ -113,7 +113,7 @@ contains
 
    subroutine solver_log
 
-      integer :: logunit
+      integer :: logunit=0
       !open(newunit=logunit,file="solver_log.txt",status="unknown",form="formatted", action="write")
 
       write (logunit,*) "Total time taken =",finishmain-startmain,"seconds."

@@ -29,13 +29,11 @@ contains
       integer :: i
       complex(kind=dp), intent(out) :: rhs(Nr_max)
       ! Local variables --------------------------
-      integer :: i_order
       complex(kind=dp) :: ur_temp_rad(Nr_max)
       complex(kind=dp) :: temp_spec_rad(Nr_max)
       complex(kind=dp) :: real_d_ur_temp_rad(Nr_max)
       complex(kind=dp) :: ur_temp_rad_spec(Nr_max)
       complex(kind=dp) :: uphi_temp_rad(Nr_max)
-      complex(kind=dp) :: real_temp_rad(Nr_max)
       complex(kind=dp) :: real_d_temp_rad(Nr_max)
       complex(kind=dp) :: real_d2_temp_rad(Nr_max)
       
@@ -90,7 +88,6 @@ contains
       complex(kind=dp) :: real_d_ur_omg_rad(Nr_max)
       complex(kind=dp) :: ur_omg_rad_spec(Nr_max)
       complex(kind=dp) :: uphi_omg_rad(Nr_max)
-      complex(kind=dp) :: real_omg_rad(Nr_max)
       complex(kind=dp) :: real_d_omg_rad(Nr_max)
       complex(kind=dp) :: real_d2_omg_rad(Nr_max)
 

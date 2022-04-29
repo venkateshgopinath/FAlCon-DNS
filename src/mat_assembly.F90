@@ -186,12 +186,11 @@ contains
                                     
    end subroutine mat_build_IRK
 
-   subroutine mat_build_uphibar_IRK(Nr_max,dt,mBC,wt_lhs_tscheme_imp,rk_stage,Pr)
+   subroutine mat_build_uphibar_IRK(Nr_max,dt,mBC,wt_lhs_tscheme_imp,rk_stage)
 
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: mBC 
       real(kind=dp), intent(in) :: dt
-      real(kind=dp), intent(in) :: Pr
       real(kind=dp) :: C
       integer :: i,j 
       integer :: INFO3
@@ -359,12 +358,11 @@ contains
                                     
    end subroutine mat_build
 
-   subroutine mat_build_uphibar(Nr_max,dt,mBC,wt_lhs_tscheme_imp,Pr)
+   subroutine mat_build_uphibar(Nr_max,dt,mBC,wt_lhs_tscheme_imp)
 
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: mBC 
       real(kind=dp), intent(in) :: dt
-      real(kind=dp), intent(in) :: Pr
       real(kind=dp) :: C
       integer :: i,j 
       integer :: INFO3

@@ -34,10 +34,10 @@ module timeschemes
 
 contains
 
-   subroutine init_time_schemes(Nm_max,Nr_max,time_scheme_imp,time_scheme_exp,time_scheme_type)
+   subroutine init_time_schemes(Nm_max,Nr_max,time_scheme_imp,time_scheme_exp)
 
       integer, intent(in) :: Nm_max,Nr_max
-      character(len=100), intent(in) :: time_scheme_imp, time_scheme_exp, time_scheme_type
+      character(len=100), intent(in) :: time_scheme_imp, time_scheme_exp
 
       select case (time_scheme_imp)
 
@@ -997,7 +997,7 @@ contains
       real(kind=dp), intent(out) :: wt_rhs_tscheme_imp(n_order_tscheme_imp)
       real(kind=dp), intent(out) :: wt_lhs_tscheme_imp
       real(kind=dp) :: a0,a1,a2,a3,a4,r_dt1,r_dt2,r_dt3
-      integer :: i,j
+      integer :: i
 
       select case (time_scheme_imp)
 

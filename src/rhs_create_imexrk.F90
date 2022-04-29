@@ -17,13 +17,12 @@ module rhs_create_imexrk
 
 contains
 
-   subroutine rhs_construct_temp_a(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,temprhs,Nm,rhs, &
+   subroutine rhs_construct_temp_a(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,Nm,rhs, &
                                  & time_scheme_type)
              
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: time_scheme_type
-      complex(kind=dp), intent(in) :: temprhs(Nr_max)
       integer, intent(in) :: Nm
       complex(kind=dp), intent(in) :: uphi_temp_FR(Nm_max+1,Nr_max),ur_temp_FR(Nm_max+1,Nr_max)
       integer :: i
@@ -33,10 +32,6 @@ contains
       complex(kind=dp) :: real_d_ur_temp_rad(Nr_max)
       complex(kind=dp) :: ur_temp_rad_spec(Nr_max)
       complex(kind=dp) :: uphi_temp_rad(Nr_max)
-      complex(kind=dp) :: real_temp_rad(Nr_max)
-      complex(kind=dp) :: temp_spec_rad(Nr_max)
-      complex(kind=dp) :: real_d_temp_rad(Nr_max)
-      complex(kind=dp) :: real_d2_temp_rad(Nr_max) 
       
       if (time_scheme_type=='IMEXRK') then
          do i=1,Nr_max
@@ -61,10 +56,9 @@ contains
 
    end subroutine rhs_construct_temp_a
 
-   subroutine rhs_construct_temp_d(Nm_max,Nr_max,temprhs,Nm,rhs, &
+   subroutine rhs_construct_temp_d(Nr_max,temprhs,Nm,rhs, &
                                  & time_scheme_type,Pr)
              
-      integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       real(kind=dp), intent(in) :: Pr
       character(len=100), intent(in) :: time_scheme_type
@@ -73,7 +67,6 @@ contains
       integer :: i
       complex(kind=dp), intent(out) :: rhs(Nr_max)
       ! Local variables --------------------------
-      complex(kind=dp) :: real_temp_rad(Nr_max)
       complex(kind=dp) :: temp_spec_rad(Nr_max)
       complex(kind=dp) :: real_d_temp_rad(Nr_max)
       complex(kind=dp) :: real_d2_temp_rad(Nr_max) 
@@ -100,7 +93,7 @@ contains
    end subroutine rhs_construct_temp_d  
 
    subroutine rhs_construct_uphibar_a(Nm_max,Nr_max,urFR_p,upFR_p,upFC,rhs_uphi, &
-                                 & time_scheme_type,urp,omgp)
+                                 & time_scheme_type)
              
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
@@ -108,8 +101,6 @@ contains
       complex(kind=dp), intent(in) :: urFR_p(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: upFR_p(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: upFC(Nm_max+1,Nr_max)
-      real(kind=dp), intent(in) :: urp(3*Nm_max,Nr_max)
-      real(kind=dp), intent(in) :: omgp(3*Nm_max,Nr_max)
       real(kind=dp), intent(out) :: rhs_uphi(Nr_max)
       
       integer :: i, Nr, j, Np, Np_max
@@ -135,7 +126,6 @@ contains
 
          do Nr=1,Nr_max
             do Np=1,Np_max
-               !ur_omg(Nr)=ur_omg(Nr) + urp(Np,Nr)*omgp(Np,Nr)
                ur_omg(Nr)=ur_omg(Nr) + ur(Np,Nr)*omg(Np,Nr)
             end do
          end do 
@@ -169,18 +159,17 @@ contains
 
    end subroutine rhs_construct_uphibar_a
 
-   subroutine rhs_construct_uphibar_d(Nm_max,Nr_max,upFR_p,upFC_p,rhs_uphi, &
+   subroutine rhs_construct_uphibar_d(Nm_max,Nr_max,upFR_p,rhs_uphi, &
                                  & time_scheme_type)
              
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: time_scheme_type
-      complex(kind=dp), intent(in) :: upFC_p(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: upFR_p(Nm_max+1,Nr_max)
       complex(kind=dp) :: upFC_t(Nr_max)
       real(kind=dp), intent(out) :: rhs_uphi(Nr_max)
       
-      integer :: i, Nm
+      integer :: i
       complex(kind=dp) :: d1upFR(Nr_max)
       complex(kind=dp) :: d2upFR(Nr_max)
 
@@ -202,13 +191,12 @@ contains
    end subroutine rhs_construct_uphibar_d
 
 
-   subroutine rhs_construct_vort_a(Nm_max,Nr_max,uphi_omg_FR,ur_omg_FR,omgrhs,Nm,rhs1,rhsf, &
+   subroutine rhs_construct_vort_a(Nm_max,Nr_max,uphi_omg_FR,ur_omg_FR,Nm,rhs1,rhsf, &
                                     & time_scheme_type,rhs2) 
 
       integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: time_scheme_type
-      complex(kind=dp), intent(in) :: omgrhs(Nr_max)
       integer, intent(in) :: Nm
       complex(kind=dp), intent(in) :: uphi_omg_FR(Nm_max+1,Nr_max),ur_omg_FR(Nm_max+1,Nr_max)
       integer :: i
@@ -220,7 +208,6 @@ contains
       complex(kind=dp) :: real_d_ur_omg_rad(Nr_max)
       complex(kind=dp) :: ur_omg_rad_spec(Nr_max)
       complex(kind=dp) :: uphi_omg_rad(Nr_max)
-      complex(kind=dp) :: real_omg_rad(Nr_max)
 
       if (time_scheme_type=='IMEXRK') then
          do i=1,Nr_max
@@ -254,10 +241,9 @@ contains
 
    end subroutine rhs_construct_vort_a
 
-   subroutine rhs_construct_vort_d(Nm_max,Nr_max,omgrhs,Nm,rhs1,rhsf, &
+   subroutine rhs_construct_vort_d(Nr_max,omgrhs,Nm,rhs1,rhsf, &
                                     & time_scheme_type,rhs2) 
 
-      integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: time_scheme_type
       complex(kind=dp), intent(in) :: omgrhs(Nr_max)
@@ -302,18 +288,15 @@ contains
 
    end subroutine rhs_construct_vort_d
 
-   subroutine rhs_construct_buo(Nm_max,Nr_max,Ra,Pr,uphi_omg_FR,ur_omg_FR,omg2,Nm, &
+   subroutine rhs_construct_buo(Nr_max,Ra,Pr,Nm, &
                                     & time_scheme_type,rhs2,temprhs) 
 
-      integer, intent(in) :: Nm_max
       integer, intent(in) :: Nr_max 
       character(len=100), intent(in) :: time_scheme_type
       real(kind=dp), intent(in) :: Ra
       real(kind=dp), intent(in) :: Pr  
-      complex(kind=dp), intent(in) :: omg2(Nm_max+1,Nr_max)
       complex(kind=dp), intent(in) :: temprhs(Nr_max)
       integer, intent(in) :: Nm
-      complex(kind=dp), intent(in) :: uphi_omg_FR(Nm_max+1,Nr_max),ur_omg_FR(Nm_max+1,Nr_max)
       integer :: i
       complex(kind=dp), intent(out) :: rhs2(Nr_max) 
 

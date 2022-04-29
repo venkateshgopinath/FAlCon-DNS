@@ -1,12 +1,14 @@
 # Compiler
-FC = ifort
+FC = gfortran
+#FC = ifort
 #FC = ifort
 
 # FFT Option : Give option of which FFT to use
 USE_FFT=FFTW
 
 # FFT Option : Give option of which FFT library to use
-USE_LAPACKLIB=MKL
+#USE_LAPACKLIB=MKL
+USE_LAPACKLIB=LAPACK
 
 # Flags for debugging 
 #FCFLAGS = -g -fbounds-check -fcheck=all -ffpe-trap=invalid,zero,overflow -Wall \
@@ -14,10 +16,20 @@ USE_LAPACKLIB=MKL
 #FCFLAGS = -O3 -xHost -ipo#-march=native 
 #FCFLAGS = -O3 -axAVX 
 #FCFLAGS = -O0 -D$(USE_FFT) -fopenmp # checked - Ok   
-FCFLAGS = -O3 -xHost -D$(USE_FFT) -fopenmp  
+#FCFLAGS = -O3 -xHost -D$(USE_FFT) -fopenmp  
+#FCFLAGS += -I/usr/local/include
+#FCFLAGS += -I/usr/local/Cellar/fftw/3.3.8/include
+#FCFLAGS += -I/usr/local/Cellar/fftw/3.3.10.reinstall/include
+#LDFLAGS = -lfftw3 -lm 
+
+FCFLAGS = -O3 -D$(USE_FFT) -fopenmp  
 FCFLAGS += -I/usr/local/include
-FCFLAGS += -I/usr/local/Cellar/fftw/3.3.8/include
-LDFLAGS = -lfftw3 -lm 
+#FCFLAGS += -I//usr/local/Cellar/fftw/3.3.8/include
+FCFLAGS += -I/usr/local/Cellar/fftw/3.3.10/include
+LDFLAGS=-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
+#FCFLAGS += -I/usr/local/Cellar/lapack/3.10.0/lib
+LDFLAGS += -llapack -lblas -lfftw3 -lm 
+#LDFLAGS += -lblas -lfftw3 -lm 
 
 ifeq ($(USE_LAPACKLIB),LAPACK)
         #FCFLAGS += -I${FFTWINCLUDE}

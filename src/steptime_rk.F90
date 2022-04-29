@@ -47,7 +47,7 @@ contains
 
    subroutine timeloop_rk(Nm_max,Np_max,Nr_max,eta,CFL,n_time_steps,n_checkpoint,n_snapshot,dt,Ra,Pr, &
                        & l_restart,n_restart,n_restart_point,n_snapshot_point,n_KE,n_KEspec, &
-                       & time_scheme_imp,time_scheme_exp,tag,lm,dt_coef,dt_max,time_scheme_type,mBC)
+                       & time_scheme_imp,time_scheme_exp,tag,lm,dt_coef,dt_max,time_scheme_type,mBC,l_vartimestep)
        
       integer :: n_step
       integer, intent(in) :: Nm_max
@@ -63,6 +63,7 @@ contains
       character(len=100), intent(in) :: time_scheme_imp
       character(len=100), intent(in) :: time_scheme_exp
       character(len=100), intent(in) :: time_scheme_type
+      logical, intent(in) :: l_vartimestep
       integer, intent(in) :: n_time_steps
       integer, intent(in) :: n_checkpoint
       integer, intent(in) :: n_snapshot
@@ -95,10 +96,11 @@ contains
             dt_old=dt
             dt_new=dt
             dt_array(:)=dt
+         if (l_vartimestep .eqv. .TRUE.) then ! If variable timestep using CFL is on
          !------------ Compute New dt by enforcing CFL ----------------- 
-         !call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr) 
+             call compute_new_dt(n_step,n_restart,l_restart,CFL,dt_new,dt_coef,dt_max,Pr)
          !--------------------------------------------------------------
-
+         end if
          !if ( (l_restart .and. n_step>1+n_restart) .or. (.not. l_restart) ) then
          !   tot_time=tot_time+dt_new 
          !end if
@@ -151,7 +153,7 @@ contains
             call store_checkpoint(Nm_max,Nr_max,count_chkpnt,dt_new,tot_time,tFR,omgFR,urFR,upFR, &
                                   & n_order_tscheme_imp,n_order_tscheme_exp, rhs_imp_temp, &
                                   & rhs_exp_temp,rhs_imp_vort,rhs_exp_vort,rhs_imp_uphi_bar, &
-                                  & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max,time_scheme_type)
+                                  & rhs_exp_uphi_bar,dt_array,n_order_tscheme_max)
  
          end if
          !------------------------------------------------------------------- 
@@ -159,7 +161,7 @@ contains
          !-------------------- Store Kinetic Energy (KE) --------------------
          if (mod(n_step,n_KE)==0) then
             call init_output(tag)  ! Open output files 
-            call writeKE_spectral(Nm_max,Nr_max,Np_max, TFC,tot_time,eta,n_step,omgFR,Ra,Pr,dt_new,tFR,mBC)
+            call writeKE_spectral(Nm_max,Nr_max,Np_max, TFC,tot_time,eta,omgFR,Ra,Pr,dt_new,tFR,mBC)
             !call writeKE_physical(Np_max,Nr_max,Nm_max,tot_time,Ra,Pr) ! Uncomment for KE calc in physical space 
             call final_output() ! Close output files
          end if

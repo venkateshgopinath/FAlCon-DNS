@@ -67,7 +67,6 @@ contains
       real(kind=dp) :: rhs_r(Nr_max), rhs_i(Nr_max), rhsf_r(2*Nr_max), rhsf_i(2*Nr_max)
       complex(kind=dp) :: rhs_omg(Nr_max),real_rhs_omg(Nr_max),real_rhs_psi(Nr_max),real_d_rhs_psi(Nr_max)
       complex(kind=dp) :: real_d2_rhs_psi(Nr_max)
-      complex(kind=dp) :: omgFR_check(Nr_max)
       integer :: i,Nm,INFO1,INFO2,Nr_max2 ! Nm -> azimuthal 'n' loop over Fourier modes
       real(kind=dp) :: t_ref, t_final
 
@@ -88,7 +87,7 @@ contains
          if (n_step-n_restart==1 .or. dt_array(1)/=dt_array(2)) then ! Call 'mat_build' only if dt_current and dt_previous are different 
             call cpu_time(startmatbuild)
             call mat_build(Nr_max,dt_array(1),Nm,mBC,wt_lhs_tscheme_imp,Pr) ! Build the operator matrices and factorize them 
-            call mat_build_uphibar(Nr_max,dt_array(1),mBC,wt_lhs_tscheme_imp,Pr)
+            call mat_build_uphibar(Nr_max,dt_array(1),mBC,wt_lhs_tscheme_imp)
             call cpu_time(finishmatbuild) 
             time_matbuild=time_matbuild + finishmatbuild - startmatbuild
          end if
@@ -145,7 +144,7 @@ contains
          ! SOLVE FOR UPHI_BAR HERE -----------------------------------------------------------------------------
          if (Nm==0) then
             !----------- Call RHS construct for uphi_bar -------------
-            call rhs_construct_uphi_bar(Nm_max,Nr_max,dt_new,upFR,urFR,omgFR,n_step,upFC,rhs_uphi,n_restart, &
+            call rhs_construct_uphi_bar(Nm_max,Nr_max,dt_new,upFR,n_step,upFC,rhs_uphi,n_restart, &
                                        & wt_rhs_tscheme_imp,wt_rhs_tscheme_exp,n_order_tscheme_imp, &
                                        & n_order_tscheme_exp,time_scheme_imp,l_restart,l_imexrk_started)
             !---------------------------------------------------------   

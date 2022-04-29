@@ -16,8 +16,7 @@ module fourierloop_imexrk
        &                   butcher_aD, butcher_bD, diag_diff, diag_index
    use rhs_create_imexrk, only: rhs_construct_temp_a, rhs_construct_vort_a,    &
        &                        rhs_construct_temp_d, rhs_construct_uphibar_a, &
-       &                        rhs_construct_uphibar_d, rhs_construct_vort_d, &
-       &                        rhs_construct_buo   
+       &                        rhs_construct_uphibar_d, rhs_construct_vort_d
 
    implicit none
 
@@ -73,7 +72,7 @@ contains
     
    end subroutine deallocate_fourierloop_imexrk
 
-   subroutine Get_stage_var(Nm_max,Nr_max,rk_stage,tFR,omgFR,psii,upFR,urFR,n_step,n_restart,Ra,Pr,mBC,lm,buo_tscheme)
+   subroutine Get_stage_var(Nm_max,Nr_max,rk_stage,tFR,omgFR,psii,upFR,urFR,n_step,n_restart,Ra,Pr,mBC,buo_tscheme)
 
 
       integer, intent(in) :: Nm_max
@@ -86,7 +85,6 @@ contains
       complex(kind=dp), intent(out) :: tFR(Nm_max+1,Nr_max),omgFR(Nm_max+1,Nr_max) 
       complex(kind=dp), intent(out) :: psii(Nm_max+1,Nr_max)
       complex(kind=dp), intent(out) :: upFR(Nm_max+1,Nr_max), urFR(Nm_max+1,Nr_max)
-      integer, intent(in) :: lm 
       !Local variables ---------------------------------------------------------
       complex(kind=dp) :: rhs_psi(Nr_max), F_dtemp_d(Nr_max), F_domg_d(Nr_max)
       complex(kind=dp) :: F_dtemp_a(Nr_max), F_domg_a(Nr_max), F_buo(Nr_max)
@@ -112,17 +110,17 @@ contains
             do Nm=0,Nm_max  
                call cpu_time(startmatbuild) 
                call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
-               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index) ! Build the operatir matrix for uphibar and factorize them
                call cpu_time(finishmatbuild) 
                time_matbuild=time_matbuild + finishmatbuild - startmatbuild
             end do
          end if
          if ( (n_step-n_restart>1) .and. (dt_array(1)/=dt_array(2)) .and. (rk_stage==2) ) then ! This condition is to build matrix when dt changes and build it only for 1 stage and use for others  
-         print *, "check here" 
+         !print *, "check here" 
             do Nm=0,Nm_max  
                call cpu_time(startmatbuild) 
                call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
-               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+               call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index) ! Build the operatir matrix for uphibar and factorize them
                call cpu_time(finishmatbuild) 
                time_matbuild=time_matbuild + finishmatbuild - startmatbuild
             end do
@@ -138,7 +136,7 @@ contains
             do Nm=0,Nm_max  
                   call cpu_time(startmatbuild) 
                   call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operator matrices for (T, omega) and factorize them 
-                  call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index,Pr) ! Build the operatir matrix for uphibar and factorize them
+                  call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(diag_index,diag_index),diag_index) ! Build the operatir matrix for uphibar and factorize them
                   call cpu_time(finishmatbuild) 
                   time_matbuild=time_matbuild + finishmatbuild - startmatbuild
             end do
@@ -154,7 +152,7 @@ contains
                      do Nm=0,Nm_max  
                            call mat_build_IRK(Nr_max,dt_array(1),Nm,mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operator matrices for (T, omega) and factorize them 
                      end do
-                           call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage,Pr) ! Build the operatir matrix for uphibar and factorize them
+                           call mat_build_uphibar_IRK(Nr_max,dt_array(1),mBC,butcher_aD(rk_stage,rk_stage),rk_stage) ! Build the operatir matrix for uphibar and factorize them
                   end if
             end if
          end if
@@ -416,7 +414,6 @@ contains
       complex(kind=dp), intent(in) :: uphi_omg_FR(Nm_max+1,Nr_max),ur_omg_FR(Nm_max+1,Nr_max)
       integer, intent(in) :: rk_stage
       integer :: Nm, i ! Nm -> azimuthal 'n' loop over Fourier modes
-      real(kind=dp) :: t_ref, t_final
 
       rhs(:)=0.0_dp 
       rhs1(:)=0.0_dp 
@@ -432,7 +429,7 @@ contains
       do Nm=0,Nm_max  
 
          !----------- Call RHS construct for temperature advection ----------
-         call rhs_construct_temp_a(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,tFR(Nm+1,:),Nm,rhs, &
+         call rhs_construct_temp_a(Nm_max,Nr_max,uphi_temp_FR,ur_temp_FR,Nm,rhs, &
                                  & time_scheme_type)
          
          dtempdt1_a(rk_stage,Nm+1,:) = rhs(:)
@@ -440,7 +437,7 @@ contains
 
          rhs(:)=0.0_dp 
          !----------- Call RHS construct for temperature diffusion ----------
-         call rhs_construct_temp_d(Nm_max,Nr_max,tFR(Nm+1,:),Nm,rhs, &
+         call rhs_construct_temp_d(Nr_max,tFR(Nm+1,:),Nm,rhs, &
                                  & time_scheme_type,Pr)
          
          dtempdt1_d(rk_stage,Nm+1,:) = rhs(:)
@@ -450,7 +447,7 @@ contains
 
             !----------- Call RHS construct for uphi_bar advection ----------
             call rhs_construct_uphibar_a(Nm_max,Nr_max,urFR,upFR,upFC,rhs_uphi, &
-                                    & time_scheme_type,ur,omg)
+                                    & time_scheme_type)
             
             !duphibar_dt1_a(rk_stage,:) = rhs_uphi(:)
             domgdt1_a(rk_stage,Nm+1,:) = rhs_uphi(:)
@@ -458,7 +455,7 @@ contains
 
             rhs_uphi(:)=0.0_dp 
             !----------- Call RHS construct for uphi_bar diffusion ----------
-            call rhs_construct_uphibar_d(Nm_max,Nr_max,upFR,upFC,rhs_uphi, &
+            call rhs_construct_uphibar_d(Nm_max,Nr_max,upFR,rhs_uphi, &
                                     & time_scheme_type)
             
             !duphibar_dt1_d(rk_stage,:) = rhs_uphi(:)
@@ -468,7 +465,7 @@ contains
          else
 
             !----------- Call RHS construct for vorticity advection ------------
-            call rhs_construct_vort_a(Nm_max,Nr_max,uphi_omg_FR,ur_omg_FR,omgFR(Nm+1,:), &
+            call rhs_construct_vort_a(Nm_max,Nr_max,uphi_omg_FR,ur_omg_FR, &
                                     & Nm,rhs1,rhsf,time_scheme_type,rhs_vort) 
 
             domgdt1_a(rk_stage,Nm+1,:) = rhs_vort(:)
@@ -476,7 +473,7 @@ contains
             rhs_vort(:)=0.0_dp
 
             !----------- Call RHS construct for vorticity diffusion ------------
-            call rhs_construct_vort_d(Nm_max,Nr_max,omgFR(Nm+1,:), &
+            call rhs_construct_vort_d(Nr_max,omgFR(Nm+1,:), &
                                     & Nm,rhs1,rhsf,time_scheme_type,rhs_vort) 
 
             domgdt1_d(rk_stage,Nm+1,:) = rhs_vort(:)
