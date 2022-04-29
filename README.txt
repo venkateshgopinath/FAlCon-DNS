@@ -6,7 +6,8 @@ For parallelization, it has OpenMP option.
 It was created from scratch as part of the PhD work at the Geomagnetism Group, Institute de Physique du Globe de Paris (IPGP), Universite de Paris.
 
 The research work using the code is published at: 
-V. Gopinath, A. Fournier and T. Gastine, An assessment of implicit-explicit time integrators for the pseudo-spectral approximation of Boussinesq thermal convection in an annulus, 460, 110965, JCP, 2022. 
+V. Gopinath, A. Fournier and T. Gastine, An assessment of implicit-explicit time integrators for the pseudo-spectral approximation of Boussinesq 
+thermal convection in an annulus, 460, 110965, JCP, 2022. 
 
 ---------------------------------------
 For compiling:
