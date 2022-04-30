@@ -13,23 +13,23 @@ The arxiv version of the published article is available at: https://arxiv.org/pd
 Also, the PhD thesis is available at: https://hal.inria.fr/tel-02612607/ 
 
 ---------------------------------------
-For compiling:
+For compiling: <br />
 
 Check the compilers in the Makefile and
-go to source directory:
-
-$ cd src
-$ make clean
-$ make all
-
-For running the code: 
-
-$ cd runs
-$ cp main ./runs/
-
-Change the input namelist as per requirement and run:
-$ ./main input.txt
-
-Please modify the Makefile according to your machine requirements. 
-For questions on usage, please contact: gopinath.venkatesh2@in.bosch.com or venkateshgk.j@gmail.com.
+go to source directory: <br />
+<br />
+$ cd src <br />
+$ make clean <br />
+$ make all <br />
+<br />
+For running the code: <br />
+<br />
+$ cd runs <br />
+$ cp main ./runs/ <br />
+<br />
+Change the input namelist as per requirement and run: <br />
+$ ./main input.txt <br />
+<br />
+Please modify the Makefile according to your machine requirements. <br />
+For questions on usage, please contact: gopinath.venkatesh2@in.bosch.com or venkateshgk.j@gmail.com. <br />
 A manual for easy use will be put up soon.
