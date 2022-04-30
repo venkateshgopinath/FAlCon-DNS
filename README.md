@@ -30,5 +30,5 @@ $ cp main ./runs/
 Change the input namelist as per requirement and run:
 $ ./main input.txt
 
-For questions on usage, please contact: gopinath.venkatesh2@in.bosch.com or venkateshgk.j@gmail.com
+For questions on usage, please contact: gopinath.venkatesh2@in.bosch.com or venkateshgk.j@gmail.com.
 A manual for easy use will be put up soon.
