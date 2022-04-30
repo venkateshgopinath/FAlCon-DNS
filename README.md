@@ -21,11 +21,14 @@ go to source directory: <br />
 $ cd src <br />
 $ make clean <br />
 $ make all <br />
+$ cd .. <br />
 <br />
 For running the code: <br />
 <br />
+$ mkdir runs <br />
 $ cd runs <br />
-$ cp main ./runs/ <br />
+$ cp ../src/main . <br />
+$ cp ../src/input.txt . <br />
 <br />
 Change the input namelist as per requirement and run: <br />
 $ ./main input.txt <br />
