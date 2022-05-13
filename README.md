@@ -1,4 +1,4 @@
-**FAlCon** (Framework of time schemes for Annular Convection) <br />
+**FAlCon-DNS** (Framework of time schemes for direct numerical simulation of annular convection) <br />
 This code is written to solve for 2 D convection in an annulus and analyse different time integration schemes.
 Contains a suite of IMEX, IMEXRK and RK time integration schemes.
 For parallelization, it has OpenMP option. 
