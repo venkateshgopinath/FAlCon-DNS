@@ -34,5 +34,4 @@ Change the input namelist as per requirement and run: <br />
 $ ./main input.txt <br />
 <br />
 Please modify the Makefile according to your machine requirements. <br />
-For questions on usage, please contact: gopinath.venkatesh2@in.bosch.com or venkateshgk.j@gmail.com. <br />
-A manual for easy use will be put up soon.
+For questions on usage, please contact: gopinath.venkatesh2@in.bosch.com or venkateshgk.j@gmail.com. 
