@@ -4,7 +4,7 @@
 ! method in the radial direction and Fourier method in the azimuthal direction.
  
  program maincode
- !$ use OMP_LIB
+ use OMP_LIB
 
  use init, only: startmain, finishmain
  use solver, only: solver_init, solver_run, solver_exit, solver_log 
