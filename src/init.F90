@@ -196,7 +196,7 @@ contains
             call lagrange(lm,radius(2:lm+1),rmin,w_rmin)
             call dlagrange(lm,radius(2:lm+1),rmin,dw_rmin)
             call d2lagrange(lm,radius(2:lm+1),rmin,d2w_rmin)
-            call lagrange(lm,radius(Nr_max-1:Nr_max-lm:-1),rmin,w_rmax)
+            call lagrange(lm,radius(Nr_max-1:Nr_max-lm:-1),rmax,w_rmax)
             call dlagrange(lm,radius(Nr_max-1:Nr_max-lm:-1),rmax,dw_rmax)
             call d2lagrange(lm,radius(Nr_max-1:Nr_max-lm:-1),rmax,d2w_rmax)
          end if
